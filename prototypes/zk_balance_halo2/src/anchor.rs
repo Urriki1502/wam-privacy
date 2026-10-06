@@ -142,6 +142,14 @@ impl Circuit<Fp> for AnchorCircuit {
             meta.fixed_column(),
             meta.fixed_column(),
         ];
+
+        // Poseidon loads round constants through Halo2's constant-assignment
+        // mechanism. Reserve one dedicated fixed column for those constants;
+        // without it MockProver fails before witness verification with
+        // NotEnoughColumnsForConstants.
+        let constants = meta.fixed_column();
+        meta.enable_constant(constants);
+
         let poseidon = Pow5Chip::configure::<P128Pow5T3>(meta, state, partial_sbox, rc_a, rc_b);
 
         AnchorConfig {
