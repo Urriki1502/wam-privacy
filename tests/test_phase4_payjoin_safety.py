@@ -105,11 +105,41 @@ class PayjoinSafetyTests(unittest.TestCase):
         bad = Transaction(
             version=2,
             locktime=0,
-            inputs=(receiver_input(),),
+            inputs=(receiver_input(atoms=120_000),),
             outputs=proposal().outputs,
         )
         with self.assertRaisesRegex(PayjoinError, "^ORIGINAL_INPUT_REMOVED$"):
             validate_proposal(original(), bad, PayjoinContext(payment_output_index=0))
+
+
+    def test_original_sender_input_order_is_preserved(self):
+        before = Transaction(
+            version=2,
+            locktime=0,
+            inputs=(
+                sender_input(n=1, atoms=60_000),
+                sender_input(n=2, atoms=40_000),
+            ),
+            outputs=(
+                TxOutput("receiver-payment", 50_000, "receiver"),
+                TxOutput("sender-change", 49_000, "sender"),
+            ),
+        )
+        after = Transaction(
+            version=2,
+            locktime=0,
+            inputs=(
+                sender_input(n=2, atoms=40_000),
+                receiver_input(atoms=20_000),
+                sender_input(n=1, atoms=60_000),
+            ),
+            outputs=(
+                TxOutput("receiver-payment", 69_000, "receiver"),
+                TxOutput("sender-change", 49_000, "sender"),
+            ),
+        )
+        with self.assertRaisesRegex(PayjoinError, "^ORIGINAL_INPUT_ORDER_CHANGED$"):
+            validate_proposal(before, after, PayjoinContext(payment_output_index=0))
 
     def test_sender_sequence_cannot_change(self):
         with self.assertRaisesRegex(PayjoinError, "^SENDER_SEQUENCE_CHANGED$"):
