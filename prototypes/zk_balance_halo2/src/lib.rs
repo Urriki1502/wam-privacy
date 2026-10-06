@@ -220,20 +220,19 @@ impl Circuit<Fp> for BalanceCircuit {
                         || Value::known(Fp::from(slack_value)),
                     )?;
                     config.cap_selector.enable(&mut region, cap_row)?;
-                    region.constrain_equal(
-                        amount_cells[index].cell(),
-                        cap_value_cell.cell(),
-                    )?;
+                    region.constrain_equal(amount_cells[index].cell(), cap_value_cell.cell())?;
 
                     // Range-constrain both the amount and its cap slack.
                     for (which, ranged_value) in [value, slack_value].into_iter().enumerate() {
-                        let start =
-                            range_base + (index * 2 + which) * (RANGE_BITS + 1);
+                        let start = range_base + (index * 2 + which) * (RANGE_BITS + 1);
                         let mut first_acc = None;
 
                         for i in 0..=RANGE_BITS {
-                            let acc_value =
-                                if i == RANGE_BITS { 0 } else { ranged_value >> i };
+                            let acc_value = if i == RANGE_BITS {
+                                0
+                            } else {
+                                ranged_value >> i
+                            };
                             let acc = region.assign_advice(
                                 || "range accumulator",
                                 config.range_acc,
@@ -255,9 +254,7 @@ impl Circuit<Fp> for BalanceCircuit {
                                 )?;
                                 config.range_selector.enable(&mut region, start + i)?;
                             } else {
-                                config
-                                    .range_final_selector
-                                    .enable(&mut region, start + i)?;
+                                config.range_final_selector.enable(&mut region, start + i)?;
                             }
                         }
 
