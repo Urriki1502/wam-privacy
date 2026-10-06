@@ -1,4 +1,4 @@
-name: Phase 8A - Halo2 balance prototype
+name: Phase 8 - Halo2 prototype suite
 
 on:
   pull_request:
@@ -8,7 +8,7 @@ permissions:
   contents: read
 
 jobs:
-  halo2-balance:
+  halo2-prototype:
     runs-on: ubuntu-24.04
     timeout-minutes: 20
 
@@ -41,6 +41,6 @@ jobs:
         run: cargo clippy --all-targets -- -D warnings
         working-directory: repo/prototypes/zk_balance_halo2
 
-      - name: Test Halo2 constraints
+      - name: Test Halo2 constraints and real proofs
         run: cargo test --all-targets --verbose
         working-directory: repo/prototypes/zk_balance_halo2
