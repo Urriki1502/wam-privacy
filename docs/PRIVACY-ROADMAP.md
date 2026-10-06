@@ -142,11 +142,13 @@ Research topics:
 
 Exit gate:
 
-- written protocol;
-- formal value-conservation statement;
-- deterministic vectors;
-- negative vectors;
-- independent expert review plan.
+- written protocol/state semantics — **PASS (internal engineering)**;
+- formal value-conservation statement — **PASS**;
+- deterministic vectors — **PASS**;
+- negative vectors — **PASS**;
+- independent expert review plan — **PASS (plan defined; external review pending)**.
+
+Current status: **INTERNAL ENGINEERING PASS**. This does not authorize Phase 8 production claims or mainnet work.
 
 ## Phase 8 — Isolated ZK prototype
 
