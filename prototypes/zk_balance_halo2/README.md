@@ -36,16 +36,19 @@ The current tests demonstrate, under Halo2 `MockProver`, that:
 - a valid private Merkle path binds to its public root;
 - wrong roots, siblings, and path directions fail.
 
+## Stage E — actual proofs
+
+The test suite now performs real Halo2 key generation, proof creation and proof verification for all current circuit families. Public-input tampering is negative-tested against the produced proof.
+
 ## What this does NOT establish
 
-The prototype does not yet prove:
+The prototype does not yet establish:
 
 - note commitment derivation from complete private note fields;
 - the nullifier/spend-authority relation;
 - nullifier uniqueness at consensus level;
 - note encryption;
 - viewing-key behavior;
-- real proof generation or verification;
 - production proving/verifying performance;
 - WAM Core integration;
 - mainnet suitability.

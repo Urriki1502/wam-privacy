@@ -116,11 +116,26 @@ This is a circuit-native research relation, not a final WAM consensus encoding. 
 
 Status: **PASS (internal circuit tests)**.
 
+## Stage E — Real proof generation / verification
+
+Stage E moves beyond `MockProver` and exercises the real Halo2 proving pipeline in isolated CI.
+
+For each current circuit family the test suite generates ephemeral parameters and proving/verifying keys, creates an actual proof, and verifies it:
+
+- value-conservation / amount-domain circuit;
+- commitment-tree anchor circuit;
+- nullifier / spend-authority circuit.
+
+For public-input circuits, the same proof is also checked against modified public inputs:
+
+- changing the public commitment root causes verification failure;
+- changing the public nullifier causes verification failure.
+
+The parameters and keys are ephemeral test artifacts. Stage E does not define production parameter distribution, proving-key custody, verifier integration, or consensus serialization.
+
+Status: **PASS (internal real-proof tests)**.
+
 ## Planned Phase 8 stages
-
-### Stage E — Real proof generation / verification
-
-Move beyond `MockProver` to actual Halo2 proof creation and verification in isolated CI.
 
 ### Stage F — Differential bridge
 
@@ -131,6 +146,6 @@ Cross-check accepted/rejected transitions between:
 
 ## Status
 
-`PHASE 8-D — INTERNAL ENGINEERING PASS / PHASE 8 IN PROGRESS`
+`PHASE 8-E — INTERNAL REAL-PROOF PASS / PHASE 8 IN PROGRESS`
 
 No production, anonymity, audit, or mainnet claim is implied.
