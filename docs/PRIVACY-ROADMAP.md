@@ -11,36 +11,53 @@ Deliverables:
 - security/research boundary;
 - design principles;
 - WSP-1 specification skeleton;
-- upstream reference set.
+- upstream reference set;
+- inventory of reusable WAM privacy assets.
 
 Exit gate:
 
 - trust boundaries are explicit;
 - security invariants are named;
-- assumptions requiring WAM Core verification are listed.
+- assumptions requiring WAM Core verification are listed;
+- existing WSP-1 work is identified as a baseline rather than duplicated.
 
-## Phase 1 — WSP-1 / Silent Payments research
+## Phase 1 — WSP-1 adoption and requalification
 
-Goal: evaluate a BIP-352-derived static payment scheme for WAM.
+Goal: adopt the existing `wam-silent-payments` WSP-1 qualification build and determine whether it remains compatible with current WAM Core.
 
-Required work:
+Existing baseline already includes:
 
-- WAM compatibility matrix;
-- deterministic key and address fixtures;
-- receiver scanning model;
-- rescan and recovery logic;
-- reorg handling;
-- duplicate processing resistance;
-- malformed-input handling;
-- performance baseline.
+- BIP-352 derivation and official vectors;
+- durable scanning and atomic block state;
+- deterministic recovery and rollback;
+- deep reorg testing;
+- PSBTv2 construction/signing;
+- differential testing;
+- coverage-guided fuzzing;
+- local two-node E2E;
+- fail-closed scanner behavior.
+
+Required work now:
+
+- pin current WAM Core revision;
+- compare current Core against the previously qualified Core revision;
+- complete the WAM compatibility matrix;
+- rerun contract, unit, adversarial, reorg, recovery and integration suites;
+- rerun relevant differential and fuzz gates when protocol-sensitive code changes;
+- record any new WAM-specific deviations;
+- keep mainnet/testnet namespace and profile decisions explicitly unresolved until maintainers adopt them.
 
 Exit gate:
 
+- current WAM Core revision is pinned;
+- no relevant unreviewed Core delta remains;
 - zero known false negatives in normative vectors;
 - expected negatives do not produce wallet credits;
 - full rescan is deterministic;
 - scanner-only compromise does not grant spend authority;
-- reorg and restart suites pass.
+- reorg and restart suites pass;
+- qualification evidence is reproducible;
+- external/adoption blockers remain explicitly marked rather than treated as engineering PASS.
 
 ## Phase 2 — Privacy-aware wallet
 
