@@ -5,6 +5,8 @@ CORE_REPO="https://github.com/wamcoin-core-dev/wam-coin.git"
 CORE_SHA="260bc468e5adffea7ce68d8f97fac3e27e4c50b2"
 WSP_REPO="https://github.com/Urriki1502/wam-silent-payments.git"
 WSP_SHA="a8522fee9b6eda285998a5ff4a45d6bc4eb991b3"
+RANDOMX_REPO="https://github.com/tevador/RandomX.git"
+RANDOMX_TAG="v1.2.1"
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")/.." && pwd)"
 WORKSPACE="${WAM_PHASE1_WORKSPACE:-$HOME/wam-phase1-gate-c}"
@@ -61,14 +63,25 @@ clone_exact "$WSP_REPO" "$WSP_DIR" "$WSP_SHA"
 note "Preparing exact WAM Core source"
 (
   cd "$CORE_DIR"
-  bash scripts/fetch-upstream.sh
 
-  # fetch-upstream.sh creates RandomX first. On Apple Silicon, remove that
-  # intermediate build so build_macos.sh recreates it using its ARM-aware path
-  # (no x86 ARCH option). Source remains pinned and untouched.
+  # On Apple Silicon, prebuild the pinned RandomX source without an x86 ARCH
+  # option before fetch-upstream.sh runs. The fetch script then detects the
+  # existing librandomx.a and reuses it rather than creating an x86-oriented
+  # intermediate build.
   if [[ "$(uname -m)" == "arm64" ]]; then
+    mkdir -p build
+    if [[ ! -d build/randomx/.git ]]; then
+      git clone --depth 1 --branch "$RANDOMX_TAG" "$RANDOMX_REPO" build/randomx
+    fi
+    git -C build/randomx fetch --tags origin
+    git -C build/randomx checkout --detach "$RANDOMX_TAG"
     rm -rf build/randomx/build
+    cmake -S build/randomx -B build/randomx/build -DCMAKE_BUILD_TYPE=Release
+    cmake --build build/randomx/build -j"${JOBS:-$(sysctl -n hw.ncpu 2>/dev/null || echo 4)}"
+    [[ -f build/randomx/build/librandomx.a ]] || die "ARM64 RandomX build did not produce librandomx.a"
   fi
+
+  bash scripts/fetch-upstream.sh
 
   JOBS="${JOBS:-$(sysctl -n hw.ncpu 2>/dev/null || echo 4)}"     bash scripts/build_macos.sh
 )
