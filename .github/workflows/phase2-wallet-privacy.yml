@@ -23,8 +23,8 @@ jobs:
 
       - name: Compile reference implementation
         run: |
-          python -m py_compile             prototypes/wallet_privacy/__init__.py             prototypes/wallet_privacy/model.py             prototypes/wallet_privacy/policy.py             tests/test_phase2_wallet_privacy.py
+          python -m py_compile             prototypes/wallet_privacy/__init__.py             prototypes/wallet_privacy/model.py             prototypes/wallet_privacy/policy.py             tests/test_phase2_wallet_privacy.py             tests/test_phase2_wallet_properties.py
 
       - name: Run wallet privacy tests
         run: |
-          python -m unittest -v tests/test_phase2_wallet_privacy.py
+          python -m unittest -v             tests/test_phase2_wallet_privacy.py             tests/test_phase2_wallet_properties.py
