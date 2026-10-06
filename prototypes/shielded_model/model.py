@@ -1,13 +1,13 @@
 """Executable shielded-state model for Phase 7 research.
 
 This module is intentionally NOT a privacy implementation and NOT a proof system.
-It models consensus-relevant state transitions that a future shielded proof would
-need to prove: note membership, spend-authority binding, nullifier uniqueness,
-value conservation, shield/unshield accounting, and protocol versioning.
+It models state-transition rules a future shielded proof would need to enforce:
+note membership, view/spend authority separation, nullifier uniqueness, value
+conservation, pool accounting, commitment-tree anchoring, and versioning.
 
 All hashing here is domain-separated SHA-256 solely to make deterministic test
-vectors. It must not be interpreted as a production note commitment/nullifier
-construction.
+vectors. It must not be interpreted as a production commitment, nullifier,
+viewing, or Merkle construction.
 """
 
 from __future__ import annotations
@@ -49,6 +49,12 @@ def spend_key_tag(nullifier_key: bytes) -> bytes:
     return _h(b"WAM/Shielded/SpendKeyTag/v1\x00", nk)
 
 
+def view_tag(view_key: bytes, rho: bytes) -> bytes:
+    vk = _field("VIEW_KEY", view_key, 32)
+    r = _field("RHO", rho, 32)
+    return _h(b"WAM/Shielded/ViewTag/v1\x00", vk, r)
+
+
 @dataclass(frozen=True)
 class Note:
     value: int
@@ -88,6 +94,23 @@ def note_commitment(note: Note) -> bytes:
     )
 
 
+def can_view(note: Note, view_key: bytes) -> bool:
+    note.validate()
+    return view_tag(view_key, note.rho) == note.recipient_tag
+
+
+def view_note(note: Note, view_key: bytes) -> dict | None:
+    """Model selective recognition; this is not encrypted note decryption."""
+
+    if not can_view(note, view_key):
+        return None
+    return {
+        "value": note.value,
+        "commitment": note.commitment.hex(),
+        "version": note.version,
+    }
+
+
 def nullifier(note: Note, nullifier_key: bytes) -> bytes:
     note.validate()
     nk = _field("NULLIFIER_KEY", nullifier_key, 32)
@@ -99,6 +122,25 @@ def nullifier(note: Note, nullifier_key: bytes) -> bytes:
         note.commitment,
         note.rho,
     )
+
+
+def commitment_root(commitments: tuple[bytes, ...]) -> bytes:
+    """Deterministic placeholder Merkle root for state anchoring."""
+
+    if any(not isinstance(c, bytes) or len(c) != 32 for c in commitments):
+        _fail("COMMITMENT_FORMAT")
+    if not commitments:
+        return _h(b"WAM/Shielded/MerkleEmpty/v1\x00")
+
+    level = [_h(b"WAM/Shielded/MerkleLeaf/v1\x00", c) for c in commitments]
+    while len(level) > 1:
+        if len(level) % 2:
+            level.append(level[-1])
+        level = [
+            _h(b"WAM/Shielded/MerkleNode/v1\x00", level[i], level[i + 1])
+            for i in range(0, len(level), 2)
+        ]
+    return _h(b"WAM/Shielded/MerkleRoot/v1\x00", level[0])
 
 
 @dataclass(frozen=True)
@@ -118,6 +160,10 @@ class ShieldedState:
     pool_atoms: int = 0
     version: int = PROTOCOL_VERSION
 
+    @property
+    def root(self) -> bytes:
+        return commitment_root(self.commitments)
+
     def validate(self) -> None:
         if self.version != PROTOCOL_VERSION:
             _fail("UNSUPPORTED_STATE_VERSION")
@@ -128,6 +174,7 @@ class ShieldedState:
             _fail("COMMITMENT_FORMAT")
         if any(not isinstance(n, bytes) or len(n) != 32 for n in self.nullifiers):
             _fail("NULLIFIER_FORMAT")
+        self.root
 
 
 @dataclass(frozen=True)
@@ -168,6 +215,8 @@ class TransitionResult:
     transparent_in: int
     transparent_out: int
     fee_atoms: int
+    prior_root: bytes
+    new_root: bytes
 
     @property
     def conservation_lhs(self) -> int:
@@ -183,6 +232,7 @@ def apply_transition(state: ShieldedState, tx: Transition) -> TransitionResult:
 
     state.validate()
     tx.validate_shape()
+    prior_root = state.root
 
     commitments = set(state.commitments)
     new_nullifiers: list[bytes] = []
@@ -230,4 +280,6 @@ def apply_transition(state: ShieldedState, tx: Transition) -> TransitionResult:
         tx.transparent_in,
         tx.transparent_out,
         tx.fee_atoms,
+        prior_root,
+        next_state.root,
     )
