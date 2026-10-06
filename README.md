@@ -17,15 +17,32 @@ The project prioritizes:
 - standard cryptographic constructions over custom cryptography;
 - testable security invariants;
 - fail-closed behavior at trust boundaries;
-- incremental deployment with explicit review gates.
+- incremental deployment with explicit review gates;
+- reuse of already-qualified WAM privacy work instead of unnecessary reimplementation.
+
+## Existing WSP-1 baseline
+
+WAM already has a substantial Silent Payments qualification implementation in:
+
+- `Urriki1502/wam-silent-payments`
+- branch: `feat/wsp1-v1.0`
+- package status: `1.0.0.dev0`
+- previously qualified node profile: WAM Core v0.1.11 / regtest
+
+That repository already contains BIP-352 derivation, durable scanning, recovery, PSBTv2 signing, adversarial tests, deep reorg tests, differential tests and fuzz evidence.
+
+Therefore this repository does **not** restart WSP-1 from zero. Its first implementation task is to adopt, review and requalify that baseline against current WAM Core.
+
+See [docs/EXISTING-ASSETS.md](docs/EXISTING-ASSETS.md) and [docs/WAM-CORE-COMPATIBILITY.md](docs/WAM-CORE-COMPATIBILITY.md).
 
 ## Initial research tracks
 
-1. **WSP-1 — Silent Payments research**
+1. **WSP-1 — Silent Payments adoption / requalification**
    - BIP-352-derived static payment addressing;
    - receiver scanning;
    - scan/spend authority separation;
-   - deterministic recovery and rescan behavior.
+   - deterministic recovery and rescan behavior;
+   - qualification of the existing WSP implementation against current WAM Core.
 
 2. **Wallet privacy**
    - privacy-aware coin selection;
@@ -60,7 +77,9 @@ The project prioritizes:
 - [docs/DESIGN-PRINCIPLES.md](docs/DESIGN-PRINCIPLES.md) — engineering rules.
 - [docs/PRIVACY-ROADMAP.md](docs/PRIVACY-ROADMAP.md) — staged delivery gates.
 - [docs/REFERENCES.md](docs/REFERENCES.md) — upstream standards and research references.
-- [wsp/wsp-1/SPEC.md](wsp/wsp-1/SPEC.md) — WSP-1 design skeleton.
+- [docs/EXISTING-ASSETS.md](docs/EXISTING-ASSETS.md) — reusable work already completed.
+- [docs/WAM-CORE-COMPATIBILITY.md](docs/WAM-CORE-COMPATIBILITY.md) — current Core qualification target.
+- [wsp/wsp-1/SPEC.md](wsp/wsp-1/SPEC.md) — WSP-1 architecture/profile contract.
 
 ## Development rule
 
