@@ -9,6 +9,7 @@ This phase does not implement zero-knowledge proofs, transaction confidentiality
 A shielded protocol can hide transaction details and still be unsafe if its state machine permits:
 
 - the same note to be spent twice;
+- the same note to generate multiple nullifiers through unrelated spend keys;
 - notes that never existed to be spent;
 - duplicate commitments;
 - shielded value to be created without transparent input;
@@ -25,9 +26,12 @@ The model carries:
 
 - value;
 - recipient tag;
+- spend-key tag;
 - rho;
 - random seed;
 - protocol version.
+
+The spend-key tag binds the modeled note to one nullifier authority. This closes the otherwise-invalid state-model path where the same note could be paired with another key to produce a second nullifier.
 
 The value is intentionally visible in this model. Confidential values belong to Phase 8 proof-system research.
 
@@ -39,7 +43,7 @@ It is **not** a proposed production commitment scheme.
 
 ### Nullifier
 
-A deterministic, domain-separated SHA-256 placeholder models one-time spend identity.
+A deterministic, domain-separated SHA-256 placeholder models one-time spend identity. Before a nullifier is derived, the supplied nullifier key must match the note's committed spend-key tag.
 
 It is **not** a proposed production nullifier construction.
 
@@ -85,29 +89,33 @@ These are separate invariants. Both must hold.
 
 Every spent note commitment must already exist in the state.
 
-### SHIELD-INV-02 — Nullifier uniqueness
+### SHIELD-INV-02 — Spend-authority binding
 
-A nullifier may be accepted once and only once.
+The spend/nullifier key must match the authority tag committed into the note.
 
-### SHIELD-INV-03 — Value conservation
+### SHIELD-INV-03 — Nullifier uniqueness
+
+A valid nullifier may be accepted once and only once.
+
+### SHIELD-INV-04 — Value conservation
 
 No transition may create shielded or transparent value outside the conservation equation.
 
-### SHIELD-INV-04 — Pool solvency
+### SHIELD-INV-05 — Pool solvency
 
 Unshielding cannot drive the modeled shielded pool below zero.
 
-### SHIELD-INV-05 — Commitment uniqueness
+### SHIELD-INV-06 — Commitment uniqueness
 
 A newly created note commitment must not duplicate an existing or same-transition commitment.
 
-### SHIELD-INV-06 — Explicit versioning
+### SHIELD-INV-07 — Explicit versioning
 
 Unknown note/state/transition versions fail closed.
 
-### SHIELD-INV-07 — Deterministic vectors
+### SHIELD-INV-08 — Deterministic vectors
 
-Model commitment/nullifier vectors are fixed so accidental semantic drift is visible in CI.
+Spend-key tags, model commitments and model nullifiers are fixed so accidental semantic drift is visible in CI.
 
 ## Relationship to Zcash Orchard / Halo 2
 
@@ -128,7 +136,7 @@ A Phase 7 PASS does not mean:
 
 - amounts are confidential;
 - recipients are hidden;
-- the model is cryptographically binding/hiding;
+- the placeholder hashes are cryptographically suitable commitment/nullifier primitives;
 - a zero-knowledge circuit exists;
 - a proving system has been audited;
 - WAM Core can activate a shielded pool.
