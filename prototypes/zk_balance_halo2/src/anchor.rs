@@ -121,10 +121,8 @@ impl Circuit<Fp> for AnchorCircuit {
                 s.clone() * bit.clone() * (bit.clone() - one),
                 s.clone()
                     * (left_v
-                        - (current.clone()
-                            + bit.clone() * (sibling_v.clone() - current.clone()))),
-                s * (right_v
-                    - (sibling_v.clone() + bit * (current - sibling_v))),
+                        - (current.clone() + bit.clone() * (sibling_v.clone() - current.clone()))),
+                s * (right_v - (sibling_v.clone() + bit * (current - sibling_v))),
             ]
         });
 
@@ -144,8 +142,7 @@ impl Circuit<Fp> for AnchorCircuit {
             meta.fixed_column(),
             meta.fixed_column(),
         ];
-        let poseidon =
-            Pow5Chip::configure::<P128Pow5T3>(meta, state, partial_sbox, rc_a, rc_b);
+        let poseidon = Pow5Chip::configure::<P128Pow5T3>(meta, state, partial_sbox, rc_a, rc_b);
 
         AnchorConfig {
             witness,
@@ -242,7 +239,10 @@ impl Circuit<Fp> for AnchorCircuit {
                 ConstantLength<HASH_INPUTS>,
                 WIDTH,
                 RATE,
-            >::init(poseidon, layouter.namespace(|| format!("poseidon init {level}")))?
+            >::init(
+                poseidon,
+                layouter.namespace(|| format!("poseidon init {level}")),
+            )?
             .hash(
                 layouter.namespace(|| format!("poseidon parent {level}")),
                 [left_cell, right_cell],
