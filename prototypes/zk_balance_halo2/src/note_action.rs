@@ -509,13 +509,7 @@ impl Circuit<Fp> for NoteActionCircuit {
             "phase9b note authority",
         )?;
         let h3 = hash_cells(&config, &mut layouter, h2, rho, "phase9b note rho")?;
-        let identity = hash_cells(
-            &config,
-            &mut layouter,
-            h3,
-            rseed,
-            "phase9b note randomness",
-        )?;
+        let identity = hash_cells(&config, &mut layouter, h3, rseed, "phase9b note randomness")?;
 
         // Anchor branch uses the exact derived identity cell.
         let mut current = identity.clone();
