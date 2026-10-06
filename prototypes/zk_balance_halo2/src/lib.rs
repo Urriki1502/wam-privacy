@@ -18,6 +18,7 @@
 
 pub mod action;
 pub mod anchor;
+pub mod note_action;
 pub mod nullifier;
 
 use halo2_proofs::{

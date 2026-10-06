@@ -1,0 +1,37 @@
+name: Phase 9B - In-circuit note commitment
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  note-commitment:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          path: repo
+
+      - name: Set up Rust 1.88
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: "1.88.0"
+          components: rustfmt, clippy
+
+      - name: Format check
+        run: cargo fmt --check
+        working-directory: repo/prototypes/zk_balance_halo2
+
+      - name: Clippy
+        run: cargo clippy --all-targets -- -D warnings
+        working-directory: repo/prototypes/zk_balance_halo2
+
+      - name: Test in-circuit note derivation and real proof
+        run: cargo test --test note_action --test note_action_proof --verbose
+        working-directory: repo/prototypes/zk_balance_halo2
