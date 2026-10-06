@@ -1,10 +1,10 @@
-# Phase 8-A — Halo2 Balance Prototype
+# Phase 8 — Halo2 Shielded Prototype
 
-This directory contains the first isolated zero-knowledge circuit experiment for WAM privacy research.
+This directory contains the isolated Halo2 circuit experiments for WAM privacy research.
 
-## Scope
+## Current implemented constraints
 
-The circuit enforces exactly one relation:
+The prototype currently enforces:
 
 ```
 spent + transparent_in
@@ -12,22 +12,27 @@ spent + transparent_in
 created + transparent_out + fee
 ```
 
-It uses Zcash's `halo2_proofs` crate and is exercised with `MockProver`.
+Every monetary witness is also:
+
+- range-constrained to 64 bits inside the circuit; and
+- constrained to the exact WAM monetary domain:
+  `amount <= 22,000,000 * 100,000,000 atoms`.
+
+It uses Zcash's `halo2_proofs` crate and is currently exercised with `MockProver`.
 
 ## What this establishes
 
-A passing test shows that the modeled arithmetic relation is encoded as a Halo2 constraint and that invalid witnesses fail the mock constraint system.
+Passing tests show that the modeled balance, bit decomposition, and exact monetary-cap relations are encoded as Halo2 constraints and reject invalid witnesses.
 
 ## What this does NOT establish
 
-This prototype does not yet prove:
+The prototype does not yet prove:
 
 - note membership;
 - Merkle anchor correctness;
 - nullifier derivation;
 - nullifier uniqueness at consensus level;
 - spend-authority binding;
-- amount range constraints;
 - commitment correctness;
 - note encryption;
 - viewing-key behavior;
@@ -37,14 +42,14 @@ This prototype does not yet prove:
 
 Therefore Phase 8 remains **IN PROGRESS**, not PASS.
 
-## Dependency pin
+## Dependency baseline
 
 The prototype targets:
 
 - Rust 1.88.0
-- `halo2_proofs = 0.3.5`
+- `halo2_proofs = 0.4`
 
-The dependency choice follows current Zcash Orchard usage as a compatibility reference, not as a claim of Orchard compatibility.
+This tracks the current Halo2 generation used by upstream Orchard as a compatibility reference. It does not imply Orchard protocol compatibility.
 
 ## Safety boundary
 
