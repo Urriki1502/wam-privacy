@@ -85,11 +85,38 @@ Dependencies currently pinned:
 
 Status: **PASS (internal circuit tests)**.
 
+## Stage D — Nullifier / spend-authority relation
+
+Stage D adds a separate `NullifierCircuit` with two private witnesses:
+
+- spend authority;
+- note identity.
+
+It constrains:
+
+```
+authority_tag = Poseidon(AUTHORITY_DOMAIN, spend_secret)
+
+note_key = Poseidon(spend_secret, note_identity)
+nullifier = Poseidon(NULLIFIER_DOMAIN, note_key)
+```
+
+The spend authority and note identity remain private. The isolated prototype exposes the expected authority tag and nullifier as public instances so the relations can be independently negative-tested.
+
+Tests verify:
+
+- a correct authority/note pair is accepted;
+- changing the private spend authority invalidates the original public outputs;
+- changing the private note identity invalidates the original nullifier;
+- the same authority used with different note identities yields different nullifiers;
+- different authorities yield different authority tags and nullifiers;
+- swapping the public tag/nullifier positions is rejected.
+
+This is a circuit-native research relation, not a final WAM consensus encoding. The spend authority is currently represented as a Pasta field element and the note identity has not yet been connected to the Stage C anchored leaf in one integrated circuit.
+
+Status: **PASS (internal circuit tests)**.
+
 ## Planned Phase 8 stages
-
-### Stage D — Nullifier relation
-
-Prove the modeled spend-authority/nullifier relation without exposing the secret authority.
 
 ### Stage E — Real proof generation / verification
 
@@ -104,6 +131,6 @@ Cross-check accepted/rejected transitions between:
 
 ## Status
 
-`PHASE 8-C — INTERNAL ENGINEERING PASS / PHASE 8 IN PROGRESS`
+`PHASE 8-D — INTERNAL ENGINEERING PASS / PHASE 8 IN PROGRESS`
 
 No production, anonymity, audit, or mainnet claim is implied.

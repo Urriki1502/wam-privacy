@@ -8,7 +8,7 @@
 | 8B — 64-bit ranges | PASS (internal engineering) | boolean decomposition and termination constraints |
 | 8B2 — exact WAM monetary cap | PASS (internal engineering) | cap, cap+1 and u64::MAX boundary tests |
 | 8C — commitment-tree anchor | PASS (internal engineering) | Poseidon path/root positive and tamper-negative tests |
-| 8D — nullifier relation | PENDING | not implemented |
+| 8D — nullifier relation | PASS (internal engineering) | private authority/note witnesses bound to public Poseidon tag/nullifier; tamper-negative tests |
 | 8E — real proof generation/verification | PENDING | not implemented |
 | 8F — Phase7/Phase8 differential bridge | PENDING | not implemented |
 
@@ -20,6 +20,19 @@
 - changing the root, a sibling, or a path direction invalidates the witness;
 - hashing uses the upstream Halo2 Poseidon gadget rather than a custom WAM hash.
 
+## Phase 8D security properties
+
+- spend authority remains a private witness;
+- note identity remains a private witness;
+- changing either private witness invalidates the original public relation;
+- nullifiers are note-bound so one authority does not map all notes to one identifier;
+- domain constants are constrained in-circuit;
+- hashing uses the upstream Halo2 Poseidon gadget.
+
+### Composition boundary
+
+Stage 8D does not yet prove that its private note identity is the exact leaf proven by Stage 8C. That cell-level composition is a later integration requirement and is intentionally not claimed here.
+
 ## Important model boundary
 
 Phase 7 uses domain-separated SHA-256 solely for deterministic executable-model vectors.
@@ -30,6 +43,6 @@ These roots are intentionally **not claimed to be byte-compatible**. A future pr
 
 ## Current claim
 
-`PHASE 8C INTERNAL ENGINEERING PASS — PHASE 8 REMAINS IN PROGRESS`
+`PHASE 8D INTERNAL ENGINEERING PASS — PHASE 8 REMAINS IN PROGRESS`
 
 This is not an audit, anonymity guarantee, production-readiness statement, or mainnet activation proposal.

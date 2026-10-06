@@ -17,6 +17,7 @@
 //! - production proof-system integration.
 
 pub mod anchor;
+pub mod nullifier;
 
 use halo2_proofs::{
     circuit::{Layouter, SimpleFloorPlanner, Value},
