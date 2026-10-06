@@ -52,11 +52,40 @@ Boundary tests include:
 - `MAX_WAM_ATOMS + 1` — rejected;
 - `u64::MAX` — rejected.
 
+## Stage C — Commitment-tree anchor
+
+Stage C adds a separate Halo2 `AnchorCircuit` that binds:
+
+- a private field-encoded commitment leaf;
+- a private fixed-depth authentication path;
+- private boolean direction bits;
+
+to a **public commitment-tree anchor**.
+
+Each tree level constrains child ordering from the private direction bit and computes the parent with the standard Zcash Halo2 Poseidon gadget:
+
+```
+parent = Poseidon(left, right)
+```
+
+Negative tests reject:
+
+- a wrong public anchor;
+- a tampered sibling;
+- a tampered direction path.
+
+The circuit supports both left- and right-oriented paths.
+
+The Phase 7 SHA-256 commitment-tree root remains an executable-model placeholder. Stage C deliberately does **not** claim byte compatibility with that placeholder; it establishes a circuit-native membership relation using a reviewed upstream gadget rather than inventing a WAM-specific hash.
+
+Dependencies currently pinned:
+
+- `halo2_proofs = 0.3.5`
+- `halo2_gadgets = 0.5.0`
+
+Status: **PASS (internal circuit tests)**.
+
 ## Planned Phase 8 stages
-
-### Stage C — Commitment-tree anchor
-
-Bind a spent note witness to a commitment-tree anchor derived from Phase 7 semantics.
 
 ### Stage D — Nullifier relation
 
@@ -75,6 +104,6 @@ Cross-check accepted/rejected transitions between:
 
 ## Status
 
-`PHASE 8-B2 — IN PROGRESS`
+`PHASE 8-C — INTERNAL ENGINEERING PASS / PHASE 8 IN PROGRESS`
 
 No production, anonymity, audit, or mainnet claim is implied.
