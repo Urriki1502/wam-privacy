@@ -16,6 +16,7 @@
 //! - note encryption / viewing semantics;
 //! - production proof-system integration.
 
+pub mod action;
 pub mod anchor;
 pub mod nullifier;
 
