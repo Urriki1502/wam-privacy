@@ -1,0 +1,30 @@
+name: Phase 5 - Network privacy
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  network-privacy:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Compile network privacy model
+        run: |
+          python -m py_compile             prototypes/network_privacy/__init__.py             prototypes/network_privacy/model.py             prototypes/network_privacy/policy.py             tests/test_phase5_network_privacy.py
+
+      - name: Run network privacy tests
+        run: |
+          python -m unittest -v tests/test_phase5_network_privacy.py

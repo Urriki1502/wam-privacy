@@ -44,7 +44,7 @@ See [docs/EXISTING-ASSETS.md](docs/EXISTING-ASSETS.md) and [docs/WAM-CORE-COMPAT
 | Phase 2 — Privacy-aware wallet policy | **INTERNAL ENGINEERING PASS** |
 | Phase 3 — Signer abstraction | **INTERNAL ENGINEERING PASS** |
 | Phase 4 — PayJoin safety | **INTERNAL ENGINEERING PASS** |
-| Phase 5 — Network privacy | not started |
+| Phase 5 — Network privacy policy | **INTERNAL ENGINEERING PASS** |
 | Phase 7/8 — Shielded / ZK research | not started |
 
 An internal engineering PASS is not a production-readiness, anonymity, audit, or mainnet claim.
