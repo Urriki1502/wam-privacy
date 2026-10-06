@@ -27,6 +27,7 @@ def request(
     inputs=1,
     payment=("wamrt-recipient", 50_000),
     change=None,
+    wallet_input=None,
     warnings=(),
 ):
     outputs = [TransactionOutput(payment[0], payment[1], "payment", False)]
@@ -39,15 +40,25 @@ def request(
         input_count=inputs,
         outputs=tuple(outputs),
         fee_atoms=fee,
+        wallet_input_atoms=wallet_input,
         warning_codes=tuple(warnings),
     )
 
 
-def approval(*, fee=1_000, merge=False, payment=("wamrt-recipient", 50_000)):
+def approval(
+    *,
+    fee=1_000,
+    merge=False,
+    payjoin=False,
+    payment_increase=False,
+    payment=("wamrt-recipient", 50_000),
+):
     return Approval(
         intents=(PaymentIntent(payment[0], payment[1]),),
         max_fee_atoms=fee,
         allow_cluster_merge=merge,
+        allow_payjoin=payjoin,
+        allow_payment_increase=payment_increase,
     )
 
 
@@ -189,6 +200,85 @@ class SignerAbstractionTests(unittest.TestCase):
             "12345",
         ):
             self.assertNotIn(secret, rendered)
+
+
+    def test_payjoin_requires_explicit_approval(self):
+        provider = FixtureSigner()
+        gate = SignerGate(provider)
+        req = request(
+            fee=2_000,
+            payment=("wamrt-recipient", 69_000),
+            change=("wallet-change", 49_000),
+            wallet_input=100_000,
+            warnings=("CHANGE_CREATED", "PAYJOIN_PROPOSAL"),
+        )
+        with self.assertRaisesRegex(ProviderError, "^PAYJOIN_NOT_APPROVED$"):
+            gate.sign(req, approval())
+        self.assertEqual(provider.calls, 0)
+
+    def test_payjoin_receiver_funded_payment_increase_can_be_approved(self):
+        provider = FixtureSigner()
+        gate = SignerGate(provider)
+        req = request(
+            fee=2_000,
+            payment=("wamrt-recipient", 69_000),
+            change=("wallet-change", 49_000),
+            wallet_input=100_000,
+            warnings=("CHANGE_CREATED", "PAYJOIN_PROPOSAL"),
+        )
+        result = gate.sign(
+            req,
+            approval(payjoin=True, payment_increase=True, fee=1_000),
+        )
+        self.assertEqual(result.request_id, req.request_id)
+        self.assertEqual(provider.calls, 1)
+
+    def test_payjoin_payment_increase_without_flag_fails(self):
+        provider = FixtureSigner()
+        gate = SignerGate(provider)
+        req = request(
+            fee=2_000,
+            payment=("wamrt-recipient", 69_000),
+            change=("wallet-change", 49_000),
+            wallet_input=100_000,
+            warnings=("CHANGE_CREATED", "PAYJOIN_PROPOSAL"),
+        )
+        with self.assertRaisesRegex(ProviderError, "^PAYMENT_INTENT_MISMATCH$"):
+            gate.sign(req, approval(payjoin=True))
+        self.assertEqual(provider.calls, 0)
+
+    def test_payjoin_sender_debit_cannot_exceed_approved_intent_plus_fee(self):
+        provider = FixtureSigner()
+        gate = SignerGate(provider)
+        req = request(
+            fee=2_500,
+            payment=("wamrt-recipient", 69_000),
+            change=("wallet-change", 48_500),
+            wallet_input=100_000,
+            warnings=("CHANGE_CREATED", "PAYJOIN_PROPOSAL"),
+        )
+        with self.assertRaisesRegex(ProviderError, "^SENDER_DEBIT_EXCEEDED$"):
+            gate.sign(
+                req,
+                approval(payjoin=True, payment_increase=True, fee=1_000),
+            )
+        self.assertEqual(provider.calls, 0)
+
+    def test_payjoin_requires_known_wallet_input_amount(self):
+        provider = FixtureSigner()
+        gate = SignerGate(provider)
+        req = request(
+            fee=2_000,
+            payment=("wamrt-recipient", 69_000),
+            change=("wallet-change", 49_000),
+            warnings=("CHANGE_CREATED", "PAYJOIN_PROPOSAL"),
+        )
+        with self.assertRaisesRegex(ProviderError, "^SENDER_DEBIT_UNKNOWN$"):
+            gate.sign(
+                req,
+                approval(payjoin=True, payment_increase=True, fee=1_000),
+            )
+        self.assertEqual(provider.calls, 0)
 
     def test_model_exposes_no_private_key_or_seed_field(self):
         names = set(SignRequest.__dataclass_fields__)
