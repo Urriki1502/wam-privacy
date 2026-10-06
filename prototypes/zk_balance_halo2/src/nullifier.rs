@@ -124,8 +124,7 @@ impl Circuit<Fp> for NullifierCircuit {
         let constants = meta.fixed_column();
         meta.enable_constant(constants);
 
-        let poseidon =
-            Pow5Chip::configure::<P128Pow5T3>(meta, state, partial_sbox, rc_a, rc_b);
+        let poseidon = Pow5Chip::configure::<P128Pow5T3>(meta, state, partial_sbox, rc_a, rc_b);
 
         NullifierConfig {
             witness,
@@ -139,38 +138,37 @@ impl Circuit<Fp> for NullifierCircuit {
         config: Self::Config,
         mut layouter: impl Layouter<Fp>,
     ) -> Result<(), Error> {
-        let (secret, note_id, authority_domain, nullifier_domain) =
-            layouter.assign_region(
-                || "load nullifier witnesses",
-                |mut region| {
-                    let secret = region.assign_advice(
-                        || "private spend authority",
-                        config.witness,
-                        0,
-                        || Value::known(self.spend_secret),
-                    )?;
-                    let note_id = region.assign_advice(
-                        || "private note identity",
-                        config.witness,
-                        1,
-                        || Value::known(self.note_identity),
-                    )?;
-                    let authority_domain = region.assign_advice_from_constant(
-                        || "authority domain",
-                        config.witness,
-                        2,
-                        Fp::from(AUTHORITY_DOMAIN),
-                    )?;
-                    let nullifier_domain = region.assign_advice_from_constant(
-                        || "nullifier domain",
-                        config.witness,
-                        3,
-                        Fp::from(NULLIFIER_DOMAIN),
-                    )?;
+        let (secret, note_id, authority_domain, nullifier_domain) = layouter.assign_region(
+            || "load nullifier witnesses",
+            |mut region| {
+                let secret = region.assign_advice(
+                    || "private spend authority",
+                    config.witness,
+                    0,
+                    || Value::known(self.spend_secret),
+                )?;
+                let note_id = region.assign_advice(
+                    || "private note identity",
+                    config.witness,
+                    1,
+                    || Value::known(self.note_identity),
+                )?;
+                let authority_domain = region.assign_advice_from_constant(
+                    || "authority domain",
+                    config.witness,
+                    2,
+                    Fp::from(AUTHORITY_DOMAIN),
+                )?;
+                let nullifier_domain = region.assign_advice_from_constant(
+                    || "nullifier domain",
+                    config.witness,
+                    3,
+                    Fp::from(NULLIFIER_DOMAIN),
+                )?;
 
-                    Ok((secret, note_id, authority_domain, nullifier_domain))
-                },
-            )?;
+                Ok((secret, note_id, authority_domain, nullifier_domain))
+            },
+        )?;
 
         let tag = hash_cells(
             &config,
@@ -181,13 +179,7 @@ impl Circuit<Fp> for NullifierCircuit {
         )?;
         layouter.constrain_instance(tag.cell(), config.instance, 0)?;
 
-        let note_key = hash_cells(
-            &config,
-            &mut layouter,
-            secret,
-            note_id,
-            "note-bound secret",
-        )?;
+        let note_key = hash_cells(&config, &mut layouter, secret, note_id, "note-bound secret")?;
         let nf = hash_cells(
             &config,
             &mut layouter,
