@@ -10,7 +10,7 @@
 | 8C — commitment-tree anchor | PASS (internal engineering) | Poseidon path/root positive and tamper-negative tests |
 | 8D — nullifier relation | PASS (internal engineering) | private authority/note witnesses bound to public Poseidon tag/nullifier; tamper-negative tests |
 | 8E — real proof generation/verification | PASS (internal engineering) | actual Halo2 create_proof/verify_proof for balance, anchor and nullifier circuits |
-| 8F — Phase7/Phase8 differential bridge | PENDING | not implemented |
+| 8F — Phase7/Phase8 differential bridge | PASS (internal engineering) | executable Phase 7 oracle regenerated in CI and consumed by Halo2 semantic bridge tests |
 
 ## Phase 8C security properties
 
@@ -31,11 +31,11 @@
 
 ### Composition boundary
 
-Stage 8D does not yet prove that its private note identity is the exact leaf proven by Stage 8C. That cell-level composition is a later integration requirement and is intentionally not claimed here.
+Stage 8D does not yet prove that its private note identity is the exact leaf proven by Stage 8C. That cell-level composition remains a later integration requirement and is intentionally not claimed here.
 
 ## Phase 8E proof evidence
 
-The CI suite now exercises actual Halo2 proof creation and verification, not only `MockProver`.
+The CI suite exercises actual Halo2 proof creation and verification, not only `MockProver`.
 
 Verified behaviors:
 
@@ -47,6 +47,18 @@ Verified behaviors:
 
 All proving parameters and proving/verifying keys are generated ephemerally inside the isolated test process.
 
+## Phase 8F differential evidence
+
+Phase 8F adds a cross-language semantic bridge:
+
+1. Python executes the actual Phase 7 shielded model and regenerates an oracle.
+2. CI requires the regenerated oracle to exactly match the committed fixture.
+3. Rust/Halo2 consumes that same fixture.
+4. Halo2 acceptance/rejection is compared against Phase 7 for shared balance and WAM monetary-cap semantics.
+5. Relational properties are cross-checked for authority mismatch, note-bound nullifiers and commitment/root mutation sensitivity.
+
+The bridge deliberately compares **semantics**, not hash bytes.
+
 ## Important model boundary
 
 Phase 7 uses domain-separated SHA-256 solely for deterministic executable-model vectors.
@@ -57,6 +69,6 @@ These roots are intentionally **not claimed to be byte-compatible**. A future pr
 
 ## Current claim
 
-`PHASE 8E INTERNAL REAL-PROOF PASS — PHASE 8 REMAINS IN PROGRESS`
+`PHASE 8F INTERNAL DIFFERENTIAL PASS — PLANNED PHASE 8 QUALIFICATION STAGES COMPLETE`
 
-This is not an audit, anonymity guarantee, production-readiness statement, or mainnet activation proposal.
+This is not an audit, anonymity guarantee, production-readiness statement, consensus specification, or mainnet activation proposal.

@@ -1,0 +1,97 @@
+{
+  "balance_cases": [
+    {
+      "created": 99000,
+      "fee": 1000,
+      "name": "shield_only",
+      "phase7_accepts": true,
+      "phase7_error": null,
+      "spent": 0,
+      "transparent_in": 100000,
+      "transparent_out": 0
+    },
+    {
+      "created": 74000,
+      "fee": 1000,
+      "name": "private_transfer_unshield",
+      "phase7_accepts": true,
+      "phase7_error": null,
+      "spent": 100000,
+      "transparent_in": 0,
+      "transparent_out": 25000
+    },
+    {
+      "created": 60000,
+      "fee": 1000,
+      "name": "mixed",
+      "phase7_accepts": true,
+      "phase7_error": null,
+      "spent": 50000,
+      "transparent_in": 20000,
+      "transparent_out": 9000
+    },
+    {
+      "created": 2200000000000000,
+      "fee": 0,
+      "name": "exact_cap_roundtrip",
+      "phase7_accepts": true,
+      "phase7_error": null,
+      "spent": 2200000000000000,
+      "transparent_in": 0,
+      "transparent_out": 0
+    },
+    {
+      "created": 0,
+      "fee": 2200000000000000,
+      "name": "exact_cap_transparent_fee",
+      "phase7_accepts": true,
+      "phase7_error": null,
+      "spent": 0,
+      "transparent_in": 2200000000000000,
+      "transparent_out": 0
+    },
+    {
+      "created": 100001,
+      "fee": 0,
+      "name": "inflation_attempt",
+      "phase7_accepts": false,
+      "phase7_error": "VALUE_CONSERVATION",
+      "spent": 100000,
+      "transparent_in": 0,
+      "transparent_out": 0
+    },
+    {
+      "created": 99500,
+      "fee": 400,
+      "name": "hidden_fee_mismatch",
+      "phase7_accepts": false,
+      "phase7_error": "VALUE_CONSERVATION",
+      "spent": 100000,
+      "transparent_in": 0,
+      "transparent_out": 0
+    },
+    {
+      "created": 2200000000000001,
+      "fee": 0,
+      "name": "amount_over_cap",
+      "phase7_accepts": false,
+      "phase7_error": "AMOUNT_RANGE",
+      "spent": 2200000000000001,
+      "transparent_in": 0,
+      "transparent_out": 0
+    }
+  ],
+  "comparison_mode": "semantic-not-byte-equivalence",
+  "max_wam_atoms": 2200000000000000,
+  "phase7_protocol_version": 1,
+  "phase7_tree_hash": "domain-separated-sha256-placeholder",
+  "phase8_tree_hash": "halo2-poseidon-p128pow5t3",
+  "properties": {
+    "authority_mismatch_rejected": true,
+    "note_mutation_changes_commitment": true,
+    "note_mutation_changes_root": true,
+    "root_byte_compatibility_claimed": false,
+    "same_authority_different_notes_have_distinct_nullifiers": true
+  },
+  "schema": 1
+}

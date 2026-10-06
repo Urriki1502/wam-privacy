@@ -22,11 +22,22 @@ jobs:
         with:
           path: repo
 
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
       - name: Set up Rust 1.88
         uses: dtolnay/rust-toolchain@stable
         with:
           toolchain: "1.88.0"
           components: rustfmt, clippy
+
+      - name: Regenerate Phase 7 semantic oracle
+        run: |
+          python3 scripts/generate_phase8f_bridge.py --output /tmp/phase8f-oracle.json
+          diff -u prototypes/zk_balance_halo2/bridge/phase8f-oracle.json /tmp/phase8f-oracle.json
+        working-directory: repo
 
       - name: Move to prototype
         run: |
@@ -41,6 +52,6 @@ jobs:
         run: cargo clippy --all-targets -- -D warnings
         working-directory: repo/prototypes/zk_balance_halo2
 
-      - name: Test Halo2 constraints and real proofs
+      - name: Test Halo2 constraints, real proofs and differential bridge
         run: cargo test --all-targets --verbose
         working-directory: repo/prototypes/zk_balance_halo2
