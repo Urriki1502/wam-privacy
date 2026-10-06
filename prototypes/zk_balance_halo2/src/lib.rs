@@ -205,7 +205,7 @@ impl Circuit<Fp> for BalanceCircuit {
                     // there is no 64-bit witness that can make an amount above
                     // MAX_WAM_ATOMS satisfy this exact field equation.
                     let cap_row = 2 + index;
-                    let slack_value = MAX_WAM_ATOMS.checked_sub(value).unwrap_or(0);
+                    let slack_value = MAX_WAM_ATOMS.saturating_sub(value);
 
                     let cap_value_cell = region.assign_advice(
                         || "capped amount",
