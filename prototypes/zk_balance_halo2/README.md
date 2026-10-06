@@ -1,10 +1,10 @@
-# Phase 8-A — Halo2 Balance Prototype
+# Phase 8 — Halo2 Prototype
 
-This directory contains the first isolated zero-knowledge circuit experiment for WAM privacy research.
+This directory contains the isolated Halo2 experiments for WAM privacy research.
 
-## Scope
+## Current implemented constraints
 
-The circuit enforces exactly one relation:
+### Stage A — value conservation
 
 ```
 spent + transparent_in
@@ -12,40 +12,54 @@ spent + transparent_in
 created + transparent_out + fee
 ```
 
-It uses Zcash's `halo2_proofs` crate and is exercised with `MockProver`.
+### Stage B / B2 — amount domain
+
+Every amount is range-constrained in-circuit and additionally bound to the exact WAM monetary domain:
+
+```
+0 <= amount <= 22,000,000 * 100,000,000 atoms
+```
+
+### Stage C — commitment-tree anchor
+
+A separate `AnchorCircuit` constrains a private commitment leaf and private authentication path to a public Merkle anchor using the standard Halo2 Poseidon gadget.
+
+The authentication-path direction is boolean-constrained at every level.
 
 ## What this establishes
 
-A passing test shows that the modeled arithmetic relation is encoded as a Halo2 constraint and that invalid witnesses fail the mock constraint system.
+The current tests demonstrate, under Halo2 `MockProver`, that:
+
+- balanced witnesses satisfy the value relation;
+- inflation and hidden-fee mismatches fail;
+- amount witnesses outside the WAM monetary domain fail;
+- a valid private Merkle path binds to its public root;
+- wrong roots, siblings, and path directions fail.
 
 ## What this does NOT establish
 
-This prototype does not yet prove:
+The prototype does not yet prove:
 
-- note membership;
-- Merkle anchor correctness;
-- nullifier derivation;
+- note commitment derivation from complete private note fields;
+- the nullifier/spend-authority relation;
 - nullifier uniqueness at consensus level;
-- spend-authority binding;
-- amount range constraints;
-- commitment correctness;
 - note encryption;
 - viewing-key behavior;
-- real proof creation or verification;
-- production performance;
-- WAM Core integration.
+- real proof generation or verification;
+- production proving/verifying performance;
+- WAM Core integration;
+- mainnet suitability.
 
-Therefore Phase 8 remains **IN PROGRESS**, not PASS.
+Phase 8 therefore remains **IN PROGRESS**.
 
-## Dependency pin
-
-The prototype targets:
+## Dependency pins
 
 - Rust 1.88.0
 - `halo2_proofs = 0.3.5`
+- `halo2_gadgets = 0.5.0`
 
-The dependency choice follows current Zcash Orchard usage as a compatibility reference, not as a claim of Orchard compatibility.
+These are research dependencies and do not imply Orchard compatibility.
 
 ## Safety boundary
 
-Local CI only. No wallet, node, public network, mainnet, testnet funds, or production key material is used.
+Local CI only. No wallet, node, public network, mainnet/testnet funds, or production key material is used.
