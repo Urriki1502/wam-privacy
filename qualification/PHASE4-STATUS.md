@@ -1,25 +1,29 @@
 # Phase 4 Status — PayJoin Safety
 
-| Gate | Status |
-| --- | --- |
-| Sender proposal-safety specification v0.1 | IMPLEMENTED |
-| Original input preservation | TEST PENDING |
-| Sequence preservation | TEST PENDING |
-| Version / locktime preservation | TEST PENDING |
-| Receiver input metadata checks | TEST PENDING |
-| Absolute fee non-decrease | TEST PENDING |
-| Payment non-decrease | TEST PENDING |
-| Sender output protection | TEST PENDING |
-| Explicit fee-contribution cap | TEST PENDING |
-| Value-flow conservation | TEST PENDING |
-| Identifier/amount redaction | TEST PENDING |
-| Real WAM PSBT adapter | NOT STARTED |
-| BIP-78 wire transport | NOT STARTED |
-| BIP-77 async transport | NOT STARTED |
-| Production readiness | NOT CLAIMED |
+| Gate | Status | Evidence |
+| --- | --- | --- |
+| Sender proposal-safety specification v0.1 | PASS | `docs/PAYJOIN-SAFETY.md` |
+| Original input preservation | PASS | regression tests |
+| Original sender input order | PASS | regression tests |
+| Sequence preservation | PASS | regression tests |
+| Version / locktime preservation | PASS | regression tests |
+| Receiver input metadata checks | PASS | regression tests |
+| Absolute fee non-decrease | PASS | regression tests |
+| Payment non-decrease | PASS | regression tests |
+| Sender output protection | PASS | regression tests |
+| Explicit fee-contribution cap | PASS | regression tests |
+| Strict value conservation profile | PASS | transaction balance + regression tests |
+| Identifier/amount redaction | PASS | regression tests |
+| Phase 4 CI | PASS (internal engineering) | workflow run `37468248558` |
+| Real WAM PSBT adapter | NOT STARTED | separate future gate |
+| BIP-78 wire transport | NOT STARTED | separate future gate |
+| BIP-77 async transport | NOT STARTED | separate future gate |
+| Production readiness | NOT CLAIMED | out of scope |
 
-## Boundary
+## Current claim
 
-Phase 4 v0.1 is a normalized sender-side policy model.
+`PHASE 4 PAYJOIN SAFETY v0.1 — INTERNAL ENGINEERING PASS`
 
-It does not parse a real PSBT, communicate over a network, sign, or broadcast.
+This establishes only the normalized sender-side safety policy.
+
+It does not establish BIP-78/BIP-77 wire compatibility, real WAM PSBT parsing, or production PayJoin readiness.
