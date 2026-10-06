@@ -64,6 +64,7 @@ class SignRequest:
     input_count: int
     outputs: tuple[TransactionOutput, ...]
     fee_atoms: int
+    wallet_input_atoms: int | None = None
     warning_codes: tuple[str, ...] = ()
 
     def validate_shape(self) -> None:
@@ -81,6 +82,11 @@ class SignRequest:
             output.validate()
         if type(self.fee_atoms) is not int or not 0 <= self.fee_atoms <= 1_000_000:
             raise ValueError("FEE")
+        if self.wallet_input_atoms is not None and (
+            type(self.wallet_input_atoms) is not int
+            or not 1 <= self.wallet_input_atoms <= MAX_MONEY
+        ):
+            raise ValueError("WALLET_INPUT_AMOUNT")
         if len(set(self.warning_codes)) != len(self.warning_codes):
             raise ValueError("DUPLICATE_WARNING")
         if any(not isinstance(w, str) or not 1 <= len(w) <= 64 for w in self.warning_codes):
@@ -92,6 +98,8 @@ class Approval:
     intents: tuple[PaymentIntent, ...]
     max_fee_atoms: int
     allow_cluster_merge: bool = False
+    allow_payjoin: bool = False
+    allow_payment_increase: bool = False
 
     def validate(self) -> None:
         if not self.intents or len(self.intents) > 128:
@@ -100,8 +108,15 @@ class Approval:
             intent.validate()
         if type(self.max_fee_atoms) is not int or not 0 <= self.max_fee_atoms <= 1_000_000:
             raise ValueError("APPROVAL_FEE")
-        if type(self.allow_cluster_merge) is not bool:
-            raise ValueError("APPROVAL_CLUSTER_MERGE")
+        for value in (
+            self.allow_cluster_merge,
+            self.allow_payjoin,
+            self.allow_payment_increase,
+        ):
+            if type(value) is not bool:
+                raise ValueError("APPROVAL_FLAGS")
+        if self.allow_payment_increase and not self.allow_payjoin:
+            raise ValueError("PAYMENT_INCREASE_REQUIRES_PAYJOIN_APPROVAL")
 
 
 @dataclass(frozen=True)
