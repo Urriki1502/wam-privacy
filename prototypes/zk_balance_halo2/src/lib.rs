@@ -17,9 +17,7 @@
 use halo2_proofs::{
     circuit::{Layouter, SimpleFloorPlanner, Value},
     pasta::Fp,
-    plonk::{
-        Advice, Circuit, Column, ConstraintSystem, Error, Expression, Selector,
-    },
+    plonk::{Advice, Circuit, Column, ConstraintSystem, Error, Expression, Selector},
     poly::Rotation,
 };
 
@@ -210,9 +208,7 @@ impl Circuit<Fp> for BalanceCircuit {
                             )?;
                             config.range_selector.enable(&mut region, start + i)?;
                         } else {
-                            config
-                                .range_final_selector
-                                .enable(&mut region, start + i)?;
+                            config.range_final_selector.enable(&mut region, start + i)?;
                         }
                     }
 
