@@ -1,19 +1,12 @@
 use halo2_proofs::{dev::MockProver, pasta::Fp};
-use wam_privacy_halo2_prototype::anchor::{
-    merkle_root, AnchorCircuit, TREE_DEPTH,
-};
+use wam_privacy_halo2_prototype::anchor::{merkle_root, AnchorCircuit, TREE_DEPTH};
 
 const K: u32 = 12;
 
 fn fixture() -> AnchorCircuit {
     AnchorCircuit {
         leaf: Fp::from(101),
-        siblings: [
-            Fp::from(201),
-            Fp::from(202),
-            Fp::from(203),
-            Fp::from(204),
-        ],
+        siblings: [Fp::from(201), Fp::from(202), Fp::from(203), Fp::from(204)],
         directions: [false, true, false, true],
     }
 }
@@ -73,12 +66,7 @@ fn tampered_direction_bit_is_rejected_against_original_anchor() {
 fn all_left_path_is_supported() {
     let circuit = AnchorCircuit {
         leaf: Fp::from(11),
-        siblings: [
-            Fp::from(12),
-            Fp::from(13),
-            Fp::from(14),
-            Fp::from(15),
-        ],
+        siblings: [Fp::from(12), Fp::from(13), Fp::from(14), Fp::from(15)],
         directions: [false; TREE_DEPTH],
     };
     assert_pass(circuit.clone(), circuit.root());
@@ -88,12 +76,7 @@ fn all_left_path_is_supported() {
 fn all_right_path_is_supported() {
     let circuit = AnchorCircuit {
         leaf: Fp::from(21),
-        siblings: [
-            Fp::from(22),
-            Fp::from(23),
-            Fp::from(24),
-            Fp::from(25),
-        ],
+        siblings: [Fp::from(22), Fp::from(23), Fp::from(24), Fp::from(25)],
         directions: [true; TREE_DEPTH],
     };
     assert_pass(circuit.clone(), circuit.root());
