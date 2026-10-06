@@ -5,7 +5,7 @@
   "wsp": {
     "repository": "Urriki1502/wam-silent-payments",
     "branch": "feat/wsp1-v1.0",
-    "commit": "a8522fee9b6eda285998a5ff4a45d6bc4eb991b3",
+    "commit": "dcf1aecc00a64bfad3151fa202c3e07d47d83e69",
     "package_version": "1.0.0.dev0"
   },
   "wam_core": {
