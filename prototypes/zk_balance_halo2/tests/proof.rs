@@ -1,23 +1,23 @@
 use halo2_proofs::{
     pasta::{EqAffine, Fp},
-    plonk::{
-        create_proof, keygen_pk, keygen_vk, verify_proof, Circuit, SingleVerifier,
-    },
+    plonk::{create_proof, keygen_pk, keygen_vk, verify_proof, Circuit, SingleVerifier},
     poly::commitment::Params,
     transcript::{Blake2bRead, Blake2bWrite, Challenge255},
 };
 use rand_core::OsRng;
 use wam_privacy_halo2_prototype::{
-    anchor::AnchorCircuit,
-    nullifier::NullifierCircuit,
-    BalanceCircuit,
+    anchor::AnchorCircuit, nullifier::NullifierCircuit, BalanceCircuit,
 };
 
 fn prove<C: Circuit<Fp> + Clone>(
     k: u32,
     circuit: C,
     instance_columns: &[&[Fp]],
-) -> (Params<EqAffine>, halo2_proofs::plonk::ProvingKey<EqAffine>, Vec<u8>) {
+) -> (
+    Params<EqAffine>,
+    halo2_proofs::plonk::ProvingKey<EqAffine>,
+    Vec<u8>,
+) {
     let params: Params<EqAffine> = Params::new(k);
     let vk = keygen_vk(&params, &circuit).expect("verification key generation");
     let pk = keygen_pk(&params, vk, &circuit).expect("proving key generation");
@@ -75,12 +75,7 @@ fn real_balance_proof_creates_and_verifies() {
 fn real_anchor_proof_verifies_and_rejects_wrong_public_root() {
     let circuit = AnchorCircuit {
         leaf: Fp::from(101),
-        siblings: [
-            Fp::from(201),
-            Fp::from(202),
-            Fp::from(203),
-            Fp::from(204),
-        ],
+        siblings: [Fp::from(201), Fp::from(202), Fp::from(203), Fp::from(204)],
         directions: [false, true, false, true],
     };
     let root = circuit.root();
