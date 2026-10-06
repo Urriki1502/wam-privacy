@@ -22,7 +22,9 @@ use halo2_gadgets::poseidon::{
 use halo2_proofs::{
     circuit::{AssignedCell, Layouter, SimpleFloorPlanner, Value},
     pasta::Fp,
-    plonk::{Advice, Circuit, Column, ConstraintSystem, Error, Expression, Fixed, Instance, Selector},
+    plonk::{
+        Advice, Circuit, Column, ConstraintSystem, Error, Expression, Fixed, Instance, Selector,
+    },
     poly::Rotation,
 };
 
@@ -163,8 +165,7 @@ impl Circuit<Fp> for ActionCircuit {
                 s.clone() * bit.clone() * (bit.clone() - one),
                 s.clone()
                     * (left_v
-                        - (current.clone()
-                            + bit.clone() * (sibling_v.clone() - current.clone()))),
+                        - (current.clone() + bit.clone() * (sibling_v.clone() - current.clone()))),
                 s * (right_v - (sibling_v.clone() + bit * (current - sibling_v))),
             ]
         });
@@ -207,8 +208,8 @@ impl Circuit<Fp> for ActionCircuit {
         config: Self::Config,
         mut layouter: impl Layouter<Fp>,
     ) -> Result<(), Error> {
-        let (note_identity, spend_secret, authority_domain, nullifier_domain) =
-            layouter.assign_region(
+        let (note_identity, spend_secret, authority_domain, nullifier_domain) = layouter
+            .assign_region(
                 || "load integrated action witnesses",
                 |mut region| {
                     let note_identity = region.assign_advice(
@@ -259,12 +260,7 @@ impl Circuit<Fp> for ActionCircuit {
                 |mut region| {
                     config.select.enable(&mut region, 0)?;
 
-                    current.copy_advice(
-                        || "current node",
-                        &mut region,
-                        config.witness,
-                        0,
-                    )?;
+                    current.copy_advice(|| "current node", &mut region, config.witness, 0)?;
                     region.assign_advice(
                         || "sibling node",
                         config.sibling,
