@@ -1,0 +1,46 @@
+name: Phase 1 - WAM Core drift gate
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  core-drift:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout wam-privacy
+        uses: actions/checkout@v4
+        with:
+          path: privacy
+
+      - name: Checkout pinned WAM Core target
+        uses: actions/checkout@v4
+        with:
+          repository: wamcoin-core-dev/wam-coin
+          ref: 260bc468e5adffea7ce68d8f97fac3e27e4c50b2
+          fetch-depth: 0
+          path: core
+
+      - name: Qualification harness syntax
+        run: |
+          python3 -m py_compile privacy/scripts/classify_core_delta.py
+          bash -n privacy/scripts/run_phase1_local.sh
+
+      - name: Classify source drift
+        run: |
+          python3 privacy/scripts/classify_core_delta.py \
+            --repo core \
+            --baseline 8a3f4fe4f1d804c378f795d4cc281ec5125f75f3 \
+            --target 260bc468e5adffea7ce68d8f97fac3e27e4c50b2 \
+            --output privacy/reports/core-drift.json
+
+      - name: Upload drift evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: phase1-core-drift
+          path: privacy/reports/core-drift.json
+          if-no-files-found: error
