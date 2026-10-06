@@ -123,11 +123,11 @@ class ShieldedStateModelTests(unittest.TestCase):
         n = note(123_456, 1, 2, 3)
         self.assertEqual(
             note_commitment(n).hex(),
-            "REPLACE_COMMITMENT",
+            "e8dc36fe5895fcfa3baf6866ace516e5e59e7178d34444c376c54afd7a77bb57",
         )
         self.assertEqual(
             nullifier(n, b(9)).hex(),
-            "REPLACE_NULLIFIER",
+            "32268f50b091f4e4a8f1e4ed2de7e2da7e2dc24caa1dfc7cb64c4ae1157381be",
         )
 
     def test_state_replay_with_same_output_is_rejected(self):
