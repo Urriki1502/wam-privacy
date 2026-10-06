@@ -48,6 +48,7 @@ See [docs/EXISTING-ASSETS.md](docs/EXISTING-ASSETS.md) and [docs/WAM-CORE-COMPAT
 | Phase 6 — Stack integration contract | **INTERNAL ENGINEERING PASS** |
 | Phase 7 — Shielded state model | **INTERNAL ENGINEERING PASS** |
 | Phase 8 — Isolated ZK prototype | Stages A/B/B2/C/D/E/F **INTERNAL ENGINEERING PASS**; real proofs + Phase 7/8 semantic differential bridge verified |
+| Phase 9A — Integrated anchored-spend action | **INTERNAL ENGINEERING PASS**; one note-identity cell binds anchor + authority + nullifier in one circuit |
 
 An internal engineering PASS is not a production-readiness, anonymity, audit, or mainnet claim.
 
