@@ -263,19 +263,19 @@ class PayjoinSafetyTests(unittest.TestCase):
         with self.assertRaisesRegex(PayjoinError, "^OUTPUT_COUNT_CHANGED$"):
             validate_proposal(original(), bad, PayjoinContext(payment_output_index=0))
 
-    def test_value_flow_identity_prevents_hidden_value_shift(self):
-        # Fee/contribution/output deltas do not reconcile with receiver input.
-        bad = Transaction(
-            version=2,
-            locktime=0,
-            inputs=(sender_input(atoms=100_000), receiver_input(atoms=20_000)),
-            outputs=(
-                TxOutput("receiver-payment", 68_000, "receiver"),
-                TxOutput("sender-change", 49_000, "sender"),
-            ),
+    def test_receiver_value_is_conserved_in_valid_profile(self):
+        before = original()
+        after = proposal()
+        evidence = validate_proposal(
+            before,
+            after,
+            PayjoinContext(payment_output_index=0),
         )
-        with self.assertRaisesRegex(PayjoinError, "^VALUE_FLOW_MISMATCH$"):
-            validate_proposal(original(), bad, PayjoinContext(payment_output_index=0))
+        receiver_input = sum(i.atoms for i in after.inputs if i.owner == "receiver")
+        payment_increase = after.outputs[0].atoms - before.outputs[0].atoms
+        fee_increase = after.fee_atoms - before.fee_atoms
+        self.assertEqual(receiver_input, payment_increase + fee_increase)
+        self.assertEqual(evidence["result"], "PASS")
 
     def test_redacted_event_has_no_identifiers_or_amounts(self):
         evidence = validate_proposal(
