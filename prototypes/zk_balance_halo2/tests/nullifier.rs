@@ -16,8 +16,7 @@ fn assert_pass(circuit: NullifierCircuit, public: Vec<Fp>) {
 }
 
 fn assert_fail(circuit: NullifierCircuit, public: Vec<Fp>) {
-    let prover =
-        MockProver::run(K, &circuit, vec![public]).expect("mock prover should build");
+    let prover = MockProver::run(K, &circuit, vec![public]).expect("mock prover should build");
     assert!(prover.verify().is_err());
 }
 
