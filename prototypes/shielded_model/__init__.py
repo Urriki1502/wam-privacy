@@ -9,9 +9,13 @@ from .model import (
     Transition,
     TransitionResult,
     apply_transition,
+    can_view,
+    commitment_root,
     note_commitment,
     nullifier,
     spend_key_tag,
+    view_note,
+    view_tag,
 )
 
 __all__ = [
@@ -23,7 +27,11 @@ __all__ = [
     "Transition",
     "TransitionResult",
     "apply_transition",
+    "can_view",
+    "commitment_root",
     "note_commitment",
     "nullifier",
     "spend_key_tag",
+    "view_note",
+    "view_tag",
 ]
