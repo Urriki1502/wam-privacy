@@ -19,7 +19,7 @@ use halo2_gadgets::poseidon::{
     Hash as PoseidonHash, Pow5Chip, Pow5Config,
 };
 use halo2_proofs::{
-    circuit::{AssignedCell, Layouter, SimpleFloorPlanner, Value},
+    circuit::{Layouter, SimpleFloorPlanner, Value},
     pasta::Fp,
     plonk::{Advice, Circuit, Column, ConstraintSystem, Error, Fixed, Instance, Selector},
     poly::Rotation,
