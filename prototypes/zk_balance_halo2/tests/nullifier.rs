@@ -1,7 +1,5 @@
 use halo2_proofs::{dev::MockProver, pasta::Fp};
-use wam_privacy_halo2_prototype::nullifier::{
-    authority_tag, nullifier, NullifierCircuit,
-};
+use wam_privacy_halo2_prototype::nullifier::{authority_tag, nullifier, NullifierCircuit};
 
 const K: u32 = 10;
 
@@ -13,8 +11,7 @@ fn fixture() -> NullifierCircuit {
 }
 
 fn assert_pass(circuit: NullifierCircuit, public: Vec<Fp>) {
-    let prover =
-        MockProver::run(K, &circuit, vec![public]).expect("mock prover should build");
+    let prover = MockProver::run(K, &circuit, vec![public]).expect("mock prover should build");
     prover.assert_satisfied();
 }
 
