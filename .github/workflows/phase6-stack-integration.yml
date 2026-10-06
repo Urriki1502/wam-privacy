@@ -1,0 +1,30 @@
+name: Phase 6 - Privacy stack integration
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  stack-integration:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Compile integration contract
+        run: |
+          python -m py_compile             prototypes/privacy_stack/__init__.py             prototypes/privacy_stack/contract.py             prototypes/signer_abstraction/model.py             prototypes/signer_abstraction/provider.py             tests/test_phase6_privacy_stack.py
+
+      - name: Run integration tests
+        run: |
+          python -m unittest -v             tests/test_phase3_signer_abstraction.py             tests/test_phase6_privacy_stack.py

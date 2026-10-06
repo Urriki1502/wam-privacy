@@ -6,7 +6,7 @@ not perform cryptographic signing and must never be treated as a WAM signature.
 
 from __future__ import annotations
 
-from collections import Counter
+from collections import Counter, defaultdict
 from typing import Protocol, runtime_checkable
 
 from .model import Approval, SignedResult, SignRequest, SignerCapabilities, SignerPolicy
@@ -29,6 +29,7 @@ class SigningProvider(Protocol):
 KNOWN_WARNINGS = {
     "CHANGE_CREATED",
     "CLUSTER_MERGE",
+    "PAYJOIN_PROPOSAL",
 }
 
 
@@ -42,6 +43,41 @@ def _payments(request: SignRequest) -> Counter[tuple[str, int]]:
 
 def _approved(approval: Approval) -> Counter[tuple[str, int]]:
     return Counter((i.destination, i.atoms) for i in approval.intents)
+
+
+def _payment_increase_matches(request: SignRequest, approval: Approval) -> bool:
+    """Require identical destination multiplicity and no payment decrease."""
+
+    actual: dict[str, list[int]] = defaultdict(list)
+    intended: dict[str, list[int]] = defaultdict(list)
+    for output in request.outputs:
+        if output.role == "payment":
+            actual[output.destination].append(output.atoms)
+    for intent in approval.intents:
+        intended[intent.destination].append(intent.atoms)
+
+    if set(actual) != set(intended):
+        return False
+    for destination in intended:
+        a = sorted(actual[destination])
+        b = sorted(intended[destination])
+        if len(a) != len(b) or any(x < y for x, y in zip(a, b)):
+            return False
+    return True
+
+
+def _sender_debit(request: SignRequest) -> int:
+    if request.wallet_input_atoms is None:
+        raise ProviderError("SENDER_DEBIT_UNKNOWN")
+    change = sum(
+        output.atoms
+        for output in request.outputs
+        if output.role == "change" and output.wallet_owned
+    )
+    debit = request.wallet_input_atoms - change
+    if debit < 0:
+        raise ProviderError("SENDER_DEBIT_INVALID")
+    return debit
 
 
 def _validate_request(
@@ -66,14 +102,25 @@ def _validate_request(
         raise ProviderError("INPUT_POLICY")
     if len(request.outputs) > policy.max_outputs:
         raise ProviderError("OUTPUT_POLICY")
-    if request.fee_atoms > min(approval.max_fee_atoms, policy.hard_max_fee_atoms):
-        raise ProviderError("FEE_NOT_APPROVED")
 
     unknown = set(request.warning_codes) - KNOWN_WARNINGS
     if unknown:
         raise ProviderError("UNKNOWN_WARNING")
+
+    payjoin = "PAYJOIN_PROPOSAL" in request.warning_codes
+    if payjoin and not approval.allow_payjoin:
+        raise ProviderError("PAYJOIN_NOT_APPROVED")
     if "CLUSTER_MERGE" in request.warning_codes and not approval.allow_cluster_merge:
         raise ProviderError("CLUSTER_MERGE_NOT_APPROVED")
+
+    # Total transaction fee always remains bounded by signer hard policy.
+    if request.fee_atoms > policy.hard_max_fee_atoms:
+        raise ProviderError("FEE_NOT_APPROVED")
+    # Outside PayJoin, user max_fee directly caps transaction fee. In PayJoin,
+    # receiver inputs may fund additional total fee, so the user's economic cap
+    # is enforced through sender debit below.
+    if not payjoin and request.fee_atoms > approval.max_fee_atoms:
+        raise ProviderError("FEE_NOT_APPROVED")
 
     change_outputs = [o for o in request.outputs if o.role == "change"]
     if len(change_outputs) > 1:
@@ -81,8 +128,18 @@ def _validate_request(
     if bool(change_outputs) != ("CHANGE_CREATED" in request.warning_codes):
         raise ProviderError("CHANGE_WARNING_MISMATCH")
 
-    if _payments(request) != _approved(approval):
-        raise ProviderError("PAYMENT_INTENT_MISMATCH")
+    exact = _payments(request) == _approved(approval)
+    if not exact:
+        if not (payjoin and approval.allow_payment_increase):
+            raise ProviderError("PAYMENT_INTENT_MISMATCH")
+        if not _payment_increase_matches(request, approval):
+            raise ProviderError("PAYMENT_INTENT_MISMATCH")
+
+    if payjoin:
+        debit = _sender_debit(request)
+        sender_cap = sum(i.atoms for i in approval.intents) + approval.max_fee_atoms
+        if debit > sender_cap:
+            raise ProviderError("SENDER_DEBIT_EXCEEDED")
 
 
 class SignerGate:
@@ -103,7 +160,7 @@ class SignerGate:
 
         try:
             result = self.provider.sign(request)
-        except Exception as exc:
+        except Exception:
             # Provider failures are retryable because the request has not been
             # marked completed. Do not leak provider exception details.
             raise ProviderError("PROVIDER_FAILED") from None
