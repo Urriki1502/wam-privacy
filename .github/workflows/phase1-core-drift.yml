@@ -24,6 +24,11 @@ jobs:
           fetch-depth: 0
           path: core
 
+      - name: Qualification harness syntax
+        run: |
+          python3 -m py_compile privacy/scripts/classify_core_delta.py
+          bash -n privacy/scripts/run_phase1_local.sh
+
       - name: Classify source drift
         run: |
           python3 privacy/scripts/classify_core_delta.py \
