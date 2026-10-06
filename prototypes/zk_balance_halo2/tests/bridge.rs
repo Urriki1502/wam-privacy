@@ -107,7 +107,10 @@ fn phase7_relational_properties_have_phase8_equivalents() {
     // Same authority, different notes: nullifiers must remain note-bound.
     let secret = Fp::from(777);
     assert_eq!(authority_tag(secret), authority_tag(secret));
-    assert_ne!(nullifier(secret, Fp::from(1001)), nullifier(secret, Fp::from(1002)));
+    assert_ne!(
+        nullifier(secret, Fp::from(1001)),
+        nullifier(secret, Fp::from(1002))
+    );
 
     // Membership/root sensitivity: changing the circuit-native leaf changes
     // the Poseidon root and cannot satisfy the original public anchor.
@@ -134,7 +137,10 @@ fn phase7_relational_properties_have_phase8_equivalents() {
 #[test]
 fn bridge_does_not_claim_hash_byte_compatibility() {
     let oracle = oracle();
-    assert_eq!(oracle.phase7_tree_hash, "domain-separated-sha256-placeholder");
+    assert_eq!(
+        oracle.phase7_tree_hash,
+        "domain-separated-sha256-placeholder"
+    );
     assert_eq!(oracle.phase8_tree_hash, "halo2-poseidon-p128pow5t3");
     assert!(!oracle.properties.root_byte_compatibility_claimed);
 }
