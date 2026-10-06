@@ -176,7 +176,7 @@ impl Circuit<Fp> for AnchorCircuit {
             },
         )?;
 
-        let poseidon = Pow5Chip::construct(config.poseidon.clone());
+        let mut current_value = self.leaf;
 
         for level in 0..TREE_DEPTH {
             let sibling_value = self.siblings[level];
@@ -205,10 +205,10 @@ impl Circuit<Fp> for AnchorCircuit {
                     let left_value = if direction_value {
                         sibling_value
                     } else {
-                        current.value().copied().unwrap_or(Fp::zero())
+                        current_value
                     };
                     let right_value = if direction_value {
-                        current.value().copied().unwrap_or(Fp::zero())
+                        current_value
                     } else {
                         sibling_value
                     };
@@ -234,6 +234,7 @@ impl Circuit<Fp> for AnchorCircuit {
                 },
             )?;
 
+            let poseidon = Pow5Chip::construct(config.poseidon.clone());
             current = PoseidonHash::<
                 Fp,
                 Pow5Chip<Fp, WIDTH, RATE>,
@@ -241,11 +242,17 @@ impl Circuit<Fp> for AnchorCircuit {
                 ConstantLength<HASH_INPUTS>,
                 WIDTH,
                 RATE,
-            >::init(poseidon.clone(), layouter.namespace(|| format!("poseidon init {level}")))?
+            >::init(poseidon, layouter.namespace(|| format!("poseidon init {level}")))?
             .hash(
                 layouter.namespace(|| format!("poseidon parent {level}")),
                 [left_cell, right_cell],
             )?;
+
+            current_value = if direction_value {
+                poseidon_pair(sibling_value, current_value)
+            } else {
+                poseidon_pair(current_value, sibling_value)
+            };
         }
 
         layouter.constrain_instance(current.cell(), config.instance, 0)
