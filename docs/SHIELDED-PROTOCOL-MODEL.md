@@ -14,7 +14,8 @@ A shielded protocol can hide transaction details and still be unsafe if its stat
 - duplicate commitments;
 - shielded value to be created without transparent input;
 - more transparent value to leave than the pool contains;
-- ambiguous protocol-version interpretation.
+- ambiguous protocol-version interpretation;
+- viewing authority to silently become spending authority.
 
 Phase 7 therefore makes those rules executable before any Halo 2 prototype is attempted.
 
@@ -25,13 +26,13 @@ Phase 7 therefore makes those rules executable before any Halo 2 prototype is at
 The model carries:
 
 - value;
-- recipient tag;
+- recipient/view tag;
 - spend-key tag;
 - rho;
 - random seed;
 - protocol version.
 
-The spend-key tag binds the modeled note to one nullifier authority. This closes the otherwise-invalid state-model path where the same note could be paired with another key to produce a second nullifier.
+The view tag and spend-key tag are deliberately distinct model domains. A valid viewing key can recognize a modeled note but cannot be used as its spend/nullifier authority.
 
 The value is intentionally visible in this model. Confidential values belong to Phase 8 proof-system research.
 
@@ -47,6 +48,12 @@ A deterministic, domain-separated SHA-256 placeholder models one-time spend iden
 
 It is **not** a proposed production nullifier construction.
 
+### Commitment root
+
+The model maintains an append-only commitment list and computes a deterministic placeholder binary-Merkle root. This gives future proof research an explicit state anchor.
+
+The SHA-256 Merkle construction is only a model and is not a proposed production tree/hash primitive.
+
 ### Shielded state
 
 State contains:
@@ -54,6 +61,7 @@ State contains:
 - append-only note commitments;
 - spent nullifiers;
 - total transparent value currently accounted inside the modeled shielded pool;
+- deterministic commitment root;
 - protocol version.
 
 ## Formal value-conservation rule
@@ -89,33 +97,41 @@ These are separate invariants. Both must hold.
 
 Every spent note commitment must already exist in the state.
 
-### SHIELD-INV-02 — Spend-authority binding
+### SHIELD-INV-02 — View/spend separation
+
+A viewing key may recognize its note but is not sufficient to derive a valid nullifier unless it independently equals the bound spend authority.
+
+### SHIELD-INV-03 — Spend-authority binding
 
 The spend/nullifier key must match the authority tag committed into the note.
 
-### SHIELD-INV-03 — Nullifier uniqueness
+### SHIELD-INV-04 — Nullifier uniqueness
 
 A valid nullifier may be accepted once and only once.
 
-### SHIELD-INV-04 — Value conservation
+### SHIELD-INV-05 — Value conservation
 
 No transition may create shielded or transparent value outside the conservation equation.
 
-### SHIELD-INV-05 — Pool solvency
+### SHIELD-INV-06 — Pool solvency
 
 Unshielding cannot drive the modeled shielded pool below zero.
 
-### SHIELD-INV-06 — Commitment uniqueness
+### SHIELD-INV-07 — Commitment uniqueness
 
 A newly created note commitment must not duplicate an existing or same-transition commitment.
 
-### SHIELD-INV-07 — Explicit versioning
+### SHIELD-INV-08 — State anchoring
+
+The ordered commitment set deterministically maps to one model root.
+
+### SHIELD-INV-09 — Explicit versioning
 
 Unknown note/state/transition versions fail closed.
 
-### SHIELD-INV-08 — Deterministic vectors
+### SHIELD-INV-10 — Deterministic vectors
 
-Spend-key tags, model commitments and model nullifiers are fixed so accidental semantic drift is visible in CI.
+View tags, spend-key tags, model commitments, model nullifiers and roots are fixed so accidental semantic drift is visible in CI.
 
 ## Relationship to Zcash Orchard / Halo 2
 
@@ -123,8 +139,9 @@ Orchard and Halo 2 remain research references for later proof-system design, esp
 
 - note commitments;
 - nullifiers;
-- viewing capabilities;
+- incoming viewing capabilities;
 - action/value balance;
+- commitment-tree anchors;
 - proof verification;
 - upgrade discipline.
 
@@ -136,7 +153,7 @@ A Phase 7 PASS does not mean:
 
 - amounts are confidential;
 - recipients are hidden;
-- the placeholder hashes are cryptographically suitable commitment/nullifier primitives;
+- the placeholder hashes are cryptographically suitable commitment/nullifier/tree primitives;
 - a zero-knowledge circuit exists;
 - a proving system has been audited;
 - WAM Core can activate a shielded pool.
