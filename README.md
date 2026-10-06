@@ -47,7 +47,7 @@ See [docs/EXISTING-ASSETS.md](docs/EXISTING-ASSETS.md) and [docs/WAM-CORE-COMPAT
 | Phase 5 — Network privacy policy | **INTERNAL ENGINEERING PASS** |
 | Phase 6 — Stack integration contract | **INTERNAL ENGINEERING PASS** |
 | Phase 7 — Shielded state model | **INTERNAL ENGINEERING PASS** |
-| Phase 8 — Isolated ZK prototype | not started |
+| Phase 8 — Isolated ZK prototype | Stages A/B/B2/C **INTERNAL ENGINEERING PASS**; Phase 8 **IN PROGRESS** |
 
 An internal engineering PASS is not a production-readiness, anonymity, audit, or mainnet claim.
 
@@ -99,6 +99,8 @@ An internal engineering PASS is not a production-readiness, anonymity, audit, or
 - [docs/SHIELDED-PROTOCOL-MODEL.md](docs/SHIELDED-PROTOCOL-MODEL.md) — Phase 7 shielded state semantics.
 - [docs/SHIELDED-REVIEW-PLAN.md](docs/SHIELDED-REVIEW-PLAN.md) — external review gates for shielded work.
 - [qualification/PHASE7-STATUS.md](qualification/PHASE7-STATUS.md) — Phase 7 qualification status.
+- [docs/ZK-PROTOTYPE.md](docs/ZK-PROTOTYPE.md) — Phase 8 Halo2 prototype stages and non-claims.
+- [qualification/PHASE8-STATUS.md](qualification/PHASE8-STATUS.md) — Phase 8 internal qualification status.
 
 ## Development rule
 

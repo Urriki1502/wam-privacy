@@ -16,6 +16,8 @@
 //! - note encryption / viewing semantics;
 //! - production proof-system integration.
 
+pub mod anchor;
+
 use halo2_proofs::{
     circuit::{Layouter, SimpleFloorPlanner, Value},
     pasta::Fp,
