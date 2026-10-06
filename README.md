@@ -35,6 +35,20 @@ Therefore this repository does **not** restart WSP-1 from zero. Its first implem
 
 See [docs/EXISTING-ASSETS.md](docs/EXISTING-ASSETS.md) and [docs/WAM-CORE-COMPATIBILITY.md](docs/WAM-CORE-COMPATIBILITY.md).
 
+## Current engineering status
+
+| Phase | Status |
+| --- | --- |
+| Phase 0 — Architecture / threat model | **MERGED** |
+| Phase 1 — WSP-1 adoption / current-Core requalification | static/contract gates **PASS**; macOS runtime Gate C **PENDING** |
+| Phase 2 — Privacy-aware wallet policy | **INTERNAL ENGINEERING PASS** |
+| Phase 3 — Signer abstraction | **INTERNAL ENGINEERING PASS** |
+| Phase 4 — PayJoin | not started |
+| Phase 5 — Network privacy | not started |
+| Phase 7/8 — Shielded / ZK research | not started |
+
+An internal engineering PASS is not a production-readiness, anonymity, audit, or mainnet claim.
+
 ## Initial research tracks
 
 1. **WSP-1 — Silent Payments adoption / requalification**
