@@ -2,8 +2,8 @@
 
 This module is intentionally NOT a privacy implementation and NOT a proof system.
 It models consensus-relevant state transitions that a future shielded proof would
-need to prove: note membership, nullifier uniqueness, value conservation,
-shield/unshield accounting, and protocol versioning.
+need to prove: note membership, spend-authority binding, nullifier uniqueness,
+value conservation, shield/unshield accounting, and protocol versioning.
 
 All hashing here is domain-separated SHA-256 solely to make deterministic test
 vectors. It must not be interpreted as a production note commitment/nullifier
@@ -44,10 +44,16 @@ def _h(domain: bytes, *parts: bytes) -> bytes:
     return sha256(domain + b"".join(parts)).digest()
 
 
+def spend_key_tag(nullifier_key: bytes) -> bytes:
+    nk = _field("NULLIFIER_KEY", nullifier_key, 32)
+    return _h(b"WAM/Shielded/SpendKeyTag/v1\x00", nk)
+
+
 @dataclass(frozen=True)
 class Note:
     value: int
     recipient_tag: bytes
+    spend_key_tag: bytes
     rho: bytes
     rseed: bytes
     version: int = PROTOCOL_VERSION
@@ -59,6 +65,7 @@ class Note:
         if self.value == 0:
             _fail("ZERO_VALUE_NOTE")
         _field("RECIPIENT_TAG", self.recipient_tag, 32)
+        _field("SPEND_KEY_TAG", self.spend_key_tag, 32)
         _field("RHO", self.rho, 32)
         _field("RSEED", self.rseed, 32)
 
@@ -75,6 +82,7 @@ def note_commitment(note: Note) -> bytes:
         ASSET_ID,
         _u64(note.value),
         note.recipient_tag,
+        note.spend_key_tag,
         note.rho,
         note.rseed,
     )
@@ -83,6 +91,8 @@ def note_commitment(note: Note) -> bytes:
 def nullifier(note: Note, nullifier_key: bytes) -> bytes:
     note.validate()
     nk = _field("NULLIFIER_KEY", nullifier_key, 32)
+    if spend_key_tag(nk) != note.spend_key_tag:
+        _fail("SPEND_AUTHORITY_MISMATCH")
     return _h(
         b"WAM/Shielded/Nullifier/v1\x00",
         nk,
