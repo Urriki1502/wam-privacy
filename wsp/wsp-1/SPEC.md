@@ -1,16 +1,36 @@
-# WSP-1 — Static Payment Address Research Specification
+# WSP-1 — Static Payment Address Profile
 
 **Version:** 0.1-draft  
-**Status:** Research only  
-**Reference:** BIP 352 Silent Payments
+**Status:** Research / adoption review  
+**Reference:** BIP 352 Silent Payments  
+**Existing implementation baseline:** `Urriki1502/wam-silent-payments@feat/wsp1-v1.0`
 
 ## 1. Purpose
 
-WSP-1 investigates whether a BIP-352-derived static payment address scheme can be safely adapted to WAM while preserving clear scan/spend authority separation and deterministic wallet recovery.
+WSP-1 defines the WAM profile for a BIP-352-derived static payment address scheme while preserving clear scan/spend authority separation and deterministic wallet recovery.
 
-This document is not yet a claim of wire compatibility with Bitcoin BIP 352.
+A substantial qualification implementation already exists. This repository therefore treats WSP-1 as an **adopt-and-requalify** effort, not a greenfield rewrite.
 
-## 2. Goals
+This document is not yet a claim of mainnet WAM adoption or universal wire compatibility.
+
+## 2. Existing engineering baseline
+
+The existing WSP implementation reports:
+
+- BIP-352 v1.1.1 derivation;
+- official vector coverage;
+- scan secret separated from base spend secret;
+- durable SQLite scanning state;
+- atomic per-block commits;
+- deterministic rollback and recovery;
+- real two-node reorg testing;
+- PSBTv2 offline signing;
+- local integration with WAM Core v0.1.11 on regtest;
+- differential and fuzz qualification evidence.
+
+These results are reusable evidence, but they must be rebound to a current WAM Core revision before new compatibility claims are made.
+
+## 3. Goals
 
 WSP-1 aims to provide:
 
@@ -21,18 +41,18 @@ WSP-1 aims to provide:
 - recoverability from documented wallet secret material;
 - scanner operation without spending authority.
 
-## 3. Non-goals
+## 4. Non-goals
 
-Version 0.1 does not provide:
+WSP-1 does not provide:
 
 - amount confidentiality;
 - sender anonymity;
 - a shielded pool;
 - network-layer anonymity;
-- consensus activation;
+- automatic mainnet activation;
 - custom cryptographic primitives.
 
-## 4. Roles
+## 5. Roles
 
 ### Sender
 
@@ -50,7 +70,7 @@ Records recognized outputs, chain position, protocol version, and rollback infor
 
 Holds or derives spending authority and signs only after independent wallet policy validation.
 
-## 5. Key separation requirement
+## 6. Key separation requirement
 
 The implementation must define distinct scanning and spending capabilities.
 
@@ -60,11 +80,11 @@ The scanner must not require:
 - base spend private key;
 - derived spend private keys.
 
-If WAM primitives make this separation impossible for a BIP-352-derived construction, the incompatibility must be documented before implementation continues.
+The existing qualification build follows this model; requalification must verify that no new integration path violates it.
 
-## 6. Compatibility matrix required before coding
+## 7. Compatibility matrix
 
-The first implementation PR must document WAM Core behavior for:
+WAM Core behavior must be pinned and reviewed for:
 
 - elliptic-curve/key primitives;
 - public-key serialization;
@@ -77,7 +97,7 @@ The first implementation PR must document WAM Core behavior for:
 - block/reorg APIs;
 - RPC chain-consistency guarantees.
 
-Each item must be marked:
+Each item is classified:
 
 - compatible;
 - adaptable;
@@ -86,7 +106,7 @@ Each item must be marked:
 
 Unknown items block production claims.
 
-## 7. Scanner state
+## 8. Scanner state
 
 Scanner state must be reconstructible or explicitly classified as cache-only.
 
@@ -99,7 +119,7 @@ At minimum it should distinguish:
 - derivation metadata required by the wallet;
 - rollback boundary.
 
-## 8. Required failure behavior
+## 9. Required failure behavior
 
 The scanner must fail closed on:
 
@@ -112,7 +132,7 @@ The scanner must fail closed on:
 
 A failure must not be silently converted into "no payment found".
 
-## 9. Reorg behavior
+## 10. Reorg behavior
 
 On a reorganization:
 
@@ -122,9 +142,9 @@ On a reorganization:
 4. scan the replacement canonical branch;
 5. preserve idempotence when blocks are replayed.
 
-## 10. Required test classes
+## 11. Required qualification classes
 
-Before WSP-1 can advance beyond prototype:
+Before current-Core qualification can pass:
 
 - deterministic positive vectors;
 - deterministic negative vectors;
@@ -132,13 +152,14 @@ Before WSP-1 can advance beyond prototype:
 - duplicate block/transaction replay;
 - restart at arbitrary scan boundaries;
 - full rescan equivalence;
-- short and deep synthetic reorgs;
+- short and deep synthetic/isolated reorgs;
 - multiple payments to one static address;
 - multiple wallets scanned against the same chain fixture;
 - scanner-state corruption;
-- unsupported-version handling.
+- unsupported-version handling;
+- current WAM Core integration.
 
-## 11. Security invariants
+## 12. Security invariants
 
 WSP-1 inherits repository invariants and adds:
 
@@ -158,6 +179,18 @@ An unsupported or ambiguous transaction form must not generate a recognized wall
 
 Replay of already processed canonical data must not duplicate wallet ownership state.
 
-## 12. Next specification step
+## 13. Current qualification target
 
-Version 0.2 should be written only after the WAM compatibility matrix is completed against a locked WAM Core commit.
+Current WAM Core head observed during Phase 0:
+
+`wamcoin-core-dev/wam-coin@260bc468e5adffea7ce68d8f97fac3e27e4c50b2`
+
+Previously qualified WSP Core baseline:
+
+`wamcoin-core-dev/wam-coin@8a3f4fe4f1d804c378f795d4cc281ec5125f75f3`
+
+The current head is 41 commits ahead of that baseline. The observed delta does not modify the Core wallet/transaction/consensus source areas used by WSP; it is still subject to qualification reruns before compatibility is promoted.
+
+## 14. Next specification step
+
+Version 0.2 should incorporate the completed current-Core compatibility matrix and recorded qualification evidence.
