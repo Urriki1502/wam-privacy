@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-WSP_EXPECTED="a8522fee9b6eda285998a5ff4a45d6bc4eb991b3"
+WSP_EXPECTED="dcf1aecc00a64bfad3151fa202c3e07d47d83e69"
 CORE_EXPECTED="260bc468e5adffea7ce68d8f97fac3e27e4c50b2"
 
 : "${WSP_DIR:?Set WSP_DIR to the wam-silent-payments checkout}"
