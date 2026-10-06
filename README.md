@@ -43,7 +43,7 @@ See [docs/EXISTING-ASSETS.md](docs/EXISTING-ASSETS.md) and [docs/WAM-CORE-COMPAT
 | Phase 1 — WSP-1 adoption / current-Core requalification | static/contract gates **PASS**; macOS runtime Gate C **PENDING** |
 | Phase 2 — Privacy-aware wallet policy | **INTERNAL ENGINEERING PASS** |
 | Phase 3 — Signer abstraction | **INTERNAL ENGINEERING PASS** |
-| Phase 4 — PayJoin | not started |
+| Phase 4 — PayJoin safety | **INTERNAL ENGINEERING PASS** |
 | Phase 5 — Network privacy | not started |
 | Phase 7/8 — Shielded / ZK research | not started |
 
