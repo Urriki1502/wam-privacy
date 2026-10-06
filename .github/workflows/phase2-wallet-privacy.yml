@@ -1,0 +1,30 @@
+name: Phase 2 - Wallet privacy policy
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  wallet-privacy:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Compile reference implementation
+        run: |
+          python -m py_compile             prototypes/wallet_privacy/__init__.py             prototypes/wallet_privacy/model.py             prototypes/wallet_privacy/policy.py             tests/test_phase2_wallet_privacy.py             tests/test_phase2_wallet_properties.py
+
+      - name: Run wallet privacy tests
+        run: |
+          python -m unittest -v             tests/test_phase2_wallet_privacy.py             tests/test_phase2_wallet_properties.py
