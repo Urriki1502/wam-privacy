@@ -1,0 +1,33 @@
+name: Phase 7 - Shielded state model
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  shielded-model:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Compile Phase 7 model
+        run: |
+          python -m py_compile \
+            prototypes/shielded_model/__init__.py \
+            prototypes/shielded_model/model.py \
+            tests/test_phase7_shielded_model.py
+
+      - name: Run Phase 7 invariant tests
+        run: |
+          python -m unittest -v tests/test_phase7_shielded_model.py
