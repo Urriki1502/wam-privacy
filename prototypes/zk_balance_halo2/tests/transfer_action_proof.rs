@@ -9,7 +9,7 @@ use wam_privacy_halo2_prototype::{
     note_action::authority_tag, transfer_action::TransferActionCircuit,
 };
 
-const K: u32 = 15;
+const K: u32 = 14;
 
 fn fixture() -> TransferActionCircuit {
     TransferActionCircuit {
