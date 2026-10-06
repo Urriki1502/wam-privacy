@@ -1,0 +1,30 @@
+name: Phase 4 - PayJoin safety
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  payjoin-safety:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Compile PayJoin safety model
+        run: |
+          python -m py_compile             prototypes/payjoin_safety/__init__.py             prototypes/payjoin_safety/model.py             prototypes/payjoin_safety/validator.py             tests/test_phase4_payjoin_safety.py
+
+      - name: Run PayJoin safety tests
+        run: |
+          python -m unittest -v tests/test_phase4_payjoin_safety.py
