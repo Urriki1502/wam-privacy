@@ -16,9 +16,7 @@ Status: **PASS (prototype integration)**.
 
 ## Stage B — In-circuit 64-bit amount ranges
 
-Stage B removes reliance on host-side `u64` typing as the only amount bound.
-
-Each amount is copied into an in-circuit little-endian decomposition satisfying:
+Each amount is constrained by a 64-step little-endian decomposition:
 
 ```
 acc_i = bit_i + 2 * acc_(i+1)
@@ -28,17 +26,31 @@ acc_64 = 0
 
 The original balance witness cell is equality-constrained to `acc_0`.
 
-This establishes that every amount used by the conservation equation is a 64-bit field value inside the circuit.
+Status: **PASS (internal circuit tests)**.
 
-### Remaining monetary-range work
+## Stage B2 — Exact WAM monetary cap
 
-WAM's exact monetary cap is lower than `2^64 - 1`. Stage B therefore blocks field-wraparound ambiguity but does **not** yet prove:
+The circuit now additionally constrains every amount witness to:
 
 ```
-amount <= 22,000,000 * 100,000,000
+0 <= amount <= 22,000,000 * 100,000,000 atoms
 ```
 
-An exact monetary-cap comparator remains required before any production-oriented claim.
+For each amount it witnesses a non-negative 64-bit `slack` and enforces:
+
+```
+amount + slack = MAX_WAM_ATOMS
+```
+
+Both `amount` and `slack` are independently range-constrained inside the circuit.
+
+This prevents a field element larger than WAM's monetary domain from passing merely because it is representable as a 64-bit integer.
+
+Boundary tests include:
+
+- exactly `MAX_WAM_ATOMS` — accepted;
+- `MAX_WAM_ATOMS + 1` — rejected;
+- `u64::MAX` — rejected.
 
 ## Planned Phase 8 stages
 
@@ -63,6 +75,6 @@ Cross-check accepted/rejected transitions between:
 
 ## Status
 
-`PHASE 8-B — IN PROGRESS`
+`PHASE 8-B2 — IN PROGRESS`
 
 No production, anonymity, audit, or mainnet claim is implied.
