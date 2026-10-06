@@ -11,6 +11,7 @@ from .model import (
     apply_transition,
     note_commitment,
     nullifier,
+    spend_key_tag,
 )
 
 __all__ = [
@@ -24,4 +25,5 @@ __all__ = [
     "apply_transition",
     "note_commitment",
     "nullifier",
+    "spend_key_tag",
 ]
