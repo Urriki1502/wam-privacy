@@ -3,12 +3,8 @@ use halo2_proofs::pasta::Fp;
 use wam_privacy_halo2_prototype::{
     anchor::merkle_root,
     note_action::note_identity,
-    note_encryption::{
-        encrypt_note, NoteAad, NotePlaintext, ShieldedKeyBundle,
-    },
-    wallet_state::{
-        ShieldedBlock, ShieldedOutputRecord, WalletScanner, WalletStateError,
-    },
+    note_encryption::{encrypt_note, NoteAad, NotePlaintext, ShieldedKeyBundle},
+    wallet_state::{ShieldedBlock, ShieldedOutputRecord, WalletScanner, WalletStateError},
 };
 
 fn fp_bytes(value: Fp) -> [u8; 32] {
