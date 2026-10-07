@@ -27,9 +27,14 @@ WAMD="$(cd "$(dirname "$WAMD")" && pwd)/$(basename "$WAMD")"
   exit 2
 }
 WSP_DIRTY="$(
-  git -C "$WSP_DIR" status --porcelain --untracked-files=all \
-    | grep -Ev '^\?\? (\.venv-phase1-macos/|reports/phase1-macos/)' \
-    || true
+  git -C "$WSP_DIR" status --porcelain=v1 -z --untracked-files=all \
+    | python3 -c '
+import sys
+entries = [x for x in sys.stdin.buffer.read().split(b"\0") if x]
+allowed = (b"?? .venv-phase1-macos/", b"?? reports/phase1-macos/")
+bad = [x for x in entries if not x.startswith(allowed)]
+sys.stdout.buffer.write(b"\n".join(bad))
+'
 )"
 [[ -z "$WSP_DIRTY" ]] || {
   echo "WSP_DIRTY_TREE" >&2
