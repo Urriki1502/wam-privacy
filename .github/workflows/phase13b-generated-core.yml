@@ -102,9 +102,10 @@ jobs:
       - name: Build experimental daemon and CLI
         working-directory: wam/build/wam-core
         run: |
+          VERIFIER_DIR="$GITHUB_WORKSPACE/privacy/prototypes/zk_balance_halo2/target/release"
           make -C src -j2 wamd wam-cli \
             WAM_PRIVACY_CPPFLAGS=-DENABLE_WAM_PRIVACY_EXPERIMENTAL \
-            WAM_PRIVACY_LIB="$GITHUB_WORKSPACE/privacy/prototypes/zk_balance_halo2/target/release/libwam_privacy_halo2_prototype.so"
+            WAM_PRIVACY_LIB="-L$VERIFIER_DIR -lwam_privacy_halo2_prototype -Wl,-rpath,$VERIFIER_DIR"
 
       - name: Verify verifier library is linked only into daemon
         working-directory: wam/build/wam-core
