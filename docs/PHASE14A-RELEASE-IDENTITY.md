@@ -52,3 +52,19 @@ Phase 14A does not yet claim:
 - production artifact signing.
 
 Those remain later release/audit concerns.
+
+
+## Qualification result
+
+Phase 14A completed successfully on workflow run `37610249058`.
+
+The committed Cargo lock was consumed with `--locked`. Two clean release builds on the same Ubuntu 24.04 runner produced identical static/shared verifier library hashes, and independently generated circuit/VK identities matched.
+
+Durable evidence is recorded in:
+
+- `qualification/PHASE14-STATUS.md`
+- `qualification/phase14a-release-identity.json`
+
+Current claim:
+
+`PHASE 14A REPRODUCIBLE RELEASE IDENTITY — INTERNAL ENGINEERING PASS`
