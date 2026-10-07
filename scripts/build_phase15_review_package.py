@@ -32,6 +32,9 @@ REQUIRED = [
     "docs/PHASE14D-FINAL-HARDENING.md",
     "qualification/PHASE14-STATUS.md",
     "qualification/PHASE15-STATUS.md",
+    "reviews/PHASE15C-STATE-MACHINE-REVIEW.md",
+    "reviews/PHASE15D-CRYPTO-CIRCUIT-REVIEW.md",
+    "reviews/FINDINGS-LEDGER.md",
     "prototypes/zk_balance_halo2/Cargo.lock",
     "prototypes/zk_balance_halo2/Cargo.toml",
     "prototypes/zk_balance_halo2/rust-toolchain.toml",
@@ -56,6 +59,7 @@ ALLOWED_AFTER_BASELINE = (
     "README.md",
     "scripts/build_phase15_review_package.py",
     "scripts/run_phase15",
+    "reviews/",
 )
 
 
