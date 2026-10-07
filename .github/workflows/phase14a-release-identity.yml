@@ -1,0 +1,42 @@
+name: Phase 14A - Reproducible release identity
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  resolve-release-identity:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          path: repo
+
+      - name: Set up Rust 1.88
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: "1.88.0"
+
+      - name: Resolve exact Cargo dependency graph
+        working-directory: repo/prototypes/zk_balance_halo2
+        run: |
+          cargo generate-lockfile
+          cargo metadata --locked --format-version 1 >/tmp/wam-privacy-cargo-metadata.json
+          sha256sum Cargo.toml Cargo.lock rust-toolchain.toml
+          echo "WAM_CARGO_LOCK_BASE64_BEGIN"
+          base64 -w0 Cargo.lock
+          echo
+          echo "WAM_CARGO_LOCK_BASE64_END"
+
+      - name: Upload generated lockfile bootstrap
+        uses: actions/upload-artifact@v4
+        with:
+          name: phase14a-cargo-lock-bootstrap
+          path: repo/prototypes/zk_balance_halo2/Cargo.lock
+          if-no-files-found: error
