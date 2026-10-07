@@ -1,6 +1,6 @@
 # Phase 10B — Fixed 2×2 Halo2 Bundle
 
-**Status:** qualification candidate.
+**Status:** internal engineering PASS.
 
 Phase 10B lifts the Phase 10A bundle semantics into one fixed-shape Halo2 relation.
 
@@ -41,7 +41,7 @@ The circuit proves:
 
 ## Fixed-shape reason
 
-A 2×2 circuit provides a deterministic proving shape for qualification. It avoids prematurely defining variable-length consensus encoding, padding rules, or recursive aggregation.
+A 2×2 circuit provides a deterministic proving shape for qualification. The synced qualification head passed the dedicated Phase 10B real-proof workflow and all repository regressions. It avoids prematurely defining variable-length consensus encoding, padding rules, or recursive aggregation.
 
 ## Boundary
 
