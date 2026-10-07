@@ -172,14 +172,13 @@ impl HardenedBundleEnvelope {
     }
 }
 
-pub fn verify_hardened_bundle_envelope_and_decode(
-    params: &Params<EqAffine>,
-    vk: &VerifyingKey<EqAffine>,
+pub fn precheck_hardened_bundle_envelope(
+    expected_vk_id: [u8; VK_ID_BYTES],
     expected_context: &ProofContext,
     encoded: &[u8],
 ) -> Result<HardenedBundleEnvelope, HardenedEnvelopeError> {
     let envelope = HardenedBundleEnvelope::decode(encoded)?;
-    if envelope.vk_id != vk_identifier(vk) {
+    if envelope.vk_id != expected_vk_id {
         return Err(HardenedEnvelopeError::VkIdMismatch);
     }
     if envelope.public_inputs[8] != expected_context.digest() {
@@ -191,6 +190,17 @@ pub fn verify_hardened_bundle_envelope_and_decode(
     {
         return Err(HardenedEnvelopeError::TransparentBalanceMismatch);
     }
+    Ok(envelope)
+}
+
+pub fn verify_hardened_bundle_envelope_and_decode(
+    params: &Params<EqAffine>,
+    vk: &VerifyingKey<EqAffine>,
+    expected_context: &ProofContext,
+    encoded: &[u8],
+) -> Result<HardenedBundleEnvelope, HardenedEnvelopeError> {
+    let envelope =
+        precheck_hardened_bundle_envelope(vk_identifier(vk), expected_context, encoded)?;
 
     let instance_columns: &[&[Fp]] = &[&envelope.public_inputs];
     let strategy = SingleVerifier::new(params);
