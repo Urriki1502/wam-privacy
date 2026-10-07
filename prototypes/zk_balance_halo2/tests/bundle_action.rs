@@ -140,8 +140,8 @@ fn aggregate_wam_cap_is_enforced() {
 fn zero_shielded_values_are_rejected() {
     let mut zero_input = fixture();
     zero_input.inputs[0].value = 0;
-    zero_input.outputs[0].value -= 50_000;
-    zero_input.outputs[1].value += 50_000;
+    zero_input.outputs[0].value = 20_000;
+    zero_input.outputs[1].value = 25_000;
     reanchor(&mut zero_input);
     let public = zero_input.public_inputs();
     assert_fail(zero_input, public);
