@@ -1,0 +1,54 @@
+name: Phase 13A - Core verifier FFI
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  core-verifier-ffi:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          path: repo
+
+      - name: Set up Rust 1.88
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: "1.88.0"
+          components: rustfmt, clippy
+
+      - name: Format check
+        working-directory: repo/prototypes/zk_balance_halo2
+        run: cargo fmt --check
+
+      - name: Clippy
+        working-directory: repo/prototypes/zk_balance_halo2
+        run: cargo clippy --all-targets -- -D warnings
+
+      - name: Compile C header
+        working-directory: repo/prototypes/zk_balance_halo2
+        run: cc -std=c11 -Wall -Wextra -Werror -Iinclude -c ffi/header_smoke.c -o /tmp/wam_privacy_header_smoke.o
+
+      - name: Test real proof through C ABI
+        working-directory: repo/prototypes/zk_balance_halo2
+        run: cargo test --test ffi_bridge --verbose
+
+      - name: Build shared/static verifier library
+        working-directory: repo/prototypes/zk_balance_halo2
+        run: cargo build --release
+
+      - name: Verify exported ABI symbols
+        working-directory: repo/prototypes/zk_balance_halo2
+        run: |
+          nm -D target/release/libwam_privacy_halo2_prototype.so | grep 'wam_privacy_halo2_abi_version'
+          nm -D target/release/libwam_privacy_halo2_prototype.so | grep 'wam_privacy_halo2_verifier_new'
+          nm -D target/release/libwam_privacy_halo2_prototype.so | grep 'wam_privacy_halo2_verifier_free'
+          nm -D target/release/libwam_privacy_halo2_prototype.so | grep 'wam_privacy_halo2_verifier_vk_id'
+          nm -D target/release/libwam_privacy_halo2_prototype.so | grep 'wam_privacy_halo2_verify_hardened_v1'
