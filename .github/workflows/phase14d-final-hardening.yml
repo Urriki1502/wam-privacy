@@ -1,0 +1,79 @@
+name: Phase 14D - Final internal hardening ledger
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  final-hardening:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          path: repo
+          fetch-depth: 0
+
+      - name: Set up Rust 1.88
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: "1.88.0"
+          components: rustfmt, clippy
+
+      - name: Format check
+        working-directory: repo/prototypes/zk_balance_halo2
+        run: cargo fmt --check
+
+      - name: Clippy
+        working-directory: repo/prototypes/zk_balance_halo2
+        run: cargo clippy --all-targets --locked -- -D warnings
+
+      - name: Upgrade and migration rejection tests
+        working-directory: repo/prototypes/zk_balance_halo2
+        run: cargo test --locked --test phase14d_upgrade --verbose
+
+      - name: Static security boundary inventory
+        run: |
+          python3 repo/scripts/phase14d_static_review.py             repo/reports/phase14d/static-review.json
+
+      - name: Build final Phase 14 ledger
+        run: |
+          python3 repo/scripts/build_phase14d_ledger.py             repo/reports/phase14d/final-ledger.json
+
+      - name: Validate final ledger
+        run: |
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          root = Path("repo/reports/phase14d")
+          static = json.loads((root / "static-review.json").read_text())
+          ledger = json.loads((root / "final-ledger.json").read_text())
+          assert static["result"] == "PASS"
+          assert ledger["phase"] == "14D"
+          assert len(ledger["source_head"]) == 40
+          assert len(ledger["source_tree"]) == 40
+          print("PHASE14D_LEDGER_VALID")
+          PY
+
+      - name: Record toolchain identity
+        run: |
+          {
+            rustc --version --verbose
+            cargo --version
+            python3 --version
+            git --version
+            uname -a
+          } > repo/reports/phase14d/toolchain.txt
+
+      - name: Upload Phase 14D evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: phase14d-final-hardening
+          path: repo/reports/phase14d/
+          if-no-files-found: warn

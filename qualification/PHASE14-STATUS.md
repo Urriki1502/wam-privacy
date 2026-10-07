@@ -6,8 +6,8 @@
 | --- | --- | --- |
 | 14A — reproducible dependency / release identity | **PASS (internal engineering)** | run `37610249058`; locked dependency graph, same-runner double-build artifact hashes and deterministic VK identity PASS |
 | 14B — parser/verifier fuzzing + adversarial corpus | **PASS (internal engineering)** | run `37615083459`; 100k executions/target + real-proof adversarial corpus + full regressions PASS |
-| 14C — proving/verifying performance + memory/resource benchmarks | **UNDER QUALIFICATION** | dedicated fixed-runner proof/verify/RSS/size benchmark |
-| 14D — upgrade/migration/static-review + final evidence ledger | PENDING | requires 14B/14C PASS |
+| 14C — proving/verifying performance + memory/resource benchmarks | **PASS (internal engineering)** | run `37620295551`; proof/verify/RSS/size profile within explicit ceilings |
+| 14D — upgrade/migration/static-review + final evidence ledger | **UNDER QUALIFICATION** | version rejection + static boundary review + deterministic ledger |
 
 ## Phase 14A invariants
 
@@ -20,7 +20,7 @@
 
 ## Current claim
 
-`PHASE 14B INTERNAL ENGINEERING PASS — PHASE 14C PERFORMANCE QUALIFICATION IN PROGRESS`
+`PHASE 14C INTERNAL ENGINEERING PASS — PHASE 14D FINAL HARDENING IN PROGRESS`
 
 No external-audit, production-release, consensus-activation or mainnet claim is implied.
 
@@ -69,3 +69,30 @@ No external-audit, production-release, consensus-activation or mainnet claim is 
 - peak RSS is measured on the already-built benchmark process, not the compiler;
 - benchmark runner/toolchain identity is archived;
 - broad fail-closed ceilings catch pathological performance/resource regressions without pretending CI timing is a production SLA.
+
+
+## Phase 14C evidence
+
+- qualification head: `2f57104d152535a7dda30cdbdc55bab367e7771e`;
+- workflow run: `37620295551`;
+- artifact digest: `sha256:37ed1953b9e7fd120cc287311d245408ad309fb76586e2c95fe6a242dbe54595`;
+- setup / VK+PK: **50,637 ms**;
+- proof generation: **17,369 ms**;
+- verification average (3 rounds): **305 ms**;
+- verification maximum: **306 ms**;
+- proof size: **5,728 bytes**;
+- encoded envelope: **6,061 bytes**;
+- peak RSS: **1,498,028 KiB**;
+- qualification ceilings: **PASS with zero violations**;
+- Phase 1–14B regression workflows on the same head: **PASS**.
+
+## Phase 14D invariants
+
+- legacy Phase 10C and hardened Phase 10D envelopes are never silently cross-decoded;
+- unknown/future format and circuit identifiers fail closed;
+- protocol/network context changes produce distinct context digests;
+- FFI ABI version remains explicit;
+- production-facing boundary files contain no TODO/unimplemented/debug placeholders;
+- Rust unsafe code in the reviewed boundary is confined to the C FFI module and inventory-hashed;
+- Core experimental gate, non-blocking verifier concurrency and panic containment remain machine-checked;
+- final ledger binds source, dependency, circuit/VK and Phase 14 evidence identities.
