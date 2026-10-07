@@ -40,22 +40,24 @@ See [docs/EXISTING-ASSETS.md](docs/EXISTING-ASSETS.md) and [docs/WAM-CORE-COMPAT
 | Phase | Status |
 | --- | --- |
 | Phase 0 — Architecture / threat model | **MERGED** |
-| Phase 1 — WSP-1 adoption / current-Core requalification | **INTERNAL ENGINEERING PASS**; macOS arm64 Gate C + E2E/reorg/interop/regtest verified |
+| Phase 1 — WSP-1 / current-Core requalification | **INTERNAL ENGINEERING PASS** |
 | Phase 2 — Privacy-aware wallet policy | **INTERNAL ENGINEERING PASS** |
 | Phase 3 — Signer abstraction | **INTERNAL ENGINEERING PASS** |
 | Phase 4 — PayJoin safety | **INTERNAL ENGINEERING PASS** |
 | Phase 5 — Network privacy policy | **INTERNAL ENGINEERING PASS** |
 | Phase 6 — Stack integration contract | **INTERNAL ENGINEERING PASS** |
 | Phase 7 — Shielded state model | **INTERNAL ENGINEERING PASS** |
-| Phase 8 — Isolated ZK prototype | Stages A/B/B2/C/D/E/F **INTERNAL ENGINEERING PASS**; real proofs + Phase 7/8 semantic differential bridge verified |
-| Phase 9A — Integrated anchored-spend action | **INTERNAL ENGINEERING PASS**; one note-identity cell binds anchor + authority + nullifier in one circuit |
-| Phase 9B — In-circuit note commitment | **INTERNAL ENGINEERING PASS**; private note fields derive the anchored/nullified identity with WAM cap constraints |
-| Phase 9C — Integrated shielded value action | **INTERNAL ENGINEERING PASS**; one input note → one output note + explicit fee with in-circuit conservation and real-proof tamper rejection |
-| Phase 10A — Executable bundle semantics | **INTERNAL ENGINEERING PASS**; multi-input/output, transparent flow, fee-correct pool accounting and uniqueness invariants verified |
-| Phase 10B — Fixed 2×2 Halo2 bundle | **INTERNAL ENGINEERING PASS**; shared anchor, distinct nullifiers/outputs, aggregate conservation and real-proof tamper rejection |
-| Phase 10C — Canonical serialization / verifier contract | **INTERNAL ENGINEERING PASS**; strict envelope + real-proof verification |
-| Phase 10D — Protocol hardening / context binding | **INTERNAL ENGINEERING PASS**; authority tags private, transparent-flow conservation, context/VK binding verified |
-| Phase 10C — Serialization / verifier contract | **INTERNAL ENGINEERING PASS**; canonical versioned envelope, strict parser and real proof verification |
+| Phase 8 — Isolated Halo2 prototype | **INTERNAL ENGINEERING PASS** |
+| Phase 9A–9C — Integrated shielded action | **INTERNAL ENGINEERING PASS** |
+| Phase 10A–10C — Bundle + serialization | **INTERNAL ENGINEERING PASS** |
+| Phase 10D — Protocol hardening/context binding | **INTERNAL ENGINEERING PASS** |
+| Phase 11 — Key hierarchy + HPKE note encryption | **INTERNAL ENGINEERING PASS** |
+| Phase 12A — Real WAM/WSP adapters | **INTERNAL ENGINEERING PASS** |
+| Phase 12B — Shielded wallet state/recovery | **INTERNAL ENGINEERING PASS** |
+| Phase 13A — Core-facing Halo2 verifier C ABI | **INTERNAL ENGINEERING PASS** |
+| Phase 13B–13D — Core regtest/state/resource integration | **PENDING** |
+| Phase 14 — Release/security hardening | **PENDING** |
+| Phase 15 — Independent review/testnet/handoff | **PENDING** |
 
 An internal engineering PASS is not a production-readiness, anonymity, audit, or mainnet claim.
 
