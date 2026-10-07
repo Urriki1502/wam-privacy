@@ -65,13 +65,6 @@ fn derive_bytes(seed: &[u8; 32], label: &[u8], len: usize) -> Vec<u8> {
     state.finalize().as_bytes().to_vec()
 }
 
-fn derive_fp(seed: &[u8; 32], label: &[u8]) -> Fp {
-    let bytes = derive_bytes(seed, label, 64);
-    let mut wide = [0u8; 64];
-    wide.copy_from_slice(&bytes);
-    Fp::from_uniform_bytes(&wide)
-}
-
 fn fp_to_bytes(value: Fp) -> [u8; 32] {
     let repr = value.to_repr();
     let mut out = [0u8; 32];
@@ -129,7 +122,7 @@ pub struct IncomingViewingKey {
 impl IncomingViewingKey {
     pub fn public_key_bytes(&self) -> Vec<u8> {
         let (_, pk) = view_keypair(&self.ikm);
-        pk.to_bytes().as_ref().to_vec()
+        pk.to_bytes().to_vec()
     }
 
     pub fn recipient_tag(&self) -> Fp {
@@ -159,7 +152,7 @@ pub struct AuditViewingKey {
 impl AuditViewingKey {
     pub fn public_key_bytes(&self) -> Vec<u8> {
         let (_, pk) = view_keypair(&self.ikm);
-        pk.to_bytes().as_ref().to_vec()
+        pk.to_bytes().to_vec()
     }
 
     pub fn decrypt(
@@ -445,7 +438,7 @@ fn seal_to(
     )
     .map_err(|_| NoteCryptoError::HpkeSeal)?;
     Ok(NoteCiphertext {
-        encapped_key: encapped.to_bytes().as_ref().to_vec(),
+        encapped_key: encapped.to_bytes().to_vec(),
         ciphertext,
     })
 }
