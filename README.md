@@ -53,6 +53,8 @@ See [docs/EXISTING-ASSETS.md](docs/EXISTING-ASSETS.md) and [docs/WAM-CORE-COMPAT
 | Phase 9C — Integrated shielded value action | **INTERNAL ENGINEERING PASS**; one input note → one output note + explicit fee with in-circuit conservation and real-proof tamper rejection |
 | Phase 10A — Executable bundle semantics | **INTERNAL ENGINEERING PASS**; multi-input/output, transparent flow, fee-correct pool accounting and uniqueness invariants verified |
 | Phase 10B — Fixed 2×2 Halo2 bundle | **INTERNAL ENGINEERING PASS**; shared anchor, distinct nullifiers/outputs, aggregate conservation and real-proof tamper rejection |
+| Phase 10C — Canonical serialization / verifier contract | **INTERNAL ENGINEERING PASS**; strict envelope + real-proof verification |
+| Phase 10D — Protocol hardening / context binding | **INTERNAL ENGINEERING PASS**; authority tags private, transparent-flow conservation, context/VK binding verified |
 | Phase 10C — Serialization / verifier contract | **INTERNAL ENGINEERING PASS**; canonical versioned envelope, strict parser and real proof verification |
 
 An internal engineering PASS is not a production-readiness, anonymity, audit, or mainnet claim.
