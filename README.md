@@ -40,7 +40,7 @@ See [docs/EXISTING-ASSETS.md](docs/EXISTING-ASSETS.md) and [docs/WAM-CORE-COMPAT
 | Phase | Status |
 | --- | --- |
 | Phase 0 — Architecture / threat model | **MERGED** |
-| Phase 1 — WSP-1 adoption / current-Core requalification | static/contract gates **PASS**; macOS runtime Gate C **PENDING** |
+| Phase 1 — WSP-1 adoption / current-Core requalification | **INTERNAL ENGINEERING PASS**; macOS arm64 Gate C + E2E/reorg/interop/regtest verified |
 | Phase 2 — Privacy-aware wallet policy | **INTERNAL ENGINEERING PASS** |
 | Phase 3 — Signer abstraction | **INTERNAL ENGINEERING PASS** |
 | Phase 4 — PayJoin safety | **INTERNAL ENGINEERING PASS** |
