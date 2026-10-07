@@ -19,9 +19,12 @@
 pub mod action;
 pub mod anchor;
 pub mod bundle_action;
+pub mod context;
+pub mod hardened_bundle;
 pub mod note_action;
 pub mod nullifier;
 pub mod serialization;
+pub mod serialization_v2;
 pub mod transfer_action;
 
 use halo2_proofs::{
