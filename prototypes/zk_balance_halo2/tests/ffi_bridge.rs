@@ -17,9 +17,7 @@ use wam_privacy_halo2_prototype::{
     },
     hardened_bundle::{HardenedBundleCircuit, HardenedBundleInput, HardenedBundleOutput},
     note_action::authority_tag,
-    serialization_v2::{
-        vk_identifier, HardenedBundleEnvelope, PUBLIC_INPUT_COUNT,
-    },
+    serialization_v2::{vk_identifier, HardenedBundleEnvelope, PUBLIC_INPUT_COUNT},
     MAX_WAM_ATOMS,
 };
 
@@ -115,13 +113,8 @@ fn proof_envelope() -> (Vec<u8>, ProofContext, [u8; 32]) {
     .expect("proof");
     let proof = transcript.finalize();
 
-    let envelope =
-        HardenedBundleEnvelope::new(pk.get_vk(), public_array, proof).expect("envelope");
-    (
-        envelope.encode().expect("encode"),
-        context,
-        expected_vk_id,
-    )
+    let envelope = HardenedBundleEnvelope::new(pk.get_vk(), public_array, proof).expect("envelope");
+    (envelope.encode().expect("encode"), context, expected_vk_id)
 }
 
 unsafe fn new_handle() -> *mut WamPrivacyVerifier {
@@ -142,9 +135,7 @@ fn abi_version_and_vk_identity_are_stable() {
 
     let mut actual = [0u8; 32];
     assert_eq!(
-        unsafe {
-            wam_privacy_halo2_verifier_vk_id(handle, actual.as_mut_ptr(), actual.len())
-        },
+        unsafe { wam_privacy_halo2_verifier_vk_id(handle, actual.as_mut_ptr(), actual.len()) },
         FfiStatus::Ok as i32
     );
     assert_eq!(actual, expected_vk_id);
