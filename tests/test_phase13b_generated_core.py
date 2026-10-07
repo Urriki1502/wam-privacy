@@ -70,7 +70,7 @@ class Phase13BGeneratedCoreTests(unittest.TestCase):
             self.assertEqual(rpc.count("WAM-PRIVACY-P13B: experimental verifier RPC"), 1)
             self.assertEqual(rpc.count("WAM-PRIVACY-P13B: register experimental verifier RPC"), 1)
             self.assertIn("#ifdef ENABLE_WAM_PRIVACY_EXPERIMENTAL", rpc)
-            self.assertIn('Params().NetworkIDString() != "regtest"', rpc)
+            self.assertIn("Params().GetChainType() != ChainType::REGTEST", rpc)
             self.assertIn("This RPC is read-only and does not mutate chain or wallet state.", rpc)
 
             self.assertEqual(make.count("  wam/privacy/privacy_verifier.cpp \\"), 1)
