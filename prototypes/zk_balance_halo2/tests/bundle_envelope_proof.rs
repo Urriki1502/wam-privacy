@@ -95,8 +95,7 @@ fn canonical_envelope_verifies_real_phase10b_proof() {
     let proof = transcript.finalize();
 
     let vk_id = [0x5A; 32];
-    let envelope =
-        BundleProofEnvelope::new(vk_id, public_array, proof).expect("valid envelope");
+    let envelope = BundleProofEnvelope::new(vk_id, public_array, proof).expect("valid envelope");
     let encoded = envelope.encode().expect("canonical encoding");
 
     assert_eq!(
