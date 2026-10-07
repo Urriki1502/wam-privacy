@@ -13,7 +13,6 @@ RPC_MARKERS = (
     "WAM-PRIVACY-P13B: register experimental verifier RPC",
 )
 MAKE_MARKERS = (
-    "WAM-PRIVACY-P13B: verifier source",
     "WAM-PRIVACY-P13B: verifier compile gate",
     "WAM-PRIVACY-P13B: verifier link gate",
 )
@@ -47,6 +46,10 @@ def main() -> int:
         require(rpc_text.count(marker) == 1, f"RPC marker count != 1: {marker}")
     for marker in MAKE_MARKERS:
         require(make_text.count(marker) == 1, f"Makefile marker count != 1: {marker}")
+    require(
+        make_text.count("  wam/privacy/privacy_verifier.cpp \\") == 1,
+        "verifier source count != 1",
+    )
 
     require(
         'Params().NetworkIDString() != "regtest"' in rpc_text,
