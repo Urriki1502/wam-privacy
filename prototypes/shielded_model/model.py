@@ -254,13 +254,24 @@ def apply_transition(state: ShieldedState, tx: Transition) -> TransitionResult:
     if any(cm in commitments for cm in new_commitments):
         _fail("COMMITMENT_ALREADY_EXISTS")
 
+    if spent_atoms > state.pool_atoms:
+        _fail("POOL_SPEND_EXCEEDS_BALANCE")
+
     created_atoms = sum(note.value for note in tx.outputs)
     lhs = spent_atoms + tx.transparent_in
     rhs = created_atoms + tx.transparent_out + tx.fee_atoms
     if lhs != rhs:
         _fail("VALUE_CONSERVATION")
 
-    new_pool = state.pool_atoms + tx.transparent_in - tx.transparent_out
+    # Conservation implies the shielded pool changes by the transparent flow
+    # and by any fee paid out of the transition. Keeping fee outside this
+    # accounting would leave phantom value in the modeled pool.
+    new_pool = (
+        state.pool_atoms
+        + tx.transparent_in
+        - tx.transparent_out
+        - tx.fee_atoms
+    )
     if new_pool < 0:
         _fail("POOL_UNDERFLOW")
     _u64(new_pool)

@@ -50,7 +50,7 @@ class ShieldedStateModelTests(unittest.TestCase):
             ),
         )
         self.assertEqual(r2.conservation_lhs, r2.conservation_rhs)
-        self.assertEqual(r2.state.pool_atoms, 75_000)
+        self.assertEqual(r2.state.pool_atoms, 74_000)
         self.assertIn(nullifier(n1, b(9)), r2.state.nullifiers)
 
     def test_view_key_recognizes_note_without_spend_authority(self):
