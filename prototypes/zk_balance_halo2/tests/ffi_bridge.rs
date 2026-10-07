@@ -1,4 +1,4 @@
-use std::ptr;
+use std::{ptr, sync::OnceLock};
 
 use halo2_proofs::{
     pasta::{EqAffine, Fp},
@@ -90,7 +90,10 @@ fn fixture() -> (HardenedBundleCircuit, ProofContext) {
 }
 
 fn proof_envelope() -> (Vec<u8>, ProofContext, [u8; 32]) {
-    let (circuit, context) = fixture();
+    static FIXTURE: OnceLock<(Vec<u8>, ProofContext, [u8; 32])> = OnceLock::new();
+    FIXTURE
+        .get_or_init(|| {
+            let (circuit, context) = fixture();
     let public = circuit.public_inputs();
     let public_array: [Fp; PUBLIC_INPUT_COUNT] =
         public.clone().try_into().expect("nine public inputs");
@@ -113,8 +116,11 @@ fn proof_envelope() -> (Vec<u8>, ProofContext, [u8; 32]) {
     .expect("proof");
     let proof = transcript.finalize();
 
-    let envelope = HardenedBundleEnvelope::new(pk.get_vk(), public_array, proof).expect("envelope");
-    (envelope.encode().expect("encode"), context, expected_vk_id)
+            let envelope =
+                HardenedBundleEnvelope::new(pk.get_vk(), public_array, proof).expect("envelope");
+            (envelope.encode().expect("encode"), context, expected_vk_id)
+        })
+        .clone()
 }
 
 unsafe fn new_handle() -> *mut WamPrivacyVerifier {
