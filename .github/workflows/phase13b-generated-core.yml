@@ -1,0 +1,175 @@
+name: Phase 13B - Generated Core regtest hook
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  patch-contract:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Python syntax
+        run: |
+          python3 -m py_compile integration/core/phase13b/apply_generated_core.py
+          python3 -m py_compile integration/core/phase13b/verify_generated_core.py
+
+      - name: Patcher regression tests
+        run: python3 -m unittest tests.test_phase13b_generated_core -v
+
+      - name: Compile wrapper with experimental feature disabled
+        run: |
+          mkdir -p /tmp/p13b-default/wam/privacy
+          cp integration/core/phase13b/privacy_verifier.h /tmp/p13b-default/wam/privacy/
+          cp integration/core/phase13b/privacy_verifier.cpp /tmp/p13b-default/wam/privacy/
+          c++ -std=c++20 -Wall -Wextra -Werror \
+            -I/tmp/p13b-default \
+            -c /tmp/p13b-default/wam/privacy/privacy_verifier.cpp \
+            -o /tmp/privacy_verifier_default.o
+
+      - name: Compile wrapper with experimental feature enabled
+        run: |
+          mkdir -p /tmp/p13b-exp/wam/privacy
+          cp integration/core/phase13b/privacy_verifier.h /tmp/p13b-exp/wam/privacy/
+          cp integration/core/phase13b/privacy_verifier.cpp /tmp/p13b-exp/wam/privacy/
+          cp prototypes/zk_balance_halo2/include/wam_privacy_halo2.h /tmp/p13b-exp/wam/privacy/
+          c++ -std=c++20 -Wall -Wextra -Werror \
+            -DENABLE_WAM_PRIVACY_EXPERIMENTAL \
+            -I/tmp/p13b-exp \
+            -c /tmp/p13b-exp/wam/privacy/privacy_verifier.cpp \
+            -o /tmp/privacy_verifier_experimental.o
+
+  generated-core:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    steps:
+      - name: Checkout privacy repo
+        uses: actions/checkout@v4
+        with:
+          path: privacy
+
+      - name: Checkout pinned WAM Core repo
+        uses: actions/checkout@v4
+        with:
+          repository: wamcoin-core-dev/wam-coin
+          ref: 260bc468e5adffea7ce68d8f97fac3e27e4c50b2
+          path: wam
+
+      - name: Install Core build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            build-essential libtool autotools-dev automake pkg-config bsdmainutils \
+            cmake libevent-dev libboost-dev libsqlite3-dev
+
+      - name: Set up Rust 1.88
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: "1.88.0"
+
+      - name: Build Phase 13A verifier library
+        working-directory: privacy/prototypes/zk_balance_halo2
+        run: cargo build --release
+
+      - name: Generate pinned WAM Core tree
+        working-directory: wam
+        run: bash scripts/fetch-upstream.sh
+
+      - name: Apply and verify Phase 13B generated-Core hook
+        run: |
+          python3 privacy/integration/core/phase13b/apply_generated_core.py \
+            --tree wam/build/wam-core \
+            --privacy-repo privacy
+          python3 privacy/integration/core/phase13b/verify_generated_core.py \
+            --tree wam/build/wam-core
+
+      - name: Configure generated Core
+        working-directory: wam/build/wam-core
+        run: |
+          ./autogen.sh
+          ./configure --without-gui \
+            --disable-zmq \
+            --disable-tests-fuzz-binary \
+            CPPFLAGS="-I$GITHUB_WORKSPACE/wam/build/randomx/src" \
+            LIBS="$GITHUB_WORKSPACE/wam/build/randomx/build/librandomx.a -lpthread"
+
+      - name: Build experimental daemon and CLI
+        working-directory: wam/build/wam-core
+        run: |
+          make -j2 src/wamd src/wam-cli \
+            WAM_PRIVACY_CPPFLAGS=-DENABLE_WAM_PRIVACY_EXPERIMENTAL \
+            WAM_PRIVACY_LIB="$GITHUB_WORKSPACE/privacy/prototypes/zk_balance_halo2/target/release/libwam_privacy_halo2_prototype.so"
+
+      - name: Verify verifier library is linked only into daemon
+        working-directory: wam/build/wam-core
+        run: |
+          ldd src/wamd | grep 'libwam_privacy_halo2_prototype'
+          if ldd src/wam-cli | grep -q 'libwam_privacy_halo2_prototype'; then
+            echo "wam-cli unexpectedly links the experimental verifier" >&2
+            exit 1
+          fi
+
+      - name: Exercise read-only regtest RPC
+        working-directory: wam/build/wam-core
+        run: |
+          export LD_LIBRARY_PATH="$GITHUB_WORKSPACE/privacy/prototypes/zk_balance_halo2/target/release"
+          DATADIR="$RUNNER_TEMP/p13b-regtest"
+          mkdir -p "$DATADIR"
+          ./src/wamd \
+            -regtest \
+            -datadir="$DATADIR" \
+            -server=1 \
+            -daemonwait \
+            -listen=0 \
+            -rpcuser=p13b \
+            -rpcpassword=p13bpass
+
+          trap './src/wam-cli -regtest -datadir="$DATADIR" -rpcuser=p13b -rpcpassword=p13bpass stop >/dev/null 2>&1 || true' EXIT
+
+          ./src/wam-cli -regtest -datadir="$DATADIR" -rpcuser=p13b -rpcpassword=p13bpass \
+            help verifyshieldedproof | grep 'EXPERIMENTAL / REGTEST ONLY'
+
+          BEFORE="$(./src/wam-cli -regtest -datadir="$DATADIR" -rpcuser=p13b -rpcpassword=p13bpass getblockcount)"
+          OUT="$(./src/wam-cli -regtest -datadir="$DATADIR" -rpcuser=p13b -rpcpassword=p13bpass \
+            verifyshieldedproof 00 \
+            0000000000000000000000000000000000000000000000000000000000000000 \
+            0 0 0)"
+          echo "$OUT"
+          echo "$OUT" | grep '"valid": false'
+          echo "$OUT" | grep '"status": 10'
+          AFTER="$(./src/wam-cli -regtest -datadir="$DATADIR" -rpcuser=p13b -rpcpassword=p13bpass getblockcount)"
+          test "$BEFORE" = "$AFTER"
+
+      - name: Verify testnet runtime rejection
+        working-directory: wam/build/wam-core
+        run: |
+          export LD_LIBRARY_PATH="$GITHUB_WORKSPACE/privacy/prototypes/zk_balance_halo2/target/release"
+          DATADIR="$RUNNER_TEMP/p13b-testnet"
+          mkdir -p "$DATADIR"
+          ./src/wamd \
+            -testnet \
+            -datadir="$DATADIR" \
+            -server=1 \
+            -daemonwait \
+            -listen=0 \
+            -rpcuser=p13b \
+            -rpcpassword=p13bpass
+
+          trap './src/wam-cli -testnet -datadir="$DATADIR" -rpcuser=p13b -rpcpassword=p13bpass stop >/dev/null 2>&1 || true' EXIT
+
+          set +e
+          OUT="$(./src/wam-cli -testnet -datadir="$DATADIR" -rpcuser=p13b -rpcpassword=p13bpass \
+            verifyshieldedproof 00 \
+            0000000000000000000000000000000000000000000000000000000000000000 \
+            0 0 0 2>&1)"
+          RC=$?
+          set -e
+          echo "$OUT"
+          test "$RC" -ne 0
+          echo "$OUT" | grep 'regtest-only'
