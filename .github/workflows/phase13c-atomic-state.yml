@@ -1,0 +1,41 @@
+name: Phase 13C - Atomic shielded state and reorg
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  atomic-state:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          path: repo
+
+      - name: Set up Rust 1.88
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: "1.88.0"
+          components: rustfmt, clippy
+
+      - name: Format check
+        working-directory: repo/prototypes/zk_balance_halo2
+        run: cargo fmt --check
+
+      - name: Clippy
+        working-directory: repo/prototypes/zk_balance_halo2
+        run: cargo clippy --all-targets -- -D warnings
+
+      - name: Atomic state and deep reorg model
+        working-directory: repo/prototypes/zk_balance_halo2
+        run: cargo test --lib core_state::tests --verbose
+
+      - name: Real proof metadata drives state transition
+        working-directory: repo/prototypes/zk_balance_halo2
+        run: cargo test --test core_state_proof --verbose
