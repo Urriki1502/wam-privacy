@@ -4,7 +4,7 @@
 
 | Stage | Status | Evidence |
 | --- | --- | --- |
-| 10A — executable bundle semantics | UNDER QUALIFICATION | Phase 7 state model promoted with explicit multi-input/output tests and fee-correct pool accounting |
+| 10A — executable bundle semantics | **PASS (internal engineering)** | run `37560574017`; Phase 7 regression + bundle tests + Phase 7/8 semantic oracle reproducibility |
 | 10B — multi-action Halo2 relation | PENDING | requires 10A PASS |
 | 10C — serialization / verifier contract | PENDING | requires 10B PASS |
 
@@ -20,6 +20,6 @@
 
 ## Current claim
 
-`PHASE 10A UNDER QUALIFICATION — BUNDLE SEMANTICS ONLY`
+`PHASE 10A INTERNAL ENGINEERING PASS — PHASE 10B IN PROGRESS`
 
 No production, audit, consensus, anonymity, encryption, or mainnet claim is implied.
