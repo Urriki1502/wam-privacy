@@ -102,7 +102,7 @@ jobs:
       - name: Build experimental daemon and CLI
         working-directory: wam/build/wam-core
         run: |
-          make -j2 src/wamd src/wam-cli \
+          make -C src -j2 wamd wam-cli \
             WAM_PRIVACY_CPPFLAGS=-DENABLE_WAM_PRIVACY_EXPERIMENTAL \
             WAM_PRIVACY_LIB="$GITHUB_WORKSPACE/privacy/prototypes/zk_balance_halo2/target/release/libwam_privacy_halo2_prototype.so"
 
