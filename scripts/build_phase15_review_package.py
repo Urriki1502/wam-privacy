@@ -55,6 +55,7 @@ ALLOWED_AFTER_BASELINE = (
     "qualification/PHASE14-STATUS.md",
     "README.md",
     "scripts/build_phase15_review_package.py",
+    "scripts/run_phase15",
 )
 
 
