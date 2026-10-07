@@ -52,7 +52,7 @@ def main() -> int:
     )
 
     require(
-        'Params().NetworkIDString() != "regtest"' in rpc_text,
+        "Params().GetChainType() != ChainType::REGTEST" in rpc_text,
         "regtest runtime gate missing",
     )
     require(
