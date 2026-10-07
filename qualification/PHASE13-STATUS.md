@@ -6,8 +6,8 @@
 | --- | --- | --- |
 | 13A — Rust/C verifier ABI | **PASS (internal engineering)** | run `37587354356`; real Phase 10D proof verified through C ABI; static/shared library + exported symbols PASS |
 | 13B — generated WAM Core regtest-only verifier hook | **PASS (internal engineering)** | run `37597535877`; generated-Core build/link/RPC qualification PASS; merge `a2bd4cd7bb21679ee0e64a174046c1b7b0b5ff09` |
-| 13C — atomic shielded state / reorg integration | UNDER QUALIFICATION | proof-bound state engine + atomic block/reorg workflow pending |
-| 13D — resource/DoS qualification | PENDING | requires 13C PASS |
+| 13C — atomic shielded state / reorg integration | **PASS (internal engineering)** | run `37600960274`; atomic failure, proof-bound metadata, disconnect and 300-block rollback/replay PASS |
+| 13D — resource / DoS qualification | **UNDER QUALIFICATION** | parser bounds, block transition cap and non-blocking verifier concurrency gate |
 
 ## Phase 13A invariants
 
@@ -43,9 +43,19 @@
 - disconnect restores prior anchor, pool, nullifier and commitment state;
 - deep rollback and replacement replay are deterministic.
 
+## Phase 13D invariants
+
+- oversized proof declarations fail before payload processing;
+- malformed/truncated envelopes fail closed;
+- a block cannot exceed the explicit shielded-transition cap;
+- exceeding the block transition cap fails before state mutation;
+- only one expensive verifier call may execute through the Core wrapper at a time;
+- a concurrent verification attempt returns `BUSY` without entering Halo2;
+- the resource gates do not relax the regtest-only or compile-time experimental boundaries.
+
 ## Current claim
 
-`PHASE 13A/13B PASS — PHASE 13C ATOMIC STATE/REORG UNDER QUALIFICATION`
+`PHASE 13A/13B/13C PASS — PHASE 13D RESOURCE/DoS QUALIFICATION IN PROGRESS`
 
 No WAM Core consensus activation, shielded mempool acceptance, persistent production
 chainstate, testnet, or mainnet claim is implied.
