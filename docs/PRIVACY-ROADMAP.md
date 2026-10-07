@@ -205,3 +205,136 @@ Target: a fixed-shape research circuit first, before any variable-length/bundle 
 Allowed only after 10B PASS.
 
 Define canonical research serialization, public-instance ordering, verifier input contract, versioning, and malformed-encoding rejection. No WAM Core activation is implied.
+
+Exit gate:
+
+- deterministic canonical encoding;
+- strict version/circuit identifier handling;
+- canonical field parsing;
+- no trailing or ambiguous bytes;
+- explicit verifying-key identifier contract;
+- real Phase 10B proof verifies after encode/decode;
+- malformed/tampered public inputs and proof bytes fail closed.
+
+### Phase 10D — Protocol hardening and context binding
+
+Required before any protocol freeze.
+
+Goals:
+
+- define domain separation for note, nullifier, Merkle-node and future encryption contexts;
+- replace research-only tree depth with an explicit capacity/performance decision;
+- define production-valid spend/view key encodings rather than unconstrained field-element placeholders;
+- bind proof verification to protocol/network/transaction context;
+- define transparent value-balance binding for shield/unshield flows;
+- freeze circuit/version identifiers and a reproducible verifying-key identity;
+- use checked/fail-closed arithmetic at host/parser boundaries.
+
+Exit gate:
+
+- context replay across incompatible versions/networks is rejected;
+- tree/key/domain parameters are explicit and versioned;
+- transparent/shielded value balance cannot diverge between outer transaction and proof;
+- circuit/verifying-key identity is reproducible.
+
+## Phase 11 — Shielded key hierarchy and note encryption
+
+Goals:
+
+- explicit spend authority, incoming viewing capability and optional outgoing/audit capability;
+- note plaintext format;
+- reviewed AEAD/KDF construction using established primitives;
+- trial-decryption / note-discovery behavior;
+- selective disclosure without spend authority;
+- deterministic recovery vectors and negative vectors.
+
+Exit gate:
+
+- viewing capability cannot authorize spends;
+- malformed ciphertext fails closed;
+- note discovery/recovery is deterministic;
+- encryption test vectors are versioned;
+- no custom cryptography is introduced without independent review.
+
+## Phase 12 — Real wallet, signer and network adapters
+
+Promote the Phase 2–6 policy models into actual WAM integrations.
+
+Required work:
+
+- WSP wallet integration;
+- real WAM transaction / PSBT adapter;
+- real cryptographic signer provider and offline/hardware-compatible boundary;
+- BIP-78 and/or BIP-77 PayJoin transport profile chosen explicitly;
+- Tor/I2P/OHTTP runtime adapters where adopted;
+- shielded note scanning, witness maintenance, recovery and reorg handling;
+- end-to-end telemetry redaction.
+
+Exit gate:
+
+- local/regtest end-to-end wallet flow uses real WAM transaction structures;
+- signer policy is enforced against real serialized transactions;
+- network fallbacks remain fail-closed;
+- restart/recovery/reorg tests pass.
+
+## Phase 13 — WAM Core isolated shielded verifier integration
+
+Environment: regtest/testnet only, disabled by default.
+
+Goals:
+
+- strict Core parser for the versioned proof envelope;
+- proof verification against the pinned circuit/verifying-key profile;
+- atomic anchor/nullifier/state updates;
+- duplicate-nullifier rejection at state level;
+- reorg rollback/replay;
+- shield/unshield supply accounting;
+- resource/DoS limits for verification.
+
+Exit gate:
+
+- malformed proof/encoding cannot crash or partially mutate state;
+- disconnect/reconnect and deep reorg restore identical canonical state;
+- supply accounting remains conserved;
+- feature remains non-mainnet and explicitly gated.
+
+## Phase 14 — Hardening and release qualification
+
+Required before external production review:
+
+- dependency lockfiles and reproducible builds;
+- deterministic protocol/test vectors;
+- parser/verifier fuzzing;
+- differential implementations where practical;
+- circuit constraint inventory;
+- proving/verifying performance and memory benchmarks;
+- adversarial resource-limit tests;
+- upgrade/version migration tests;
+- static/security review of wallet/Core integration;
+- release artifact hashes and evidence ledger.
+
+Exit gate:
+
+- no known high/critical internal finding remains open;
+- reproducible qualification report binds source, dependencies, circuit/VK identity and binaries;
+- test vectors and fuzz corpora are archived.
+
+## Phase 15 — Independent review, extended testnet and maintainer handoff
+
+This is the final project-owned gate before any activation decision.
+
+Required:
+
+- independent state-machine review;
+- independent cryptographic/circuit review;
+- remediation and regression tests for every confirmed high/critical finding;
+- extended isolated/public testnet history;
+- wallet recovery/reorg/upgrade drills;
+- final protocol specification and non-claims;
+- maintainer review package with exact commits, build instructions, hashes and activation dependencies.
+
+Completion boundary:
+
+`wam-privacy` may be called **handoff-complete** after Phase 15 evidence is complete.
+
+Mainnet/consensus activation remains a separate WAM maintainer/governance decision and is never implied by this repository alone.
