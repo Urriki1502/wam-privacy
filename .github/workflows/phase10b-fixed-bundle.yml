@@ -1,0 +1,37 @@
+name: Phase 10B - Fixed bundle Halo2
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  fixed-bundle-halo2:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          path: repo
+
+      - name: Set up Rust 1.88
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: "1.88.0"
+          components: rustfmt, clippy
+
+      - name: Format check
+        run: cargo fmt --check
+        working-directory: repo/prototypes/zk_balance_halo2
+
+      - name: Clippy
+        run: cargo clippy --all-targets -- -D warnings
+        working-directory: repo/prototypes/zk_balance_halo2
+
+      - name: Test fixed bundle relation and real proof
+        run: cargo test --test bundle_action --test bundle_action_proof --verbose
+        working-directory: repo/prototypes/zk_balance_halo2
