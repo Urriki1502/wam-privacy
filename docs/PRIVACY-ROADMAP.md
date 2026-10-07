@@ -159,3 +159,49 @@ Environment:
 - local/regtest/testnet only;
 - no production wallet claims;
 - no mainnet activation proposal until independent review and extended validation exist.
+
+
+## Phase 9 — Integrated shielded action research
+
+Status through 9C: **INTERNAL ENGINEERING PASS**.
+
+Completed gates:
+
+- 9A — one in-circuit note identity shared by Merkle membership and nullifier derivation;
+- 9B — complete private note fields derive the anchored/nullified note commitment;
+- 9C — one shielded input → one shielded output + explicit fee with in-circuit value conservation.
+
+This remains research-only and does not define production bundle serialization or consensus verification.
+
+## Phase 10 — Bundle semantics and multi-action composition
+
+### Phase 10A — Executable bundle semantics
+
+Goals:
+
+- validate multiple shielded inputs and outputs;
+- enforce aggregate nullifier uniqueness;
+- enforce aggregate commitment uniqueness;
+- account transparent input/output and fee exactly;
+- preserve global WAM monetary-cap accounting.
+
+Exit gate:
+
+- two-input/two-output positive bundle passes;
+- duplicate input/nullifier fails closed;
+- mixed transparent/shielded flow conserves exactly;
+- fee cannot leave phantom pool value;
+- malformed pool accounting fails closed;
+- Phase 7/8 semantic bridge remains reproducible.
+
+### Phase 10B — Multi-action Halo2 relation
+
+Allowed only after 10A PASS.
+
+Target: a fixed-shape research circuit first, before any variable-length/bundle encoding claim.
+
+### Phase 10C — Serialization and verifier contract
+
+Allowed only after 10B PASS.
+
+Define canonical research serialization, public-instance ordering, verifier input contract, versioning, and malformed-encoding rejection. No WAM Core activation is implied.
