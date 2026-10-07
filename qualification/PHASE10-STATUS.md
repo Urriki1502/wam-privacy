@@ -4,8 +4,8 @@
 
 | Stage | Status | Evidence |
 | --- | --- | --- |
-| 10A — executable bundle semantics | UNDER QUALIFICATION | Phase 7 state model promoted with explicit multi-input/output tests and fee-correct pool accounting |
-| 10B — multi-action Halo2 relation | PENDING | requires 10A PASS |
+| 10A — executable bundle semantics | **PASS (internal engineering)** | dedicated Phase 10A gate + Phase 1–9C regressions all PASS on PR #28 head |
+| 10B — multi-action Halo2 relation | PENDING | allowed after 10A PASS |
 | 10C — serialization / verifier contract | PENDING | requires 10B PASS |
 
 ## 10A invariants
@@ -18,10 +18,21 @@
 - global pool accounting cannot exceed the exact WAM monetary cap;
 - transition shape limits fail closed.
 
+## Qualification evidence
+
+PR #28 qualification head completed with all repository workflows successful.
+
+Key evidence:
+
+- Phase 10A bundle semantics: run `37563922532` — **PASS**;
+- Phase 8 Halo2 prototype suite: **PASS**;
+- Phase 9A integrated shielded action: **PASS**;
+- Phase 9B in-circuit note commitment: **PASS**;
+- Phase 9C integrated value action: **PASS**;
+- Phase 1–7 regression workflows: **PASS**.
+
 ## Current claim
 
-`PHASE 10A QUALIFICATION RERUN PENDING — BUNDLE SEMANTICS ONLY`
-
-Qualification closure requires the dedicated Phase 10A workflow and all repository regressions to pass on a reviewable PR head.
+`PHASE 10A EXECUTABLE BUNDLE SEMANTICS — INTERNAL ENGINEERING PASS`
 
 No production, audit, consensus, anonymity, encryption, or mainnet claim is implied.
