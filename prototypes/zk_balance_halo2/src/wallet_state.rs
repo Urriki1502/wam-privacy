@@ -150,8 +150,8 @@ impl WalletScanner {
                 return Err(WalletStateError::DuplicateCommitment);
             }
 
-            let commitment =
-                fp_from_bytes(record.aad.note_commitment).ok_or(WalletStateError::InvalidCommitment)?;
+            let commitment = fp_from_bytes(record.aad.note_commitment)
+                .ok_or(WalletStateError::InvalidCommitment)?;
             let encrypted = EncryptedNote::decode(&record.encrypted_note)
                 .map_err(|_| WalletStateError::InvalidCiphertext)?;
 
