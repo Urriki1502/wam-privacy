@@ -6,7 +6,7 @@
 | --- | --- | --- |
 | 10A — executable bundle semantics | **PASS (internal engineering)** | dedicated Phase 10A gate + Phase 1–9C regressions all PASS on PR #28 head |
 | 10B — multi-action Halo2 relation | **PASS (internal engineering)** | fixed 2×2 bundle real-proof workflow + full Phase 1–10A regressions all PASS on synced PR #27 head |
-| 10C — serialization / verifier contract | **UNDER QUALIFICATION** | canonical envelope, strict parser and real Halo2 verifier contract implemented on Phase 10C branch |
+| 10C — serialization / verifier contract | **PASS (internal engineering)** | run `37568843380`; canonical envelope, strict parser and real Halo2 verifier contract all PASS |
 
 ## 10A invariants
 
@@ -48,8 +48,17 @@ Phase 10B synced qualification head:
 - Phase 8/9A/9B/9C real-proof regressions — **PASS**;
 - Phase 1–7 regressions — **PASS**.
 
+Phase 10C qualification head:
+
+- Phase 10C serialization/verifier run `37568843380` — **PASS**;
+- canonical parser and malformed-input tests — **PASS**;
+- real Phase 10B proof encode/decode/verify — **PASS**;
+- public-instance tamper rejection — **PASS**;
+- proof-byte tamper rejection — **PASS**;
+- Phase 1–10B regression workflows — **PASS**.
+
 ## Current claim
 
-`PHASE 10C SERIALIZATION / VERIFIER CONTRACT — UNDER QUALIFICATION`
+`PHASE 10C SERIALIZATION / VERIFIER CONTRACT — INTERNAL ENGINEERING PASS`
 
 No production, audit, consensus, anonymity, encryption, serialization, or mainnet claim is implied.
