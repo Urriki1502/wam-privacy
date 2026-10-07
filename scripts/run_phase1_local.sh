@@ -36,7 +36,16 @@ CORE_ACTUAL="$(head_sha "$WAM_CORE_DIR")"
   exit 2
 }
 
-assert_clean "$WSP_DIR"
+WSP_DIRTY="$(
+  git -C "$WSP_DIR" status --porcelain --untracked-files=all \
+    | grep -Ev '^\?\? (\.venv-phase1/|reports/qualification\.json$|reports/)' \
+    || true
+)"
+[[ -z "$WSP_DIRTY" ]] || {
+  echo "DIRTY_TREE: $WSP_DIR" >&2
+  printf '%s\n' "$WSP_DIRTY" >&2
+  exit 2
+}
 assert_clean "$WAM_CORE_DIR"
 
 [[ -f "$WAMD" ]] || {

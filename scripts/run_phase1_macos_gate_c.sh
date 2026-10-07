@@ -26,8 +26,14 @@ WAMD="$(cd "$(dirname "$WAMD")" && pwd)/$(basename "$WAMD")"
   echo "CORE_SHA_MISMATCH" >&2
   exit 2
 }
-[[ -z "$(git -C "$WSP_DIR" status --porcelain)" ]] || {
+WSP_DIRTY="$(
+  git -C "$WSP_DIR" status --porcelain --untracked-files=all \
+    | grep -Ev '^\?\? (\.venv-phase1-macos/|reports/phase1-macos/)' \
+    || true
+)"
+[[ -z "$WSP_DIRTY" ]] || {
   echo "WSP_DIRTY_TREE" >&2
+  printf '%s\n' "$WSP_DIRTY" >&2
   exit 2
 }
 [[ -z "$(git -C "$WAM_CORE_DIR" status --porcelain)" ]] || {
