@@ -1,0 +1,46 @@
+{
+  "schema": 1,
+  "stage": "phase-15b-operator-testnet-evidence",
+  "status": "TEMPLATE_ONLY",
+  "privacy_commit": null,
+  "wam_core_commit": null,
+  "binaries": {
+    "wamd_sha256": null,
+    "wam_cli_sha256": null,
+    "verifier_library_sha256": null
+  },
+  "network": {
+    "name": null,
+    "network_id": null,
+    "parameters_digest": null,
+    "start_time_utc": null,
+    "end_time_utc": null,
+    "start_height": null,
+    "end_height": null
+  },
+  "activity": {
+    "shield_count": 0,
+    "transfer_count": 0,
+    "unshield_count": 0,
+    "verifier_accept_count": 0,
+    "verifier_reject_count": 0,
+    "duplicate_nullifier_reject_count": 0,
+    "malformed_proof_reject_count": 0
+  },
+  "drills": {
+    "wallet_restart_recovery": [],
+    "scanner_recovery": [],
+    "reorgs": [],
+    "state_replay_equivalence": []
+  },
+  "resources": {
+    "verifier_latency_ms": [],
+    "peak_rss_kib": null,
+    "incidents": []
+  },
+  "result": "PENDING_OPERATOR_EXECUTION",
+  "non_claims": [
+    "template is not testnet evidence",
+    "no activation claim"
+  ]
+}
