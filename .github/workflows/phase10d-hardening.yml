@@ -1,0 +1,41 @@
+name: Phase 10D - Protocol hardening and context binding
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  protocol-hardening:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          path: repo
+
+      - name: Set up Rust 1.88
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: "1.88.0"
+          components: rustfmt, clippy
+
+      - name: Format check
+        run: cargo fmt --check
+        working-directory: repo/prototypes/zk_balance_halo2
+
+      - name: Clippy
+        run: cargo clippy --all-targets -- -D warnings
+        working-directory: repo/prototypes/zk_balance_halo2
+
+      - name: Hardened circuit constraints
+        run: cargo test --test hardened_bundle --verbose
+        working-directory: repo/prototypes/zk_balance_halo2
+
+      - name: Real context-bound Halo2 proof
+        run: cargo test --test hardened_bundle_proof --verbose
+        working-directory: repo/prototypes/zk_balance_halo2
