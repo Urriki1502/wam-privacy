@@ -6,30 +6,22 @@
 | --- | --- | --- |
 | 9A — integrated anchor/nullifier composition | PASS (internal engineering) | one private note-identity cell is reused and constrained across Merkle membership and nullifier derivation; negative tests + real proof verification |
 | 9B — in-circuit note commitment derivation | PASS (internal engineering) | private value/recipient/authority/rho/rseed derive the exact anchored + nullified identity; cap/nonzero constraints + real proof |
-| 9C — integrated value/action relation | PENDING | value conservation is not yet composed into the same action circuit |
+| 9C — integrated value/action relation | UNDER QUALIFICATION | one input note, one output note and explicit fee are composed with exact value conservation in the same Halo2 relation |
 
-## Phase 9A invariants
+## Phase 9C invariants
 
-- note identity is assigned once;
-- the same note-identity cell is the Merkle leaf and nullifier input;
-- spend authority remains private;
-- authentication path remains private;
-- root, authority tag and nullifier are public instances;
-- changing any linked private witness invalidates the original public relation;
-- changing any public output invalidates the real proof.
-
-## Phase 9B invariants
-
-- note identity is no longer supplied as an unconstrained precomputed witness;
-- private value, recipient tag, spend authority tag, rho and rseed are Poseidon-bound into the note identity;
-- the derived note-identity cell is reused directly as the Merkle leaf and nullifier input;
-- note value is constrained to be non-zero, 64-bit and no greater than the exact WAM monetary cap;
-- changing any private note field invalidates the original public relation;
-- exact cap is accepted and cap + 1 is rejected;
-- a real Halo2 proof binds root, authority tag and nullifier to the derived note.
+- input value is used by both the input note commitment and conservation gate;
+- output value is used by both the output note commitment and conservation gate;
+- input note identity is used by both Merkle anchoring and nullifier derivation;
+- output note commitment is public and bound to all output note fields;
+- fee is public and participates in the exact conservation equation;
+- shielded input/output values are non-zero;
+- input/output/fee are 64-bit and capped at the exact WAM monetary maximum;
+- changing any private linked witness invalidates the original public relation;
+- changing any public root, authority tag, nullifier, output commitment or fee invalidates the real proof.
 
 ## Current claim
 
-`PHASE 9B INTERNAL NOTE-COMMITMENT PASS — PHASE 9 IN PROGRESS`
+`PHASE 9C UNDER QUALIFICATION — PHASE 9 IN PROGRESS`
 
-No production, audit, consensus, or mainnet claim is implied.
+No production, audit, consensus, anonymity, or mainnet claim is implied.

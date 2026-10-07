@@ -20,6 +20,7 @@ pub mod action;
 pub mod anchor;
 pub mod note_action;
 pub mod nullifier;
+pub mod transfer_action;
 
 use halo2_proofs::{
     circuit::{Layouter, SimpleFloorPlanner, Value},

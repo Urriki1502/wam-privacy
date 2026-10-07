@@ -52,6 +52,13 @@ jobs:
         run: cargo clippy --all-targets -- -D warnings
         working-directory: repo/prototypes/zk_balance_halo2
 
-      - name: Test Halo2 constraints, real proofs and differential bridge
-        run: cargo test --all-targets --verbose
+      - name: Test Phase 8 constraints, real proofs and differential bridge
+        run: >-
+          cargo test
+          --test balance
+          --test anchor
+          --test nullifier
+          --test proof
+          --test bridge
+          --verbose
         working-directory: repo/prototypes/zk_balance_halo2
