@@ -7,6 +7,7 @@
 | 10A — executable bundle semantics | **PASS (internal engineering)** | dedicated Phase 10A gate + Phase 1–9C regressions all PASS on PR #28 head |
 | 10B — multi-action Halo2 relation | **PASS (internal engineering)** | fixed 2×2 bundle real-proof workflow + full Phase 1–10A regressions all PASS on synced PR #27 head |
 | 10C — serialization / verifier contract | **PASS (internal engineering)** | run `37568843380`; canonical envelope, strict parser and real Halo2 verifier contract all PASS |
+| 10D — protocol hardening / context binding | **PASS (internal engineering)** | run `37572674207`; private authority tags, transparent-flow conservation, context-bound real proof and replay rejection all PASS |
 
 ## 10A invariants
 
@@ -59,6 +60,17 @@ Phase 10C qualification head:
 
 ## Current claim
 
-`PHASE 10C SERIALIZATION / VERIFIER CONTRACT — INTERNAL ENGINEERING PASS`
+`PHASE 10D PROTOCOL HARDENING / CONTEXT BINDING — INTERNAL ENGINEERING PASS`
 
-No production, audit, consensus, anonymity, encryption, serialization, or mainnet claim is implied.
+No production, audit, consensus, note-encryption, wallet-integration, or mainnet claim is implied.
+
+
+## Phase 10D hardening evidence
+
+- dedicated Phase 10D workflow run `37572674207` — **PASS**;
+- authority tags are no longer public instances in the hardened relation;
+- shielded + transparent value conservation is enforced in-circuit;
+- protocol/network/transaction/value context is a public proof input;
+- real proof rejects wrong network, transaction digest and transparent balance;
+- VK identifier is derived from Halo2's pinned verification-key representation;
+- Phase 1–10C regressions on the same head — **PASS**.
