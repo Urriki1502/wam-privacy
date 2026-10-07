@@ -103,7 +103,7 @@ static RPCHelpMan verifyshieldedproof()
             "\"<envelopehex>\" \"<txdigest>\" 10000 2000 3000")},
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
         {
-            if (Params().NetworkIDString() != "regtest") {
+            if (Params().GetChainType() != ChainType::REGTEST) {
                 throw JSONRPCError(
                     RPC_INVALID_PARAMETER,
                     "verifyshieldedproof is experimental and regtest-only");
