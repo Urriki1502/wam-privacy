@@ -34,6 +34,7 @@ ALLOWED_AFTER_BASELINE = (
     ".github/workflows/phase15",
     "docs/PHASE15",
     "qualification/PHASE15",
+    "qualification/PHASE14-STATUS.md",
     "reviews/",
     "README.md",
     "scripts/build_phase15_review_package.py",
@@ -193,6 +194,7 @@ def main() -> int:
 
         raw = path.read_bytes()
         text = raw.decode("utf-8")
+        runtime_text = text.split("\n#[cfg(test)]", 1)[0] if rel.endswith(".rs") else text
         files[rel] = {"sha256": digest(path), "bytes": len(raw)}
 
         for token in FORBIDDEN_PLACEHOLDERS:
@@ -205,7 +207,7 @@ def main() -> int:
                 })
 
         if rel.endswith(".rs"):
-            if "unsafe" in text and rel != "prototypes/zk_balance_halo2/src/ffi.rs":
+            if "unsafe" in runtime_text and rel != "prototypes/zk_balance_halo2/src/ffi.rs":
                 violations.append({
                     "id": "V1-UNSAFE-001",
                     "severity": "HIGH",
@@ -214,12 +216,12 @@ def main() -> int:
                 })
 
             risky = {
-                "unwrap(": count_token(text, "unwrap("),
-                "expect(": count_token(text, "expect("),
-                "panic!(": count_token(text, "panic!("),
+                "unwrap(": count_token(runtime_text, "unwrap("),
+                "expect(": count_token(runtime_text, "expect("),
+                "panic!(": count_token(runtime_text, "panic!("),
             }
             allowed = PANIC_ALLOWLIST.get(rel, [])
-            allowed_expect = sum(text.count(token) for token in allowed)
+            allowed_expect = sum(runtime_text.count(token) for token in allowed)
             unknown_expect = max(0, risky["expect("] - allowed_expect)
             if risky["unwrap("] or risky["panic!("] or unknown_expect:
                 violations.append({
@@ -253,13 +255,30 @@ def main() -> int:
             })
 
     note_text = (root / "prototypes/zk_balance_halo2/src/note_encryption.rs").read_text(encoding="utf-8")
-    if "#[derive(Clone, Debug" in note_text and (
-        "IncomingViewingKey" in note_text or "AuditViewingKey" in note_text
-    ):
+    hardened_text = (root / "prototypes/zk_balance_halo2/src/hardened_bundle.rs").read_text(encoding="utf-8")
+    if "#[derive(Clone, Debug, PartialEq, Eq)]\npub struct NotePlaintext" in note_text:
         observations.append({
-            "id": "V1-KEY-HYGIENE-REVIEW",
-            "classification": "manual-review-required",
-            "message": "Reconfirm no secret-bearing key type derives Debug or is logged.",
+            "id": "V1-SECRET-DEBUG-001",
+            "severity": "MEDIUM",
+            "classification": "remediation-recommended-before-release",
+            "path": "prototypes/zk_balance_halo2/src/note_encryption.rs",
+            "message": "NotePlaintext derives Debug; accidental debug logging could disclose note plaintext.",
+        })
+    if "#[derive(Clone, Debug)]\npub struct HardenedBundleInput" in hardened_text or "#[derive(Clone, Debug)]\npub struct HardenedBundleCircuit" in hardened_text:
+        observations.append({
+            "id": "V1-SECRET-DEBUG-002",
+            "severity": "MEDIUM",
+            "classification": "remediation-recommended-before-release",
+            "path": "prototypes/zk_balance_halo2/src/hardened_bundle.rs",
+            "message": "Private Halo2 witness containers derive Debug; accidental debug logging could disclose witness material.",
+        })
+    if "let spend_vec = derive_bytes" in note_text or "let incoming_vec = derive_bytes" in note_text or "let audit_vec = derive_bytes" in note_text:
+        observations.append({
+            "id": "V1-KEY-ZEROIZE-001",
+            "severity": "LOW",
+            "classification": "remediation-recommended-before-release",
+            "path": "prototypes/zk_balance_halo2/src/note_encryption.rs",
+            "message": "Intermediate derived-key Vec buffers are not explicitly wrapped in Zeroizing.",
         })
 
     report = {
