@@ -57,7 +57,8 @@ See [docs/EXISTING-ASSETS.md](docs/EXISTING-ASSETS.md) and [docs/WAM-CORE-COMPAT
 | Phase 13A — Core-facing Halo2 verifier C ABI | **INTERNAL ENGINEERING PASS** |
 | Phase 13B–13D — Core regtest/state/resource integration | **INTERNAL ENGINEERING PASS** |
 | Phase 14A — Reproducible release identity | **INTERNAL ENGINEERING PASS** |
-| Phase 14B–14D — Fuzz/performance/release hardening | **PENDING** |
+| Phase 14B — Parser/verifier fuzzing | **UNDER QUALIFICATION** |
+| Phase 14C–14D — Performance/release hardening | **PENDING** |
 | Phase 15 — Independent review/testnet/handoff | **PENDING** |
 
 An internal engineering PASS is not a production-readiness, anonymity, audit, or mainnet claim.

@@ -1,4 +1,4 @@
-use std::{ptr, time::Instant};
+use std::{ptr, sync::OnceLock, time::Instant};
 
 use halo2_proofs::{
     pasta::{EqAffine, Fp},
@@ -92,7 +92,7 @@ fn fixture() -> (HardenedBundleCircuit, ProofContext) {
     (circuit, context)
 }
 
-fn proof_envelope() -> (Vec<u8>, ProofContext, [u8; 32]) {
+fn build_proof_envelope() -> (Vec<u8>, ProofContext, [u8; 32]) {
     let (circuit, context) = fixture();
     let public = circuit.public_inputs();
     let public_array: [Fp; PUBLIC_INPUT_COUNT] =
@@ -118,6 +118,11 @@ fn proof_envelope() -> (Vec<u8>, ProofContext, [u8; 32]) {
 
     let envelope = HardenedBundleEnvelope::new(pk.get_vk(), public_array, proof).expect("envelope");
     (envelope.encode().expect("encode"), context, expected_vk_id)
+}
+
+fn proof_envelope() -> (Vec<u8>, ProofContext, [u8; 32]) {
+    static FIXTURE: OnceLock<(Vec<u8>, ProofContext, [u8; 32])> = OnceLock::new();
+    FIXTURE.get_or_init(build_proof_envelope).clone()
 }
 
 unsafe fn new_handle() -> *mut WamPrivacyVerifier {
@@ -260,6 +265,180 @@ fn core_facing_ffi_contract() {
         )
     };
     assert_eq!(bad_amount, FfiStatus::AmountRange as i32);
+
+    assert_eq!(
+        unsafe { wam_privacy_halo2_verifier_free(handle) },
+        FfiStatus::Ok as i32
+    );
+}
+
+#[test]
+fn phase14b_adversarial_verifier_corpus_fails_closed() {
+    let (encoded, context, _) = proof_envelope();
+    let handle = unsafe { new_handle() };
+
+    let verify = |candidate: &[u8],
+                  digest: &[u8; 32],
+                  transparent_in: u64,
+                  transparent_out: u64,
+                  fee: u64|
+     -> i32 {
+        unsafe {
+            wam_privacy_halo2_verify_hardened_v1(
+                handle,
+                candidate.as_ptr(),
+                candidate.len(),
+                NetworkId::Regtest as u32,
+                digest.as_ptr(),
+                digest.len(),
+                transparent_in,
+                transparent_out,
+                fee,
+            )
+        }
+    };
+
+    assert_eq!(
+        verify(
+            &encoded,
+            &context.transaction_digest,
+            context.transparent_in,
+            context.transparent_out,
+            context.fee,
+        ),
+        FfiStatus::Ok as i32
+    );
+
+    let mut bad_magic = encoded.clone();
+    bad_magic[0] ^= 1;
+    assert_eq!(
+        verify(
+            &bad_magic,
+            &context.transaction_digest,
+            context.transparent_in,
+            context.transparent_out,
+            context.fee,
+        ),
+        FfiStatus::BadEnvelope as i32
+    );
+
+    let mut bad_version = encoded.clone();
+    bad_version[4] ^= 1;
+    assert_eq!(
+        verify(
+            &bad_version,
+            &context.transaction_digest,
+            context.transparent_in,
+            context.transparent_out,
+            context.fee,
+        ),
+        FfiStatus::BadEnvelope as i32
+    );
+
+    let mut bad_count = encoded.clone();
+    bad_count[40] = 0;
+    assert_eq!(
+        verify(
+            &bad_count,
+            &context.transaction_digest,
+            context.transparent_in,
+            context.transparent_out,
+            context.fee,
+        ),
+        FfiStatus::BadEnvelope as i32
+    );
+
+    let mut noncanonical_field = encoded.clone();
+    noncanonical_field[41..73].fill(0xff);
+    assert_eq!(
+        verify(
+            &noncanonical_field,
+            &context.transaction_digest,
+            context.transparent_in,
+            context.transparent_out,
+            context.fee,
+        ),
+        FfiStatus::BadEnvelope as i32
+    );
+
+    let mut wrong_vk = encoded.clone();
+    wrong_vk[8] ^= 1;
+    assert_eq!(
+        verify(
+            &wrong_vk,
+            &context.transaction_digest,
+            context.transparent_in,
+            context.transparent_out,
+            context.fee,
+        ),
+        FfiStatus::VkIdMismatch as i32
+    );
+
+    let mut bad_fee = encoded.clone();
+    let fee_field = 41 + 5 * 32;
+    bad_fee[fee_field] ^= 1;
+    assert_eq!(
+        verify(
+            &bad_fee,
+            &context.transaction_digest,
+            context.transparent_in,
+            context.transparent_out,
+            context.fee,
+        ),
+        FfiStatus::TransparentBalanceMismatch as i32
+    );
+
+    let mut trailing = encoded.clone();
+    trailing.push(0);
+    assert_eq!(
+        verify(
+            &trailing,
+            &context.transaction_digest,
+            context.transparent_in,
+            context.transparent_out,
+            context.fee,
+        ),
+        FfiStatus::BadEnvelope as i32
+    );
+
+    let mut truncated = encoded.clone();
+    truncated.pop();
+    assert_eq!(
+        verify(
+            &truncated,
+            &context.transaction_digest,
+            context.transparent_in,
+            context.transparent_out,
+            context.fee,
+        ),
+        FfiStatus::BadEnvelope as i32
+    );
+
+    let mut wrong_digest = context.transaction_digest;
+    wrong_digest[0] ^= 1;
+    assert_eq!(
+        verify(
+            &encoded,
+            &wrong_digest,
+            context.transparent_in,
+            context.transparent_out,
+            context.fee,
+        ),
+        FfiStatus::ContextMismatch as i32
+    );
+
+    let mut tampered_proof = encoded.clone();
+    *tampered_proof.last_mut().expect("proof byte") ^= 1;
+    assert_eq!(
+        verify(
+            &tampered_proof,
+            &context.transaction_digest,
+            context.transparent_in,
+            context.transparent_out,
+            context.fee,
+        ),
+        FfiStatus::ProofRejected as i32
+    );
 
     assert_eq!(
         unsafe { wam_privacy_halo2_verifier_free(handle) },
