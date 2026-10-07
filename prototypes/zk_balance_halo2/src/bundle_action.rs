@@ -51,6 +51,12 @@ const RATE: usize = 2;
 const HASH_INPUTS: usize = 2;
 const RANGE_BITS: usize = 64;
 
+type DerivedInput = (
+    AssignedCell<Fp, Fp>,
+    AssignedCell<Fp, Fp>,
+    AssignedCell<Fp, Fp>,
+);
+
 #[derive(Clone, Debug)]
 pub struct BundleInput {
     pub value: u64,
@@ -359,14 +365,7 @@ fn derive_input(
     value: AssignedCell<Fp, Fp>,
     input: &BundleInput,
     label: &str,
-) -> Result<
-    (
-        AssignedCell<Fp, Fp>,
-        AssignedCell<Fp, Fp>,
-        AssignedCell<Fp, Fp>,
-    ),
-    Error,
-> {
+) -> Result<DerivedInput, Error> {
     let (recipient, spend_secret, rho, rseed, note_domain, authority_domain, nullifier_domain) =
         layouter.assign_region(
             || format!("{label} private fields"),
