@@ -237,6 +237,8 @@ Exit gate:
 - transparent/shielded value balance cannot diverge between outer transaction and proof;
 - circuit/verifying-key identity is reproducible.
 
+Phase 10D status: **INTERNAL ENGINEERING PASS** for the hardened research profile. Final spend-key encoding and note encryption remain Phase 11 work.
+
 ## Phase 11 — Shielded key hierarchy and note encryption
 
 Goals:
