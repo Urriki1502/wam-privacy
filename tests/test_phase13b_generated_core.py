@@ -73,7 +73,7 @@ class Phase13BGeneratedCoreTests(unittest.TestCase):
             self.assertIn('Params().NetworkIDString() != "regtest"', rpc)
             self.assertIn("This RPC is read-only and does not mutate chain or wallet state.", rpc)
 
-            self.assertEqual(make.count("WAM-PRIVACY-P13B: verifier source"), 1)
+            self.assertEqual(make.count("  wam/privacy/privacy_verifier.cpp \\"), 1)
             self.assertEqual(make.count("WAM-PRIVACY-P13B: verifier compile gate"), 1)
             self.assertEqual(make.count("WAM-PRIVACY-P13B: verifier link gate"), 1)
             self.assertIn(
