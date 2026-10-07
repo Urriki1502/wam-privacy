@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "phase": "phase-1-wsp-requalification",
-  "status": "requalification-pending",
+  "status": "internal-engineering-pass",
   "wsp": {
     "repository": "Urriki1502/wam-silent-payments",
     "branch": "feat/wsp1-v1.0",
@@ -12,7 +12,7 @@
     "repository": "wamcoin-core-dev/wam-coin",
     "previously_qualified_commit": "8a3f4fe4f1d804c378f795d4cc281ec5125f75f3",
     "target_commit": "260bc468e5adffea7ce68d8f97fac3e27e4c50b2",
-    "target_status": "requalification-pending"
+    "target_status": "internal-engineering-pass"
   },
   "upstream": {
     "bitcoin_bips_commit_used_by_wsp": "3a10b5b5f0a7586df8928d580a3009744ebb2079",
@@ -24,5 +24,14 @@
     "isolated regtest",
     "repository-owned CI"
   ],
-  "production_claim": false
+  "production_claim": false,
+  "phase1_closed": true,
+  "gate_c": {
+    "platform": "macOS arm64",
+    "result": "PASS",
+    "wsp_commit": "dcf1aecc00a64bfad3151fa202c3e07d47d83e69",
+    "wam_core_commit": "260bc468e5adffea7ce68d8f97fac3e27e4c50b2",
+    "wamd_sha256": "99a5f20fb741620de3655fcab980b3303d8caa2bbb6025dc490eb8cca4074a34",
+    "atheris_fuzz_included": false
+  }
 }

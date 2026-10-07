@@ -60,19 +60,35 @@ This does **not** establish runtime or consensus compatibility.
 
 ## Gate C — current-Core isolated regtest
 
-Status: **PENDING RERUN AFTER WSP REPIN**
+Status: **PASS (internal engineering)**
 
-Already built target daemon:
+Pinned runtime:
 
-- Core commit: `260bc468e5adffea7ce68d8f97fac3e27e4c50b2`;
+- WSP commit: `dcf1aecc00a64bfad3151fa202c3e07d47d83e69`;
+- WAM Core commit: `260bc468e5adffea7ce68d8f97fac3e27e4c50b2`;
 - macOS arm64 `wamd` SHA-256: `99a5f20fb741620de3655fcab980b3303d8caa2bbb6025dc490eb8cca4074a34`.
 
-Next evidence required:
+Observed final Gate C evidence:
 
-- rerun local/private regtest with WSP `dcf1aecc00a64bfad3151fa202c3e07d47d83e69`;
-- complete WSP-E2E-003 through WSP-E2E-007;
-- verify reorg depths 1 / 12 / 100 / 300;
-- recovery, restart and final accounting;
-- emit `gate-c-evidence.json`.
+- self-test: exit code 0;
+- black-box contract: exit code 0;
+- independent differential: 10,000/10,000 PASS, exit code 0;
+- real-node suite: WSP-E2E-001 through WSP-E2E-007 all PASS;
+- real reorg depths: 1 / 12 / 100 / 300 all PASS;
+- interop suite: SP2-001 through SP2-010 all PASS;
+- regtest suite: SPREG-001 through SPREG-009 all PASS;
+- final evidence result: `PASS`;
+- runner terminator: `PHASE1_MACOS_GATE_C_PASS`;
+- local evidence path: `reports/phase1-macos/gate-c-evidence.json`.
 
-No Core rebuild is required unless the binary digest changes.
+Atheris/libFuzzer is intentionally excluded from the macOS Gate C run; Linux fuzz evidence remains tracked separately.
+
+### Phase 1 closure
+
+All internal engineering gates required by the Phase 1 roadmap are now satisfied against the pinned current Core revision.
+
+Remaining blockers are external by design:
+
+- independent security/cryptographic review;
+- maintainer adoption of production network profile/namespace;
+- any future mainnet or consensus activation decision.
