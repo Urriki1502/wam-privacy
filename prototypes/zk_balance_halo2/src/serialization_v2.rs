@@ -172,12 +172,12 @@ impl HardenedBundleEnvelope {
     }
 }
 
-pub fn verify_hardened_bundle_envelope(
+pub fn verify_hardened_bundle_envelope_and_decode(
     params: &Params<EqAffine>,
     vk: &VerifyingKey<EqAffine>,
     expected_context: &ProofContext,
     encoded: &[u8],
-) -> Result<(), HardenedEnvelopeError> {
+) -> Result<HardenedBundleEnvelope, HardenedEnvelopeError> {
     let envelope = HardenedBundleEnvelope::decode(encoded)?;
     if envelope.vk_id != vk_identifier(vk) {
         return Err(HardenedEnvelopeError::VkIdMismatch);
@@ -198,7 +198,17 @@ pub fn verify_hardened_bundle_envelope(
         Blake2bRead::<_, EqAffine, Challenge255<_>>::init(envelope.proof.as_slice());
 
     verify_proof(params, vk, strategy, &[instance_columns], &mut transcript)
-        .map_err(|_| HardenedEnvelopeError::ProofRejected)
+        .map_err(|_| HardenedEnvelopeError::ProofRejected)?;
+    Ok(envelope)
+}
+
+pub fn verify_hardened_bundle_envelope(
+    params: &Params<EqAffine>,
+    vk: &VerifyingKey<EqAffine>,
+    expected_context: &ProofContext,
+    encoded: &[u8],
+) -> Result<(), HardenedEnvelopeError> {
+    verify_hardened_bundle_envelope_and_decode(params, vk, expected_context, encoded).map(|_| ())
 }
 
 fn take<'a>(
