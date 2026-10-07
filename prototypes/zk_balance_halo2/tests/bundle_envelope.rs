@@ -7,8 +7,7 @@ use wam_privacy_halo2_prototype::serialization::{
 fn fixture() -> BundleProofEnvelope {
     let public_inputs: [Fp; PUBLIC_INPUT_COUNT] =
         core::array::from_fn(|index| Fp::from((index as u64) + 1));
-    BundleProofEnvelope::new([0xA5; 32], public_inputs, vec![1, 2, 3, 4])
-        .expect("fixture envelope")
+    BundleProofEnvelope::new([0xA5; 32], public_inputs, vec![1, 2, 3, 4]).expect("fixture envelope")
 }
 
 #[test]
@@ -113,12 +112,7 @@ fn empty_and_oversized_proofs_fail_closed() {
     let public_inputs: [Fp; PUBLIC_INPUT_COUNT] =
         core::array::from_fn(|index| Fp::from((index as u64) + 1));
     assert_eq!(
-        BundleProofEnvelope::new(
-            [0; 32],
-            public_inputs,
-            vec![0; MAX_PROOF_BYTES + 1]
-        )
-        .unwrap_err(),
+        BundleProofEnvelope::new([0; 32], public_inputs, vec![0; MAX_PROOF_BYTES + 1]).unwrap_err(),
         EnvelopeError::ProofTooLarge
     );
 }
