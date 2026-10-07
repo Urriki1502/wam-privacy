@@ -8,9 +8,9 @@ permissions:
   contents: read
 
 jobs:
-  resolve-release-identity:
+  reproducible-release-identity:
     runs-on: ubuntu-24.04
-    timeout-minutes: 30
+    timeout-minutes: 90
 
     steps:
       - name: Checkout
@@ -23,20 +23,97 @@ jobs:
         with:
           toolchain: "1.88.0"
 
-      - name: Resolve exact Cargo dependency graph
+      - name: Verify committed dependency lock
         working-directory: repo/prototypes/zk_balance_halo2
         run: |
-          cargo generate-lockfile
           cargo metadata --locked --format-version 1 >/tmp/wam-privacy-cargo-metadata.json
+          cargo check --locked --all-targets
+          git diff --exit-code -- Cargo.lock
           sha256sum Cargo.toml Cargo.lock rust-toolchain.toml
-          echo "WAM_CARGO_LOCK_BASE64_BEGIN"
-          base64 -w0 Cargo.lock
-          echo
-          echo "WAM_CARGO_LOCK_BASE64_END"
 
-      - name: Upload generated lockfile bootstrap
+      - name: Build release verifier twice
+        working-directory: repo/prototypes/zk_balance_halo2
+        run: |
+          rm -rf /tmp/wam-release-a /tmp/wam-release-b
+          CARGO_TARGET_DIR=/tmp/wam-release-a cargo build --release --locked
+          CARGO_TARGET_DIR=/tmp/wam-release-b cargo build --release --locked
+
+      - name: Compare release artifact hashes
+        working-directory: repo/prototypes/zk_balance_halo2
+        run: |
+          A_SO=/tmp/wam-release-a/release/libwam_privacy_halo2_prototype.so
+          B_SO=/tmp/wam-release-b/release/libwam_privacy_halo2_prototype.so
+          A_A=/tmp/wam-release-a/release/libwam_privacy_halo2_prototype.a
+          B_A=/tmp/wam-release-b/release/libwam_privacy_halo2_prototype.a
+
+          test -f "$A_SO" && test -f "$B_SO"
+          test -f "$A_A" && test -f "$B_A"
+
+          A_SO_HASH="$(sha256sum "$A_SO" | awk '{print $1}')"
+          B_SO_HASH="$(sha256sum "$B_SO" | awk '{print $1}')"
+          A_A_HASH="$(sha256sum "$A_A" | awk '{print $1}')"
+          B_A_HASH="$(sha256sum "$B_A" | awk '{print $1}')"
+
+          test "$A_SO_HASH" = "$B_SO_HASH"
+          test "$A_A_HASH" = "$B_A_HASH"
+
+          printf '%s\n' "$A_SO_HASH" >/tmp/wam-so.sha256
+          printf '%s\n' "$A_A_HASH" >/tmp/wam-a.sha256
+
+      - name: Compare deterministic circuit and VK identity
+        working-directory: repo/prototypes/zk_balance_halo2
+        run: |
+          CARGO_TARGET_DIR=/tmp/wam-release-a cargo run --release --locked --quiet --example release_identity >/tmp/wam-identity-a.txt
+          CARGO_TARGET_DIR=/tmp/wam-release-b cargo run --release --locked --quiet --example release_identity >/tmp/wam-identity-b.txt
+          diff -u /tmp/wam-identity-a.txt /tmp/wam-identity-b.txt
+          cat /tmp/wam-identity-a.txt
+
+      - name: Emit release qualification manifest
+        working-directory: repo/prototypes/zk_balance_halo2
+        env:
+          SOURCE_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: |
+          export RUSTC_VERSION="$(rustc --version --verbose | tr '\n' '|' | sed 's/|$//')"
+          export CARGO_TOML_SHA="$(sha256sum Cargo.toml | awk '{print $1}')"
+          export CARGO_LOCK_SHA="$(sha256sum Cargo.lock | awk '{print $1}')"
+          export TOOLCHAIN_SHA="$(sha256sum rust-toolchain.toml | awk '{print $1}')"
+          export STATICLIB_SHA="$(cat /tmp/wam-a.sha256)"
+          export SHAREDLIB_SHA="$(cat /tmp/wam-so.sha256)"
+          export PROTOCOL_VERSION="$(sed -n 's/^protocol_version=//p' /tmp/wam-identity-a.txt)"
+          export CIRCUIT_ID="$(sed -n 's/^circuit_id=//p' /tmp/wam-identity-a.txt)"
+          export VERIFIER_K="$(sed -n 's/^verifier_k=//p' /tmp/wam-identity-a.txt)"
+          export VK_ID="$(sed -n 's/^vk_id=//p' /tmp/wam-identity-a.txt)"
+
+          python3 - <<'PY'
+          import json, os
+          manifest = {
+              "schema": 1,
+              "phase": "14A",
+              "result": "PASS",
+              "runner": "ubuntu-24.04",
+              "source_sha": os.environ["SOURCE_SHA"],
+              "rustc": os.environ["RUSTC_VERSION"],
+              "cargo_toml_sha256": os.environ["CARGO_TOML_SHA"],
+              "cargo_lock_sha256": os.environ["CARGO_LOCK_SHA"],
+              "rust_toolchain_sha256": os.environ["TOOLCHAIN_SHA"],
+              "protocol_version": int(os.environ["PROTOCOL_VERSION"]),
+              "circuit_id": int(os.environ["CIRCUIT_ID"]),
+              "verifier_k": int(os.environ["VERIFIER_K"]),
+              "vk_id": os.environ["VK_ID"],
+              "staticlib_sha256": os.environ["STATICLIB_SHA"],
+              "sharedlib_sha256": os.environ["SHAREDLIB_SHA"],
+              "same_runner_double_build_match": True,
+              "claim": "internal engineering reproducibility evidence only",
+          }
+          with open("/tmp/phase14a-release-identity.json", "w", encoding="utf-8") as f:
+              json.dump(manifest, f, indent=2, sort_keys=True)
+              f.write("\n")
+          print(json.dumps(manifest, indent=2, sort_keys=True))
+          PY
+
+      - name: Upload Phase 14A evidence
         uses: actions/upload-artifact@v4
         with:
-          name: phase14a-cargo-lock-bootstrap
-          path: repo/prototypes/zk_balance_halo2/Cargo.lock
+          name: phase14a-release-identity
+          path: /tmp/phase14a-release-identity.json
           if-no-files-found: error
