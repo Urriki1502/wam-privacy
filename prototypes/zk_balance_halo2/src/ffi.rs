@@ -11,8 +11,7 @@
 
 use std::{
     panic::{catch_unwind, AssertUnwindSafe},
-    ptr,
-    slice,
+    ptr, slice,
 };
 
 use halo2_proofs::{
@@ -84,9 +83,7 @@ pub extern "C" fn wam_privacy_halo2_abi_version() -> u32 {
 ///
 /// `out` must be either null or writable for one pointer value.
 #[no_mangle]
-pub unsafe extern "C" fn wam_privacy_halo2_verifier_new(
-    out: *mut *mut WamPrivacyVerifier,
-) -> i32 {
+pub unsafe extern "C" fn wam_privacy_halo2_verifier_new(out: *mut *mut WamPrivacyVerifier) -> i32 {
     if out.is_null() {
         return FfiStatus::NullPointer as i32;
     }
@@ -116,9 +113,7 @@ pub unsafe extern "C" fn wam_privacy_halo2_verifier_new(
 /// `handle` must be null or a live handle returned by this library and must
 /// not be freed more than once.
 #[no_mangle]
-pub unsafe extern "C" fn wam_privacy_halo2_verifier_free(
-    handle: *mut WamPrivacyVerifier,
-) -> i32 {
+pub unsafe extern "C" fn wam_privacy_halo2_verifier_free(handle: *mut WamPrivacyVerifier) -> i32 {
     if handle.is_null() {
         return FfiStatus::NullPointer as i32;
     }
