@@ -1,6 +1,6 @@
 # Phase 10A — Shielded Bundle Semantics
 
-**Status:** qualification candidate.
+**Status:** internal engineering PASS.
 
 Phase 10A promotes the already-general Phase 7 transition model into an explicit bundle contract before any multi-action Halo2 circuit is attempted.
 
@@ -65,7 +65,7 @@ Phase 10A covers:
 
 ## Boundary
 
-Phase 10A is an executable semantic contract only.
+Phase 10A is an executable semantic contract only. Its dedicated qualification gate and all repository regressions passed on the Phase 10A closure PR.
 
 It does not yet provide:
 
