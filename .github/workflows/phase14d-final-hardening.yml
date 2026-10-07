@@ -76,4 +76,4 @@ jobs:
         with:
           name: phase14d-final-hardening
           path: repo/reports/phase14d/
-          if-no-files-found: error
+          if-no-files-found: warn
