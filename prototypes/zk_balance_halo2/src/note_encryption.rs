@@ -12,11 +12,8 @@ use blake2b_simd::Params as Blake2bParams;
 use ff::{FromUniformBytes, PrimeField};
 use halo2_proofs::pasta::Fp;
 use hpke::{
-    aead::ChaCha20Poly1305,
-    kdf::HkdfSha256,
-    kem::X25519HkdfSha256,
-    single_shot_open, single_shot_seal,
-    Deserializable, Kem as KemTrait, OpModeR, OpModeS, Serializable,
+    aead::ChaCha20Poly1305, kdf::HkdfSha256, kem::X25519HkdfSha256, single_shot_open,
+    single_shot_seal, Deserializable, Kem as KemTrait, OpModeR, OpModeS, Serializable,
 };
 use zeroize::Zeroizing;
 
@@ -459,8 +456,8 @@ fn open_ciphertext(
     aad: &NoteAad,
 ) -> Result<Vec<u8>, NoteCryptoError> {
     ciphertext.validate()?;
-    let encapped =
-        KemEncappedKey::from_bytes(&ciphertext.encapped_key).map_err(|_| NoteCryptoError::BadEncappedKey)?;
+    let encapped = KemEncappedKey::from_bytes(&ciphertext.encapped_key)
+        .map_err(|_| NoteCryptoError::BadEncappedKey)?;
     single_shot_open::<Aead, Kdf, Kem>(
         &OpModeR::Base,
         secret,
@@ -485,7 +482,10 @@ fn encode_ciphertext(out: &mut Vec<u8>, value: &NoteCiphertext) -> Result<(), No
     Ok(())
 }
 
-fn decode_ciphertext(encoded: &[u8], cursor: &mut usize) -> Result<NoteCiphertext, NoteCryptoError> {
+fn decode_ciphertext(
+    encoded: &[u8],
+    cursor: &mut usize,
+) -> Result<NoteCiphertext, NoteCryptoError> {
     let enc_len = u16::from_le_bytes(
         take(encoded, cursor, 2)?
             .try_into()
