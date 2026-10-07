@@ -199,8 +199,7 @@ pub fn verify_hardened_bundle_envelope_and_decode(
     expected_context: &ProofContext,
     encoded: &[u8],
 ) -> Result<HardenedBundleEnvelope, HardenedEnvelopeError> {
-    let envelope =
-        precheck_hardened_bundle_envelope(vk_identifier(vk), expected_context, encoded)?;
+    let envelope = precheck_hardened_bundle_envelope(vk_identifier(vk), expected_context, encoded)?;
 
     let instance_columns: &[&[Fp]] = &[&envelope.public_inputs];
     let strategy = SingleVerifier::new(params);
