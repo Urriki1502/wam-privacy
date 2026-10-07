@@ -16,6 +16,7 @@ import sys
 MARKER_INCLUDE = "// WAM-PRIVACY-P13B: experimental verifier include"
 MARKER_RPC = "// WAM-PRIVACY-P13B: experimental verifier RPC"
 MARKER_COMMAND = "// WAM-PRIVACY-P13B: register experimental verifier RPC"
+MARKER_CLIENT_CONVERT = "// WAM-PRIVACY-P13B: verifier RPC numeric conversion"
 MARKER_CPPFLAGS = "# WAM-PRIVACY-P13B: verifier compile gate"
 MARKER_LDADD = "# WAM-PRIVACY-P13B: verifier link gate"
 
@@ -41,6 +42,7 @@ def main() -> int:
     privacy_repo = args.privacy_repo.resolve()
 
     rpc = tree / "src/wam/rpc/wam_rpc.cpp"
+    rpc_client = tree / "src/rpc/client.cpp"
     makefile = tree / "src/Makefile.am"
     target_dir = tree / "src/wam/privacy"
     integration_dir = privacy_repo / "integration/core/phase13b"
@@ -49,7 +51,7 @@ def main() -> int:
         / "prototypes/zk_balance_halo2/include/wam_privacy_halo2.h"
     )
 
-    for required in (rpc, makefile, ffi_header, integration_dir / "privacy_verifier.h",
+    for required in (rpc, rpc_client, makefile, ffi_header, integration_dir / "privacy_verifier.h",
                      integration_dir / "privacy_verifier.cpp"):
         if not required.exists():
             die(f"missing required path: {required}")
@@ -173,6 +175,20 @@ static RPCHelpMan verifyshieldedproof()
             "rpc command",
         )
 
+    client_text = rpc_client.read_text(encoding="utf-8")
+    if MARKER_CLIENT_CONVERT not in client_text:
+        convert_anchor = "static const CRPCConvertParam vRPCConvertParams[] =\n{\n"
+        client_text = replace_once(
+            client_text,
+            convert_anchor,
+            convert_anchor
+            + f"    {MARKER_CLIENT_CONVERT}\n"
+            + '    { "verifyshieldedproof", 2, "transparent_in" },\n'
+            + '    { "verifyshieldedproof", 3, "transparent_out" },\n'
+            + '    { "verifyshieldedproof", 4, "fee" },\n',
+            "RPC client conversion",
+        )
+
     make_text = makefile.read_text(encoding="utf-8")
     verifier_source = "  wam/privacy/privacy_verifier.cpp \\\n"
     if verifier_source not in make_text:
@@ -217,6 +233,7 @@ static RPCHelpMan verifyshieldedproof()
     shutil.copy2(integration_dir / "privacy_verifier.cpp", target_dir / "privacy_verifier.cpp")
     shutil.copy2(ffi_header, target_dir / "wam_privacy_halo2.h")
     rpc.write_text(rpc_text, encoding="utf-8")
+    rpc_client.write_text(client_text, encoding="utf-8")
     makefile.write_text(make_text, encoding="utf-8")
 
     print("PHASE13B_PATCH_APPLIED")
