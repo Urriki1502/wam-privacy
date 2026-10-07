@@ -1,0 +1,79 @@
+name: Phase 14C - Performance and resource benchmarks
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  performance-resource:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          path: repo
+
+      - name: Set up Rust 1.88
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: "1.88.0"
+          components: rustfmt, clippy
+
+      - name: Format check
+        working-directory: repo/prototypes/zk_balance_halo2
+        run: cargo fmt --check
+
+      - name: Clippy
+        working-directory: repo/prototypes/zk_balance_halo2
+        run: cargo clippy --all-targets --locked -- -D warnings
+
+      - name: Build benchmark target
+        working-directory: repo/prototypes/zk_balance_halo2
+        run: cargo test --release --locked --test phase14c_benchmark --no-run
+
+      - name: Locate benchmark binary
+        id: bench
+        working-directory: repo/prototypes/zk_balance_halo2
+        run: |
+          set -euo pipefail
+          BIN="$(find target/release/deps -maxdepth 1 -type f -perm -111 -name 'phase14c_benchmark-*' | head -1)"
+          test -n "$BIN"
+          echo "bin=$BIN" >> "$GITHUB_OUTPUT"
+
+      - name: Run fixed-shape proof benchmark
+        working-directory: repo/prototypes/zk_balance_halo2
+        run: |
+          set -euo pipefail
+          mkdir -p reports/phase14c
+          /usr/bin/time -v "${{ steps.bench.outputs.bin }}" --exact emit_phase14c_profile --nocapture             > reports/phase14c/benchmark.log             2> reports/phase14c/time.log
+          grep '^PHASE14C_JSON=' reports/phase14c/benchmark.log             | tail -1             | sed 's/^PHASE14C_JSON=//'             > reports/phase14c/profile.json
+          cat reports/phase14c/benchmark.log
+          cat reports/phase14c/time.log
+
+      - name: Enforce qualification ceilings
+        run: |
+          python3 repo/scripts/check_phase14c_benchmark.py             repo/prototypes/zk_balance_halo2/reports/phase14c/profile.json             repo/prototypes/zk_balance_halo2/reports/phase14c/time.log             repo/prototypes/zk_balance_halo2/reports/phase14c/evidence.json
+
+      - name: Record runner identity
+        run: |
+          {
+            echo "runner_os=${RUNNER_OS}"
+            echo "runner_arch=${RUNNER_ARCH}"
+            echo "image_os=$(cat /etc/os-release | tr '\n' ' ')"
+            rustc --version --verbose
+            cargo --version
+            uname -a
+          } > repo/prototypes/zk_balance_halo2/reports/phase14c/runner.txt
+
+      - name: Upload Phase 14C evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: phase14c-performance-resource
+          path: repo/prototypes/zk_balance_halo2/reports/phase14c/
+          if-no-files-found: error
