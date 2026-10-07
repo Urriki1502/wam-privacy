@@ -12,8 +12,10 @@ PATCHER = REPO / "integration/core/phase13b/apply_generated_core.py"
 def make_tree(root: Path, *, include_ldadd: bool = True) -> Path:
     tree = root / "core"
     rpc = tree / "src/wam/rpc/wam_rpc.cpp"
+    rpc_client = tree / "src/rpc/client.cpp"
     makefile = tree / "src/Makefile.am"
     rpc.parent.mkdir(parents=True)
+    rpc_client.parent.mkdir(parents=True, exist_ok=True)
     rpc.write_text(
         "#include <wam/crypto/randomx_hash.h>\n"
         "\n"
@@ -24,6 +26,13 @@ def make_tree(root: Path, *, include_ldadd: bool = True) -> Path:
         "        {\"wam\", &getemissionschedule},\n"
         "    };\n"
         "}\n",
+        encoding="utf-8",
+    )
+    rpc_client.write_text(
+        "static const CRPCConvertParam vRPCConvertParams[] =\n"
+        "{\n"
+        '    { "getblockhash", 0, "height" },\n'
+        "};\n",
         encoding="utf-8",
     )
     make = (
@@ -64,6 +73,7 @@ class Phase13BGeneratedCoreTests(unittest.TestCase):
             self.assertEqual(second.returncode, 0, second.stderr)
 
             rpc = (tree / "src/wam/rpc/wam_rpc.cpp").read_text(encoding="utf-8")
+            client = (tree / "src/rpc/client.cpp").read_text(encoding="utf-8")
             make = (tree / "src/Makefile.am").read_text(encoding="utf-8")
 
             self.assertEqual(rpc.count("WAM-PRIVACY-P13B: experimental verifier include"), 1)
@@ -72,6 +82,11 @@ class Phase13BGeneratedCoreTests(unittest.TestCase):
             self.assertIn("#ifdef ENABLE_WAM_PRIVACY_EXPERIMENTAL", rpc)
             self.assertIn("Params().GetChainType() != ChainType::REGTEST", rpc)
             self.assertIn("This RPC is read-only and does not mutate chain or wallet state.", rpc)
+
+            self.assertEqual(client.count("WAM-PRIVACY-P13B: verifier RPC numeric conversion"), 1)
+            self.assertIn('{ "verifyshieldedproof", 2, "transparent_in" },', client)
+            self.assertIn('{ "verifyshieldedproof", 3, "transparent_out" },', client)
+            self.assertIn('{ "verifyshieldedproof", 4, "fee" },', client)
 
             self.assertEqual(make.count("  wam/privacy/privacy_verifier.cpp \\"), 1)
             self.assertEqual(make.count("WAM-PRIVACY-P13B: verifier compile gate"), 1)
@@ -90,14 +105,17 @@ class Phase13BGeneratedCoreTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as td:
             tree = make_tree(Path(td), include_ldadd=False)
             rpc = tree / "src/wam/rpc/wam_rpc.cpp"
+            rpc_client = tree / "src/rpc/client.cpp"
             makefile = tree / "src/Makefile.am"
             rpc_before = rpc.read_bytes()
+            client_before = rpc_client.read_bytes()
             make_before = makefile.read_bytes()
 
             result = apply(tree)
             self.assertNotEqual(result.returncode, 0)
             self.assertIn("Makefile wamd linker", result.stderr + result.stdout)
             self.assertEqual(rpc.read_bytes(), rpc_before)
+            self.assertEqual(rpc_client.read_bytes(), client_before)
             self.assertEqual(makefile.read_bytes(), make_before)
             self.assertFalse((tree / "src/wam/privacy").exists())
 
