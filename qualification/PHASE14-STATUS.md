@@ -5,8 +5,8 @@
 | Stage | Status | Evidence |
 | --- | --- | --- |
 | 14A — reproducible dependency / release identity | **PASS (internal engineering)** | run `37610249058`; locked dependency graph, same-runner double-build artifact hashes and deterministic VK identity PASS |
-| 14B — parser/verifier fuzzing + adversarial corpus | **UNDER QUALIFICATION** | coverage-guided parser/precheck fuzzing + real-proof adversarial corpus |
-| 14C — proving/verifying performance + memory/resource benchmarks | PENDING | requires 14A PASS |
+| 14B — parser/verifier fuzzing + adversarial corpus | **PASS (internal engineering)** | run `37615083459`; 100k executions/target + real-proof adversarial corpus + full regressions PASS |
+| 14C — proving/verifying performance + memory/resource benchmarks | **UNDER QUALIFICATION** | dedicated fixed-runner proof/verify/RSS/size benchmark |
 | 14D — upgrade/migration/static-review + final evidence ledger | PENDING | requires 14B/14C PASS |
 
 ## Phase 14A invariants
@@ -20,7 +20,7 @@
 
 ## Current claim
 
-`PHASE 14A INTERNAL ENGINEERING PASS — PHASE 14B FUZZ QUALIFICATION IN PROGRESS`
+`PHASE 14B INTERNAL ENGINEERING PASS — PHASE 14C PERFORMANCE QUALIFICATION IN PROGRESS`
 
 No external-audit, production-release, consensus-activation or mainnet claim is implied.
 
@@ -49,3 +49,23 @@ No external-audit, production-release, consensus-activation or mainnet claim is 
 - real proof mutations fail closed;
 - fuzz input length and resource use are bounded;
 - corpus/evidence hashes are archived.
+
+
+## Phase 14B evidence
+
+- qualification head: `9798d4aa4d1367f91ce3eaea7d30d14d8133a76c`;
+- workflow run: `37615083459`;
+- parser fuzz target: **100,000 executions PASS**;
+- verifier-precheck fuzz target: **100,000 executions PASS**;
+- deterministic corpus + SHA-256 manifest: **PASS**;
+- real Phase 10D proof adversarial mutations: **PASS / fail-closed**;
+- Phase 1–14A regression workflows on the same head: **PASS**.
+
+## Phase 14C invariants
+
+- benchmark uses the pinned Phase 10D hardened 2×2 circuit;
+- proof generation and verification are measured separately;
+- proof and encoded-envelope sizes are recorded;
+- peak RSS is measured on the already-built benchmark process, not the compiler;
+- benchmark runner/toolchain identity is archived;
+- broad fail-closed ceilings catch pathological performance/resource regressions without pretending CI timing is a production SLA.
