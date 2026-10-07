@@ -4,7 +4,7 @@ set -euo pipefail
 CORE_REPO="https://github.com/wamcoin-core-dev/wam-coin.git"
 CORE_SHA="260bc468e5adffea7ce68d8f97fac3e27e4c50b2"
 WSP_REPO="https://github.com/Urriki1502/wam-silent-payments.git"
-WSP_SHA="a8522fee9b6eda285998a5ff4a45d6bc4eb991b3"
+WSP_SHA="dcf1aecc00a64bfad3151fa202c3e07d47d83e69"
 RANDOMX_REPO="https://github.com/tevador/RandomX.git"
 RANDOMX_TAG="v1.2.1"
 
