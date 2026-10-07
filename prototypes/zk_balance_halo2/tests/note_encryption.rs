@@ -52,10 +52,21 @@ fn incoming_and_audit_capabilities_decrypt_without_spend_material() {
     let incoming = keys.incoming_viewing_key();
     let audit = keys.audit_viewing_key();
 
-    assert_eq!(incoming.decrypt(&encrypted, &aad()).expect("incoming decrypt"), note);
-    assert_eq!(audit.decrypt(&encrypted, &aad()).expect("audit decrypt"), note);
+    assert_eq!(
+        incoming
+            .decrypt(&encrypted, &aad())
+            .expect("incoming decrypt"),
+        note
+    );
+    assert_eq!(
+        audit.decrypt(&encrypted, &aad()).expect("audit decrypt"),
+        note
+    );
     assert_eq!(incoming.recipient_tag(), address.recipient_tag);
-    assert_eq!(keys.spend_authority().public_tag(), address.spend_authority_tag);
+    assert_eq!(
+        keys.spend_authority().public_tag(),
+        address.spend_authority_tag
+    );
 }
 
 #[test]
@@ -72,7 +83,10 @@ fn wrong_viewing_key_and_cross_role_ciphertext_fail_closed() {
         NoteCryptoError::HpkeOpen
     );
     assert_eq!(
-        wrong.audit_viewing_key().decrypt(&encrypted, &aad()).unwrap_err(),
+        wrong
+            .audit_viewing_key()
+            .decrypt(&encrypted, &aad())
+            .unwrap_err(),
         NoteCryptoError::HpkeOpen
     );
 
