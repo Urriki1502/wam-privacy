@@ -1,0 +1,21 @@
+{
+  "schema": 1,
+  "phase": "14A",
+  "result": "PASS",
+  "runner": "ubuntu-24.04",
+  "source_sha": "ac9550e9e966c2e22cbadb96bb0ef57c4d14b2fa",
+  "rustc": "rustc 1.88.0 (6b00bc388 2025-06-23); host x86_64-unknown-linux-gnu; LLVM 20.1.5",
+  "cargo_toml_sha256": "82881664be247998def48e26ad4c7a1a23d638f9706668dbbed17191515947b9",
+  "cargo_lock_sha256": "4e3824e9bacfa07b64edf390f16e8decf802e4684c02732440dab0b62b7b8948",
+  "rust_toolchain_sha256": "6a3177dca3783745b00765ea571974808dad2644947fc0a8df5927048edf13a5",
+  "protocol_version": 1,
+  "circuit_id": 2564,
+  "verifier_k": 15,
+  "vk_id": "de8ae5b7a5a149c11587f6b0e14f61954aea404461642a6ad1eb18b3a5b1700a",
+  "staticlib_sha256": "efcedac97c0759908aa165611dd1a8cf23db1013e527c05ee44420d9391bebbe",
+  "sharedlib_sha256": "8716395a55b431b8b92ec2abe23f8096a251375f741b26dbcaee0756aa1d31df",
+  "same_runner_double_build_match": true,
+  "workflow_run": 37610249058,
+  "artifact_digest": "sha256:6f03aff679d3e9a104b8e9bc0c6570436eaafd288bdc5f5fdae4a6369d09cf49",
+  "claim": "internal engineering reproducibility evidence only"
+}
