@@ -55,11 +55,6 @@ def main() -> int:
         if not required.exists():
             die(f"missing required path: {required}")
 
-    target_dir.mkdir(parents=True, exist_ok=True)
-    shutil.copy2(integration_dir / "privacy_verifier.h", target_dir / "privacy_verifier.h")
-    shutil.copy2(integration_dir / "privacy_verifier.cpp", target_dir / "privacy_verifier.cpp")
-    shutil.copy2(ffi_header, target_dir / "wam_privacy_halo2.h")
-
     rpc_text = rpc.read_text(encoding="utf-8")
     if MARKER_INCLUDE not in rpc_text:
         include_anchor = "#include <wam/crypto/randomx_hash.h>\n"
@@ -179,8 +174,6 @@ static RPCHelpMan verifyshieldedproof()
             "rpc command",
         )
 
-    rpc.write_text(rpc_text, encoding="utf-8")
-
     make_text = makefile.read_text(encoding="utf-8")
     if MARKER_SOURCE not in make_text:
         source_anchor = "  wam/rpc/wam_rpc.cpp \\\n"
@@ -219,6 +212,13 @@ static RPCHelpMan verifyshieldedproof()
             "Makefile wamd linker",
         )
 
+    # Commit the generated-tree mutation only after every anchor has been
+    # validated. An anchor failure must leave the generated Core tree unchanged.
+    target_dir.mkdir(parents=True, exist_ok=True)
+    shutil.copy2(integration_dir / "privacy_verifier.h", target_dir / "privacy_verifier.h")
+    shutil.copy2(integration_dir / "privacy_verifier.cpp", target_dir / "privacy_verifier.cpp")
+    shutil.copy2(ffi_header, target_dir / "wam_privacy_halo2.h")
+    rpc.write_text(rpc_text, encoding="utf-8")
     makefile.write_text(make_text, encoding="utf-8")
 
     print("PHASE13B_PATCH_APPLIED")
