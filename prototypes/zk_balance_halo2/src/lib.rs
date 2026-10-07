@@ -20,6 +20,7 @@ pub mod action;
 pub mod anchor;
 pub mod bundle_action;
 pub mod context;
+pub mod ffi;
 pub mod hardened_bundle;
 pub mod note_action;
 pub mod note_encryption;
