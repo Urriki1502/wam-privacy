@@ -16,7 +16,6 @@ import sys
 MARKER_INCLUDE = "// WAM-PRIVACY-P13B: experimental verifier include"
 MARKER_RPC = "// WAM-PRIVACY-P13B: experimental verifier RPC"
 MARKER_COMMAND = "// WAM-PRIVACY-P13B: register experimental verifier RPC"
-MARKER_SOURCE = "# WAM-PRIVACY-P13B: verifier source"
 MARKER_CPPFLAGS = "# WAM-PRIVACY-P13B: verifier compile gate"
 MARKER_LDADD = "# WAM-PRIVACY-P13B: verifier link gate"
 
@@ -175,14 +174,13 @@ static RPCHelpMan verifyshieldedproof()
         )
 
     make_text = makefile.read_text(encoding="utf-8")
-    if MARKER_SOURCE not in make_text:
+    verifier_source = "  wam/privacy/privacy_verifier.cpp \\\n"
+    if verifier_source not in make_text:
         source_anchor = "  wam/rpc/wam_rpc.cpp \\\n"
         make_text = replace_once(
             make_text,
             source_anchor,
-            source_anchor
-            + f"  {MARKER_SOURCE}\n"
-            + "  wam/privacy/privacy_verifier.cpp \\\n",
+            source_anchor + verifier_source,
             "Makefile source",
         )
 
