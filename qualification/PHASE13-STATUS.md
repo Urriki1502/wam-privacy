@@ -1,13 +1,13 @@
 # Phase 13 Status
 
-**Scope:** isolated WAM Core shielded verifier integration.
+**Scope:** isolated WAM Core shielded verifier and state integration.
 
 | Stage | Status | Evidence |
 | --- | --- | --- |
 | 13A — Rust/C verifier ABI | **PASS (internal engineering)** | run `37587354356`; real Phase 10D proof verified through C ABI; static/shared library + exported symbols PASS |
-| 13B — WAM Core regtest-only verifier hook | UNDER QUALIFICATION | generated-Core patch/build/RPC workflow pending |
-| 13C — atomic shielded state / reorg integration | PENDING | requires 13B PASS |
-| 13D — resource/DoS qualification | PENDING | requires Core verifier integration |
+| 13B — generated WAM Core regtest-only verifier hook | **PASS (internal engineering)** | run `37597535877`; generated-Core build/link/RPC qualification PASS; merge `a2bd4cd7bb21679ee0e64a174046c1b7b0b5ff09` |
+| 13C — atomic shielded state / reorg integration | UNDER QUALIFICATION | proof-bound state engine + atomic block/reorg workflow pending |
+| 13D — resource/DoS qualification | PENDING | requires 13C PASS |
 
 ## Phase 13A invariants
 
@@ -22,23 +22,30 @@
 - C header compiles independently;
 - expected verifier symbols are exported from the shared library.
 
-## Phase 13A qualification
+## Phase 13B invariants
 
-PR #34 completed with all 20 repository workflows successful.
+- normal generated-Core builds remain verifier-disabled;
+- the experimental RPC exists only with the explicit compile/link gates;
+- runtime is regtest-only;
+- the RPC is read-only;
+- no validation, mempool, coins, or persistent chainstate mutation is introduced;
+- malformed proof/context/value inputs fail closed;
+- exact WAM Core revision is pinned for qualification.
 
-Dedicated Phase 13A evidence:
+## Phase 13C invariants
 
-- format: PASS;
-- clippy: PASS;
-- C header compile: PASS;
-- real hardened proof through C ABI: PASS;
-- static/shared verifier library build: PASS;
-- exported ABI symbol checks: PASS;
-- run: `37587354356`;
-- merge commit: `d30e1b8f45cd3d062a26541c6f711a7562093880`.
+- nullifiers and output commitments are extracted only from a verified Phase 10D proof;
+- block application is all-or-nothing;
+- duplicate nullifiers and commitments fail closed;
+- every transition is bound to the current anchor;
+- height and parent linkage are exact;
+- pool arithmetic is checked and WAM-cap bounded;
+- disconnect restores prior anchor, pool, nullifier and commitment state;
+- deep rollback and replacement replay are deterministic.
 
 ## Current claim
 
-`PHASE 13A PASS — PHASE 13B GENERATED-CORE REGTEST HOOK UNDER QUALIFICATION`
+`PHASE 13A/13B PASS — PHASE 13C ATOMIC STATE/REORG UNDER QUALIFICATION`
 
-No WAM Core consensus source was modified by Phase 13A. Phase 13B remains regtest-only and disabled from normal Core builds.
+No WAM Core consensus activation, shielded mempool acceptance, persistent production
+chainstate, testnet, or mainnet claim is implied.
