@@ -5,7 +5,7 @@
 | Stage | Status | Evidence |
 | --- | --- | --- |
 | 13A — Rust/C verifier ABI | **PASS (internal engineering)** | run `37587354356`; real Phase 10D proof verified through C ABI; static/shared library + exported symbols PASS |
-| 13B — WAM Core regtest-only verifier hook | PENDING | requires 13A PASS |
+| 13B — WAM Core regtest-only verifier hook | UNDER QUALIFICATION | generated-Core patch/build/RPC workflow pending |
 | 13C — atomic shielded state / reorg integration | PENDING | requires 13B PASS |
 | 13D — resource/DoS qualification | PENDING | requires Core verifier integration |
 
@@ -39,6 +39,6 @@ Dedicated Phase 13A evidence:
 
 ## Current claim
 
-`PHASE 13A CORE VERIFIER FFI — INTERNAL ENGINEERING PASS`
+`PHASE 13A PASS — PHASE 13B GENERATED-CORE REGTEST HOOK UNDER QUALIFICATION`
 
 No WAM Core consensus source was modified by Phase 13A. Phase 13B remains regtest-only and disabled from normal Core builds.
