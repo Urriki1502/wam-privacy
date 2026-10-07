@@ -17,6 +17,8 @@ MARKER_INCLUDE = "// WAM-PRIVACY-P13B: experimental verifier include"
 MARKER_RPC = "// WAM-PRIVACY-P13B: experimental verifier RPC"
 MARKER_COMMAND = "// WAM-PRIVACY-P13B: register experimental verifier RPC"
 MARKER_SOURCE = "# WAM-PRIVACY-P13B: verifier source"
+MARKER_CPPFLAGS = "# WAM-PRIVACY-P13B: verifier compile gate"
+MARKER_LDADD = "# WAM-PRIVACY-P13B: verifier link gate"
 
 
 def die(message: str) -> None:
@@ -190,7 +192,34 @@ static RPCHelpMan verifyshieldedproof()
             + "  wam/privacy/privacy_verifier.cpp \\\n",
             "Makefile source",
         )
-        makefile.write_text(make_text, encoding="utf-8")
+
+    if MARKER_CPPFLAGS not in make_text:
+        cppflags_anchor = "libbitcoin_node_a_CPPFLAGS = "
+        if make_text.count(cppflags_anchor) != 1:
+            die(
+                "Makefile cppflags: expected exactly one "
+                "libbitcoin_node_a_CPPFLAGS assignment"
+            )
+        line_end = make_text.index("\n", make_text.index(cppflags_anchor)) + 1
+        make_text = (
+            make_text[:line_end]
+            + f"{MARKER_CPPFLAGS}\n"
+            + "libbitcoin_node_a_CPPFLAGS += $(WAM_PRIVACY_CPPFLAGS)\n"
+            + make_text[line_end:]
+        )
+
+    if MARKER_LDADD not in make_text:
+        ldadd_anchor = "wamd_LDADD = $(LIBBITCOIN_NODE) $(bitcoin_bin_ldadd)\n"
+        make_text = replace_once(
+            make_text,
+            ldadd_anchor,
+            ldadd_anchor
+            + f"{MARKER_LDADD}\n"
+            + "wamd_LDADD += $(WAM_PRIVACY_LIB)\n",
+            "Makefile wamd linker",
+        )
+
+    makefile.write_text(make_text, encoding="utf-8")
 
     print("PHASE13B_PATCH_APPLIED")
     return 0
