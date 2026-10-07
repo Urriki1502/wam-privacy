@@ -55,8 +55,9 @@ See [docs/EXISTING-ASSETS.md](docs/EXISTING-ASSETS.md) and [docs/WAM-CORE-COMPAT
 | Phase 12A — Real WAM/WSP adapters | **INTERNAL ENGINEERING PASS** |
 | Phase 12B — Shielded wallet state/recovery | **INTERNAL ENGINEERING PASS** |
 | Phase 13A — Core-facing Halo2 verifier C ABI | **INTERNAL ENGINEERING PASS** |
-| Phase 13B–13D — Core regtest/state/resource integration | **PENDING** |
-| Phase 14 — Release/security hardening | **PENDING** |
+| Phase 13B–13D — Core regtest/state/resource integration | **INTERNAL ENGINEERING PASS** |
+| Phase 14A — Reproducible release identity | **UNDER QUALIFICATION** |
+| Phase 14B–14D — Fuzz/performance/release hardening | **PENDING** |
 | Phase 15 — Independent review/testnet/handoff | **PENDING** |
 
 An internal engineering PASS is not a production-readiness, anonymity, audit, or mainnet claim.
