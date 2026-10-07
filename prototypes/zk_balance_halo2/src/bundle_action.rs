@@ -367,70 +367,63 @@ fn derive_input(
     ),
     Error,
 > {
-    let (
-        recipient,
-        spend_secret,
-        rho,
-        rseed,
-        note_domain,
-        authority_domain,
-        nullifier_domain,
-    ) = layouter.assign_region(
-        || format!("{label} private fields"),
-        |mut region| {
-            let recipient = region.assign_advice(
-                || "recipient tag",
-                config.witness,
-                0,
-                || Value::known(input.recipient_tag),
-            )?;
-            let spend_secret = region.assign_advice(
-                || "spend secret",
-                config.witness,
-                1,
-                || Value::known(input.spend_secret),
-            )?;
-            let rho = region.assign_advice(
-                || "rho",
-                config.witness,
-                2,
-                || Value::known(input.rho),
-            )?;
-            let rseed = region.assign_advice(
-                || "rseed",
-                config.witness,
-                3,
-                || Value::known(input.rseed),
-            )?;
-            let note_domain = region.assign_advice(
-                || "note domain",
-                config.witness,
-                4,
-                || Value::known(Fp::from(NOTE_DOMAIN)),
-            )?;
-            let authority_domain = region.assign_advice(
-                || "authority domain",
-                config.witness,
-                5,
-                || Value::known(Fp::from(AUTHORITY_DOMAIN)),
-            )?;
-            let nullifier_domain = region.assign_advice(
-                || "nullifier domain",
-                config.witness,
-                6,
-                || Value::known(Fp::from(NULLIFIER_DOMAIN)),
-            )?;
-            Ok((
-                recipient,
-                spend_secret,
-                rho,
-                rseed,
-                note_domain,
-                authority_domain,
-                nullifier_domain,
-            ))
-        },
-    )?;
+    let (recipient, spend_secret, rho, rseed, note_domain, authority_domain, nullifier_domain) =
+        layouter.assign_region(
+            || format!("{label} private fields"),
+            |mut region| {
+                let recipient = region.assign_advice(
+                    || "recipient tag",
+                    config.witness,
+                    0,
+                    || Value::known(input.recipient_tag),
+                )?;
+                let spend_secret = region.assign_advice(
+                    || "spend secret",
+                    config.witness,
+                    1,
+                    || Value::known(input.spend_secret),
+                )?;
+                let rho = region.assign_advice(
+                    || "rho",
+                    config.witness,
+                    2,
+                    || Value::known(input.rho),
+                )?;
+                let rseed = region.assign_advice(
+                    || "rseed",
+                    config.witness,
+                    3,
+                    || Value::known(input.rseed),
+                )?;
+                let note_domain = region.assign_advice(
+                    || "note domain",
+                    config.witness,
+                    4,
+                    || Value::known(Fp::from(NOTE_DOMAIN)),
+                )?;
+                let authority_domain = region.assign_advice(
+                    || "authority domain",
+                    config.witness,
+                    5,
+                    || Value::known(Fp::from(AUTHORITY_DOMAIN)),
+                )?;
+                let nullifier_domain = region.assign_advice(
+                    || "nullifier domain",
+                    config.witness,
+                    6,
+                    || Value::known(Fp::from(NULLIFIER_DOMAIN)),
+                )?;
+                Ok((
+                    recipient,
+                    spend_secret,
+                    rho,
+                    rseed,
+                    note_domain,
+                    authority_domain,
+                    nullifier_domain,
+                ))
+            },
+        )?;
 
     let authority = hash_cells(
         config,
@@ -462,13 +455,7 @@ fn derive_input(
         &format!("{label} authority tag"),
     )?;
     let h3 = hash_cells(config, layouter, h2, rho, &format!("{label} rho"))?;
-    let identity = hash_cells(
-        config,
-        layouter,
-        h3,
-        rseed,
-        &format!("{label} randomness"),
-    )?;
+    let identity = hash_cells(config, layouter, h3, rseed, &format!("{label} randomness"))?;
 
     let root = anchor_identity(
         config,
@@ -520,12 +507,8 @@ fn derive_output(
                 1,
                 || Value::known(output.spend_authority_tag),
             )?;
-            let rho = region.assign_advice(
-                || "rho",
-                config.witness,
-                2,
-                || Value::known(output.rho),
-            )?;
+            let rho =
+                region.assign_advice(|| "rho", config.witness, 2, || Value::known(output.rho))?;
             let rseed = region.assign_advice(
                 || "rseed",
                 config.witness,
@@ -564,13 +547,7 @@ fn derive_output(
         &format!("{label} authority tag"),
     )?;
     let h3 = hash_cells(config, layouter, h2, rho, &format!("{label} rho"))?;
-    hash_cells(
-        config,
-        layouter,
-        h3,
-        rseed,
-        &format!("{label} randomness"),
-    )
+    hash_cells(config, layouter, h3, rseed, &format!("{label} randomness"))
 }
 
 fn anchor_identity(
