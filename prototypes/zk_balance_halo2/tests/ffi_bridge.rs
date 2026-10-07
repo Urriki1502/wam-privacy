@@ -1,4 +1,4 @@
-use std::{ptr, sync::OnceLock};
+use std::ptr;
 
 use halo2_proofs::{
     pasta::{EqAffine, Fp},
@@ -32,6 +32,7 @@ fn fixture() -> (HardenedBundleCircuit, ProofContext) {
         transparent_out,
         fee,
     );
+
     let mut circuit = HardenedBundleCircuit {
         inputs: [
             HardenedBundleInput {
@@ -90,37 +91,31 @@ fn fixture() -> (HardenedBundleCircuit, ProofContext) {
 }
 
 fn proof_envelope() -> (Vec<u8>, ProofContext, [u8; 32]) {
-    static FIXTURE: OnceLock<(Vec<u8>, ProofContext, [u8; 32])> = OnceLock::new();
-    FIXTURE
-        .get_or_init(|| {
-            let (circuit, context) = fixture();
-            let public = circuit.public_inputs();
-            let public_array: [Fp; PUBLIC_INPUT_COUNT] =
-                public.clone().try_into().expect("nine public inputs");
+    let (circuit, context) = fixture();
+    let public = circuit.public_inputs();
+    let public_array: [Fp; PUBLIC_INPUT_COUNT] =
+        public.clone().try_into().expect("nine public inputs");
 
-            let params: Params<EqAffine> = Params::new(VERIFIER_K);
-            let vk = keygen_vk(&params, &circuit).expect("verification key");
-            let expected_vk_id = vk_identifier(&vk);
-            let pk = keygen_pk(&params, vk, &circuit).expect("proving key");
+    let params: Params<EqAffine> = Params::new(VERIFIER_K);
+    let vk = keygen_vk(&params, &circuit).expect("verification key");
+    let expected_vk_id = vk_identifier(&vk);
+    let pk = keygen_pk(&params, vk, &circuit).expect("proving key");
 
-            let instance_columns: &[&[Fp]] = &[&public];
-            let mut transcript = Blake2bWrite::<_, EqAffine, Challenge255<_>>::init(vec![]);
-            create_proof(
-                &params,
-                &pk,
-                &[circuit],
-                &[instance_columns],
-                OsRng,
-                &mut transcript,
-            )
-            .expect("proof");
-            let proof = transcript.finalize();
+    let instance_columns: &[&[Fp]] = &[&public];
+    let mut transcript = Blake2bWrite::<_, EqAffine, Challenge255<_>>::init(vec![]);
+    create_proof(
+        &params,
+        &pk,
+        &[circuit],
+        &[instance_columns],
+        OsRng,
+        &mut transcript,
+    )
+    .expect("proof");
+    let proof = transcript.finalize();
 
-            let envelope =
-                HardenedBundleEnvelope::new(pk.get_vk(), public_array, proof).expect("envelope");
-            (envelope.encode().expect("encode"), context, expected_vk_id)
-        })
-        .clone()
+    let envelope = HardenedBundleEnvelope::new(pk.get_vk(), public_array, proof).expect("envelope");
+    (envelope.encode().expect("encode"), context, expected_vk_id)
 }
 
 unsafe fn new_handle() -> *mut WamPrivacyVerifier {
@@ -134,54 +129,39 @@ unsafe fn new_handle() -> *mut WamPrivacyVerifier {
 }
 
 #[test]
-fn abi_version_and_vk_identity_are_stable() {
+fn core_facing_ffi_contract() {
     assert_eq!(wam_privacy_halo2_abi_version(), ABI_VERSION);
-    let (_, _, expected_vk_id) = proof_envelope();
+
+    let (encoded, context, expected_vk_id) = proof_envelope();
     let handle = unsafe { new_handle() };
 
-    let mut actual = [0u8; 32];
+    let mut actual_vk_id = [0u8; 32];
     assert_eq!(
-        unsafe { wam_privacy_halo2_verifier_vk_id(handle, actual.as_mut_ptr(), actual.len()) },
+        unsafe {
+            wam_privacy_halo2_verifier_vk_id(
+                handle,
+                actual_vk_id.as_mut_ptr(),
+                actual_vk_id.len(),
+            )
+        },
         FfiStatus::Ok as i32
     );
-    assert_eq!(actual, expected_vk_id);
+    assert_eq!(actual_vk_id, expected_vk_id);
 
-    assert_eq!(
-        unsafe { wam_privacy_halo2_verifier_free(handle) },
-        FfiStatus::Ok as i32
-    );
-}
-
-#[test]
-fn real_hardened_proof_verifies_through_core_facing_abi() {
-    let (encoded, context, _) = proof_envelope();
-    let handle = unsafe { new_handle() };
-
-    let rc = unsafe {
+    let valid = unsafe {
         wam_privacy_halo2_verify_hardened_v1(
             handle,
             encoded.as_ptr(),
             encoded.len(),
             NetworkId::Regtest as u32,
             context.transaction_digest.as_ptr(),
-            context.transaction_digest.len(),
+            32,
             context.transparent_in,
             context.transparent_out,
             context.fee,
         )
     };
-    assert_eq!(rc, FfiStatus::Ok as i32);
-
-    assert_eq!(
-        unsafe { wam_privacy_halo2_verifier_free(handle) },
-        FfiStatus::Ok as i32
-    );
-}
-
-#[test]
-fn context_and_network_replay_fail_closed() {
-    let (encoded, context, _) = proof_envelope();
-    let handle = unsafe { new_handle() };
+    assert_eq!(valid, FfiStatus::Ok as i32);
 
     let mainnet = unsafe {
         wam_privacy_halo2_verify_hardened_v1(
@@ -230,19 +210,8 @@ fn context_and_network_replay_fail_closed() {
     };
     assert_eq!(wrong_balance, FfiStatus::ContextMismatch as i32);
 
-    assert_eq!(
-        unsafe { wam_privacy_halo2_verifier_free(handle) },
-        FfiStatus::Ok as i32
-    );
-}
-
-#[test]
-fn malformed_inputs_fail_before_or_during_verification() {
-    let (encoded, context, _) = proof_envelope();
-    let handle = unsafe { new_handle() };
-
     let malformed = [0xFFu8; 16];
-    let rc = unsafe {
+    let malformed_rc = unsafe {
         wam_privacy_halo2_verify_hardened_v1(
             handle,
             malformed.as_ptr(),
@@ -255,7 +224,7 @@ fn malformed_inputs_fail_before_or_during_verification() {
             context.fee,
         )
     };
-    assert_eq!(rc, FfiStatus::BadEnvelope as i32);
+    assert_eq!(malformed_rc, FfiStatus::BadEnvelope as i32);
 
     let bad_digest_len = unsafe {
         wam_privacy_halo2_verify_hardened_v1(
