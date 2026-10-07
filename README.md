@@ -50,6 +50,7 @@ See [docs/EXISTING-ASSETS.md](docs/EXISTING-ASSETS.md) and [docs/WAM-CORE-COMPAT
 | Phase 8 — Isolated ZK prototype | Stages A/B/B2/C/D/E/F **INTERNAL ENGINEERING PASS**; real proofs + Phase 7/8 semantic differential bridge verified |
 | Phase 9A — Integrated anchored-spend action | **INTERNAL ENGINEERING PASS**; one note-identity cell binds anchor + authority + nullifier in one circuit |
 | Phase 9B — In-circuit note commitment | **INTERNAL ENGINEERING PASS**; private note fields derive the anchored/nullified identity with WAM cap constraints |
+| Phase 9C — Integrated shielded value action | **INTERNAL ENGINEERING PASS**; one input note → one output note + explicit fee with in-circuit conservation and real-proof tamper rejection |
 
 An internal engineering PASS is not a production-readiness, anonymity, audit, or mainnet claim.
 
@@ -103,6 +104,8 @@ An internal engineering PASS is not a production-readiness, anonymity, audit, or
 - [qualification/PHASE7-STATUS.md](qualification/PHASE7-STATUS.md) — Phase 7 qualification status.
 - [docs/ZK-PROTOTYPE.md](docs/ZK-PROTOTYPE.md) — Phase 8 Halo2 prototype stages and non-claims.
 - [qualification/PHASE8-STATUS.md](qualification/PHASE8-STATUS.md) — Phase 8 internal qualification status.
+- [docs/PHASE9C-VALUE-ACTION.md](docs/PHASE9C-VALUE-ACTION.md) — Phase 9C integrated value-action relation.
+- [qualification/PHASE9-STATUS.md](qualification/PHASE9-STATUS.md) — Phase 9 qualification status.
 
 ## Development rule
 

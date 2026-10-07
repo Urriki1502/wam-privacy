@@ -98,6 +98,14 @@ The suite rejects:
 
 The Phase 9C suite generates and verifies a real Halo2 proof for the integrated value action and verifies that each public instance is cryptographically bound.
 
+Qualification workflow run `37559236742` completed successfully.
+
+## CI qualification note
+
+During initial qualification, the Phase 8 workflow was cancelled after all executed tests had passed because it used `cargo test --all-targets` and therefore also ran later Phase 9 real-proof targets, exceeding its 20-minute job timeout.
+
+The workflow was corrected to run only the Phase 8 test targets. The corrected Phase 8 run `37559236698` passed, and the dedicated Phase 9A, 9B and 9C workflows also passed independently.
+
 ## Boundary
 
 This is not yet a production shielded transaction.
@@ -115,4 +123,4 @@ Those remain explicit future gates.
 
 ## Claim
 
-`PHASE 9C INTEGRATED VALUE ACTION — INTERNAL ENGINEERING RESEARCH`
+`PHASE 9C INTEGRATED VALUE ACTION — INTERNAL ENGINEERING PASS`
