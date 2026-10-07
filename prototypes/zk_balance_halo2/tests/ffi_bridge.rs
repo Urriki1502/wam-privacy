@@ -138,11 +138,7 @@ fn core_facing_ffi_contract() {
     let mut actual_vk_id = [0u8; 32];
     assert_eq!(
         unsafe {
-            wam_privacy_halo2_verifier_vk_id(
-                handle,
-                actual_vk_id.as_mut_ptr(),
-                actual_vk_id.len(),
-            )
+            wam_privacy_halo2_verifier_vk_id(handle, actual_vk_id.as_mut_ptr(), actual_vk_id.len())
         },
         FfiStatus::Ok as i32
     );
