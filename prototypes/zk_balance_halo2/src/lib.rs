@@ -21,6 +21,7 @@ pub mod anchor;
 pub mod bundle_action;
 pub mod note_action;
 pub mod nullifier;
+pub mod serialization;
 pub mod transfer_action;
 
 use halo2_proofs::{
