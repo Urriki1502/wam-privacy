@@ -5,8 +5,8 @@
 | Stage | Status | Evidence |
 | --- | --- | --- |
 | 10A — executable bundle semantics | **PASS (internal engineering)** | dedicated Phase 10A gate + Phase 1–9C regressions all PASS on PR #28 head |
-| 10B — multi-action Halo2 relation | PENDING | allowed after 10A PASS |
-| 10C — serialization / verifier contract | PENDING | requires 10B PASS |
+| 10B — multi-action Halo2 relation | **PASS (internal engineering)** | fixed 2×2 bundle real-proof workflow + full Phase 1–10A regressions all PASS on synced PR #27 head |
+| 10C — serialization / verifier contract | PENDING | allowed after 10B PASS |
 
 ## 10A invariants
 
@@ -18,21 +18,38 @@
 - global pool accounting cannot exceed the exact WAM monetary cap;
 - transition shape limits fail closed.
 
+## 10B fixed-shape relation
+
+The 2×2 research circuit proves:
+
+- one shared public Merkle root for both shielded inputs;
+- two private spend authorities and two public authority tags;
+- two public nullifiers derived from their exact input note identities;
+- in-circuit nullifier-pair uniqueness;
+- two complete output note commitments;
+- in-circuit output-commitment uniqueness;
+- non-zero, 64-bit, exact-WAM-cap-bounded shielded amounts;
+- 64-bit, exact-WAM-cap-bounded fee;
+- capped aggregate input and aggregate output-plus-fee;
+- exact aggregate value conservation;
+- real Halo2 proof verification and public-instance tamper rejection.
+
 ## Qualification evidence
 
-PR #28 qualification head completed with all repository workflows successful.
+Phase 10A closure:
 
-Key evidence:
+- Phase 10A bundle semantics run `37563922532` — **PASS**;
+- Phase 1–9C regressions — **PASS**.
 
-- Phase 10A bundle semantics: run `37563922532` — **PASS**;
-- Phase 8 Halo2 prototype suite: **PASS**;
-- Phase 9A integrated shielded action: **PASS**;
-- Phase 9B in-circuit note commitment: **PASS**;
-- Phase 9C integrated value action: **PASS**;
-- Phase 1–7 regression workflows: **PASS**.
+Phase 10B synced qualification head:
+
+- Phase 10B fixed bundle Halo2 run `37565601095` — **PASS**;
+- Phase 10A bundle semantics — **PASS**;
+- Phase 8/9A/9B/9C real-proof regressions — **PASS**;
+- Phase 1–7 regressions — **PASS**.
 
 ## Current claim
 
-`PHASE 10A EXECUTABLE BUNDLE SEMANTICS — INTERNAL ENGINEERING PASS`
+`PHASE 10B FIXED 2×2 HALO2 BUNDLE — INTERNAL ENGINEERING PASS`
 
-No production, audit, consensus, anonymity, encryption, or mainnet claim is implied.
+No production, audit, consensus, anonymity, encryption, serialization, or mainnet claim is implied.

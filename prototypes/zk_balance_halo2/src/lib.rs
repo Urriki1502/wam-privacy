@@ -18,6 +18,7 @@
 
 pub mod action;
 pub mod anchor;
+pub mod bundle_action;
 pub mod note_action;
 pub mod nullifier;
 pub mod transfer_action;
