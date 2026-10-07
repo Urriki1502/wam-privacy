@@ -94,27 +94,27 @@ fn proof_envelope() -> (Vec<u8>, ProofContext, [u8; 32]) {
     FIXTURE
         .get_or_init(|| {
             let (circuit, context) = fixture();
-    let public = circuit.public_inputs();
-    let public_array: [Fp; PUBLIC_INPUT_COUNT] =
-        public.clone().try_into().expect("nine public inputs");
+            let public = circuit.public_inputs();
+            let public_array: [Fp; PUBLIC_INPUT_COUNT] =
+                public.clone().try_into().expect("nine public inputs");
 
-    let params: Params<EqAffine> = Params::new(VERIFIER_K);
-    let vk = keygen_vk(&params, &circuit).expect("verification key");
-    let expected_vk_id = vk_identifier(&vk);
-    let pk = keygen_pk(&params, vk, &circuit).expect("proving key");
+            let params: Params<EqAffine> = Params::new(VERIFIER_K);
+            let vk = keygen_vk(&params, &circuit).expect("verification key");
+            let expected_vk_id = vk_identifier(&vk);
+            let pk = keygen_pk(&params, vk, &circuit).expect("proving key");
 
-    let instance_columns: &[&[Fp]] = &[&public];
-    let mut transcript = Blake2bWrite::<_, EqAffine, Challenge255<_>>::init(vec![]);
-    create_proof(
-        &params,
-        &pk,
-        &[circuit],
-        &[instance_columns],
-        OsRng,
-        &mut transcript,
-    )
-    .expect("proof");
-    let proof = transcript.finalize();
+            let instance_columns: &[&[Fp]] = &[&public];
+            let mut transcript = Blake2bWrite::<_, EqAffine, Challenge255<_>>::init(vec![]);
+            create_proof(
+                &params,
+                &pk,
+                &[circuit],
+                &[instance_columns],
+                OsRng,
+                &mut transcript,
+            )
+            .expect("proof");
+            let proof = transcript.finalize();
 
             let envelope =
                 HardenedBundleEnvelope::new(pk.get_vk(), public_array, proof).expect("envelope");
