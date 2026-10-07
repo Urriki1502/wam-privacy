@@ -88,6 +88,12 @@ pub unsafe extern "C" fn wam_privacy_halo2_verifier_new(out: *mut *mut WamPrivac
         return FfiStatus::NullPointer as i32;
     }
 
+    // Fail closed: a failed constructor must never leave the caller holding a
+    // stale or uninitialized handle value.
+    unsafe {
+        ptr::write(out, ptr::null_mut());
+    }
+
     match catch_unwind(AssertUnwindSafe(|| {
         let params: Params<EqAffine> = Params::new(VERIFIER_K);
         let circuit = HardenedBundleCircuit::default();
