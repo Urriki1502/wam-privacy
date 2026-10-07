@@ -5,7 +5,7 @@
 | Stage | Status | Evidence |
 | --- | --- | --- |
 | 14A — reproducible dependency / release identity | **PASS (internal engineering)** | run `37610249058`; locked dependency graph, same-runner double-build artifact hashes and deterministic VK identity PASS |
-| 14B — parser/verifier fuzzing + adversarial corpus | PENDING | requires 14A PASS |
+| 14B — parser/verifier fuzzing + adversarial corpus | **UNDER QUALIFICATION** | coverage-guided parser/precheck fuzzing + real-proof adversarial corpus |
 | 14C — proving/verifying performance + memory/resource benchmarks | PENDING | requires 14A PASS |
 | 14D — upgrade/migration/static-review + final evidence ledger | PENDING | requires 14B/14C PASS |
 
@@ -20,7 +20,7 @@
 
 ## Current claim
 
-`PHASE 14A REPRODUCIBLE RELEASE IDENTITY — INTERNAL ENGINEERING PASS`
+`PHASE 14A INTERNAL ENGINEERING PASS — PHASE 14B FUZZ QUALIFICATION IN PROGRESS`
 
 No external-audit, production-release, consensus-activation or mainnet claim is implied.
 
@@ -40,3 +40,12 @@ No external-audit, production-release, consensus-activation or mainnet claim is 
 - static library SHA-256: `efcedac97c0759908aa165611dd1a8cf23db1013e527c05ee44420d9391bebbe`;
 - shared library SHA-256: `8716395a55b431b8b92ec2abe23f8096a251375f741b26dbcaee0756aa1d31df`;
 - same-runner double-build match: **true**.
+
+## Phase 14B invariants
+
+- arbitrary envelope bytes cannot panic the parser;
+- any accepted decode canonicalizes deterministically;
+- verifier precheck cannot accept wrong VK/context/transparent balance;
+- real proof mutations fail closed;
+- fuzz input length and resource use are bounded;
+- corpus/evidence hashes are archived.
