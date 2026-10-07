@@ -272,14 +272,17 @@ fn core_facing_ffi_contract() {
     );
 }
 
-
 #[test]
 fn phase14b_adversarial_verifier_corpus_fails_closed() {
     let (encoded, context, _) = proof_envelope();
     let handle = unsafe { new_handle() };
 
-    let verify = |candidate: &[u8], digest: &[u8; 32], transparent_in: u64,
-                  transparent_out: u64, fee: u64| -> i32 {
+    let verify = |candidate: &[u8],
+                  digest: &[u8; 32],
+                  transparent_in: u64,
+                  transparent_out: u64,
+                  fee: u64|
+     -> i32 {
         unsafe {
             wam_privacy_halo2_verify_hardened_v1(
                 handle,
