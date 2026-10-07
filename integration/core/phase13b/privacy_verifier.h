@@ -22,6 +22,7 @@ enum class VerifyStatus : int32_t {
     TRANSPARENT_BALANCE_MISMATCH = 13,
     PROOF_REJECTED = 14,
     NOT_COMPILED = 100,
+    BUSY = 101,
 };
 
 struct VerifyRequest {

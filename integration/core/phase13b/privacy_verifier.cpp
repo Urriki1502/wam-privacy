@@ -55,7 +55,11 @@ VerifyStatus VerifyRegtest(const VerifyRequest& request)
         return static_cast<VerifyStatus>(holder.init_status);
     }
 
-    std::lock_guard<std::mutex> lock{verify_mutex};
+    std::unique_lock<std::mutex> lock{verify_mutex, std::try_to_lock};
+    if (!lock.owns_lock()) {
+        return VerifyStatus::BUSY;
+    }
+
     const int32_t status = wam_privacy_halo2_verify_hardened_v1(
         holder.verifier,
         request.envelope.data(),

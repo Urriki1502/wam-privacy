@@ -18,6 +18,8 @@ use halo2_proofs::{
     poly::commitment::Params,
 };
 
+pub const MAX_TRANSITIONS_PER_BLOCK: usize = 64;
+
 use crate::{
     context::ProofContext,
     serialization_v2::{verify_hardened_bundle_envelope_and_decode, HardenedEnvelopeError},
@@ -30,6 +32,7 @@ pub enum CoreStateError {
     InitialPoolRange,
     NonCanonicalAnchor,
     EmptyBlock,
+    BlockTransitionLimit,
     HeightMismatch,
     ParentMismatch,
     AnchorMismatch,
@@ -187,6 +190,9 @@ impl CoreShieldedState {
     fn apply_block_inner(&mut self, block: StateBlock) -> Result<(), CoreStateError> {
         if block.transitions.is_empty() {
             return Err(CoreStateError::EmptyBlock);
+        }
+        if block.transitions.len() > MAX_TRANSITIONS_PER_BLOCK {
+            return Err(CoreStateError::BlockTransitionLimit);
         }
         require_canonical_fp(block.next_anchor)?;
 
@@ -432,6 +438,23 @@ mod tests {
         assert_eq!(
             state.apply_block(candidate),
             Err(CoreStateError::PoolUnderflow)
+        );
+        assert_eq!(state, before);
+    }
+
+    #[test]
+    fn oversized_transition_batch_fails_before_state_mutation() {
+        let anchor = field(450);
+        let mut state = CoreShieldedState::new(anchor, 100_000).unwrap();
+        let before = state.clone();
+        let transitions = (0..=MAX_TRANSITIONS_PER_BLOCK)
+            .map(|index| transition(anchor, 100 + index as u64, 0, 0, 0))
+            .collect();
+        let candidate = block(&state, 0, 12, field(451), transitions);
+
+        assert_eq!(
+            state.apply_block(candidate),
+            Err(CoreStateError::BlockTransitionLimit)
         );
         assert_eq!(state, before);
     }

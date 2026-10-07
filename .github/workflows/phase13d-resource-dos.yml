@@ -1,0 +1,56 @@
+name: Phase 13D - Resource and DoS qualification
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  resource-dos:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          path: repo
+
+      - name: Set up Rust 1.88
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: "1.88.0"
+          components: rustfmt, clippy
+
+      - name: Format check
+        working-directory: repo/prototypes/zk_balance_halo2
+        run: cargo fmt --check
+
+      - name: Clippy
+        working-directory: repo/prototypes/zk_balance_halo2
+        run: cargo clippy --all-targets -- -D warnings
+
+      - name: Parser and envelope resource limits
+        working-directory: repo/prototypes/zk_balance_halo2
+        run: cargo test --test resource_limits --verbose
+
+      - name: State transition resource cap
+        working-directory: repo/prototypes/zk_balance_halo2
+        run: cargo test --lib core_state::tests::oversized_transition_batch_fails_before_state_mutation --verbose
+
+      - name: Verify generated-Core resource contract
+        run: |
+          python3 -m py_compile repo/integration/core/phase13b/verify_generated_core.py
+          grep -q 'std::try_to_lock' repo/integration/core/phase13b/privacy_verifier.cpp
+          grep -q 'VerifyStatus::BUSY' repo/integration/core/phase13b/privacy_verifier.cpp
+
+      - name: Compile and run verifier concurrency smoke
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/phase13d/wam/privacy
+          cp repo/integration/core/phase13b/privacy_verifier.h /tmp/phase13d/wam/privacy/privacy_verifier.h
+          cp repo/prototypes/zk_balance_halo2/include/wam_privacy_halo2.h /tmp/phase13d/wam/privacy/wam_privacy_halo2.h
+          c++ -std=c++20 -Wall -Wextra -Werror -pthread             -DENABLE_WAM_PRIVACY_EXPERIMENTAL             -I/tmp/phase13d             repo/integration/core/phase13b/privacy_verifier.cpp             repo/integration/core/phase13d/concurrency_smoke.cpp             -o /tmp/phase13d-concurrency
+          /tmp/phase13d-concurrency
