@@ -1,0 +1,51 @@
+name: Phase 12 - Real WAM adapters
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  real-wam-adapters:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout wam-privacy
+        uses: actions/checkout@v4
+        with:
+          path: repo
+
+      - name: Checkout qualified WSP implementation
+        uses: actions/checkout@v4
+        with:
+          repository: Urriki1502/wam-silent-payments
+          ref: dcf1aecc00a64bfad3151fa202c3e07d47d83e69
+          path: wsp
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: |
+            wsp/requirements-dev.txt
+            wsp/requirements-lock.txt
+
+      - name: Install WSP runtime
+        working-directory: wsp
+        run: |
+          python -m pip install -r requirements-dev.txt
+          python -m pip install --no-build-isolation . ./integration-deps/wam-sdk
+
+      - name: Compile adapter boundary
+        working-directory: repo
+        run: |
+          PYTHONPATH=prototypes python -m py_compile             prototypes/real_adapters/__init__.py             prototypes/real_adapters/wam.py             tests/test_phase12_real_adapters.py
+
+      - name: Run real adapter tests
+        working-directory: repo
+        run: |
+          PYTHONPATH=prototypes python -m unittest -v tests/test_phase12_real_adapters.py
