@@ -1,0 +1,26 @@
+[package]
+name = "wam-privacy-halo2-fuzz"
+version = "0.0.0"
+publish = false
+edition = "2021"
+
+[package.metadata]
+cargo-fuzz = true
+
+[dependencies]
+libfuzzer-sys = "0.4"
+wam-privacy-halo2-prototype = { path = ".." }
+
+[[bin]]
+name = "hardened_envelope_decode"
+path = "fuzz_targets/hardened_envelope_decode.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "hardened_verifier_precheck"
+path = "fuzz_targets/hardened_verifier_precheck.rs"
+test = false
+doc = false
+bench = false
