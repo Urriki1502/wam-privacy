@@ -1,0 +1,35 @@
+name: Phase 10A - Bundle semantics
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  bundle-semantics:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Compile executable bundle model
+        run: |
+          python -m py_compile             prototypes/shielded_model/__init__.py             prototypes/shielded_model/model.py             tests/test_phase7_shielded_model.py             tests/test_phase10_bundle_semantics.py
+
+      - name: Run Phase 7 regression and Phase 10A bundle tests
+        run: |
+          python -m unittest -v             tests/test_phase7_shielded_model.py             tests/test_phase10_bundle_semantics.py
+
+      - name: Verify Phase 7/8 semantic oracle remains reproducible
+        run: |
+          python scripts/generate_phase8f_bridge.py --output /tmp/phase8f-oracle.json
+          diff -u prototypes/zk_balance_halo2/bridge/phase8f-oracle.json /tmp/phase8f-oracle.json
