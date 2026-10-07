@@ -17,7 +17,9 @@ use wam_privacy_halo2_prototype::{
     },
     hardened_bundle::{HardenedBundleCircuit, HardenedBundleInput, HardenedBundleOutput},
     note_action::authority_tag,
-    serialization_v2::{vk_identifier, HardenedBundleEnvelope, PUBLIC_INPUT_COUNT},
+    serialization_v2::{
+        vk_identifier, HardenedBundleEnvelope, MAX_PROOF_BYTES, PUBLIC_INPUT_COUNT,
+    },
     MAX_WAM_ATOMS,
 };
 
