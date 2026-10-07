@@ -20,9 +20,7 @@ use halo2_proofs::{
 
 use crate::{
     context::ProofContext,
-    serialization_v2::{
-        verify_hardened_bundle_envelope_and_decode, HardenedEnvelopeError,
-    },
+    serialization_v2::{verify_hardened_bundle_envelope_and_decode, HardenedEnvelopeError},
     MAX_WAM_ATOMS,
 };
 
@@ -67,8 +65,7 @@ impl VerifiedTransition {
         context: &ProofContext,
         encoded: &[u8],
     ) -> Result<Self, CoreStateError> {
-        let envelope =
-            verify_hardened_bundle_envelope_and_decode(params, vk, context, encoded)?;
+        let envelope = verify_hardened_bundle_envelope_and_decode(params, vk, context, encoded)?;
 
         Ok(Self {
             anchor: fp_bytes(envelope.public_inputs[0]),
@@ -217,9 +214,7 @@ impl CoreShieldedState {
             }
 
             for commitment in transition.output_commitments {
-                if self.commitments.contains(&commitment)
-                    || !block_commitments.insert(commitment)
-                {
+                if self.commitments.contains(&commitment) || !block_commitments.insert(commitment) {
                     return Err(CoreStateError::DuplicateCommitment);
                 }
             }
@@ -286,7 +281,9 @@ impl CoreShieldedState {
     pub fn rollback_to(&mut self, height: Option<u64>) -> Result<(), CoreStateError> {
         match height {
             Some(target) => {
-                let current = self.tip_height.ok_or(CoreStateError::UnknownRollbackHeight)?;
+                let current = self
+                    .tip_height
+                    .ok_or(CoreStateError::UnknownRollbackHeight)?;
                 if target > current {
                     return Err(CoreStateError::UnknownRollbackHeight);
                 }
