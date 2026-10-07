@@ -70,9 +70,10 @@ def evaluate_balance_case(name: str, spent: int, tin: int, created: int, tout: i
         if created:
             outputs = (note(created, 2, blob(0x12)),)
 
-        # Seed exactly enough transparent pool value to isolate value-conservation
-        # semantics from unrelated pool-underflow behavior.
-        state = ShieldedState(commitments=commitments, pool_atoms=tout)
+        # Seed the modeled pool with the value represented by the spend fixture.
+        # This keeps pool accounting coherent while isolating the semantic
+        # accept/reject comparison from unrelated malformed-state behavior.
+        state = ShieldedState(commitments=commitments, pool_atoms=spent)
         tx = Transition(
             spends=spends,
             outputs=outputs,
