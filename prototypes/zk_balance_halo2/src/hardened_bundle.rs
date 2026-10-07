@@ -750,8 +750,7 @@ impl Circuit<Fp> for HardenedBundleCircuit {
 
             vec![
                 s.clone() * (in_total.clone() - in0 - in1 - transparent_in_v),
-                s.clone()
-                    * (out_total.clone() - out0 - out1 - transparent_out_v - fee_v),
+                s.clone() * (out_total.clone() - out0 - out1 - transparent_out_v - fee_v),
                 s * (in_total - out_total),
             ]
         });
