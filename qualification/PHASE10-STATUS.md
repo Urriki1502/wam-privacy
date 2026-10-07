@@ -20,6 +20,8 @@
 
 ## Current claim
 
-`PHASE 10A UNDER QUALIFICATION — BUNDLE SEMANTICS ONLY`
+`PHASE 10A QUALIFICATION RERUN PENDING — BUNDLE SEMANTICS ONLY`
+
+Qualification closure requires the dedicated Phase 10A workflow and all repository regressions to pass on a reviewable PR head.
 
 No production, audit, consensus, anonymity, encryption, or mainnet claim is implied.
