@@ -89,6 +89,10 @@ def main() -> int:
         "wam_privacy_halo2_verify_hardened_v1" in verifier_text,
         "Phase 13A verifier ABI call missing",
     )
+    require(
+        "std::try_to_lock" in verifier_text and "VerifyStatus::BUSY" in verifier_text,
+        "non-blocking verifier concurrency gate missing",
+    )
 
     for relative in ("src/validation.cpp", "src/txmempool.cpp", "src/coins.cpp"):
         path = tree / relative
