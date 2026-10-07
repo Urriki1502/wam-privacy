@@ -1,0 +1,72 @@
+name: Phase 15B - Extended regtest drill harness
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  extended-regtest-drill:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Rust 1.88
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: "1.88.0"
+
+      - name: Python syntax
+        run: |
+          python3 -m py_compile scripts/build_phase15_review_package.py
+          python3 -m py_compile scripts/run_phase15b_extended_drill.py
+
+      - name: Revalidate frozen Phase 15 review package
+        run: |
+          python3 scripts/build_phase15_review_package.py \
+            --root . \
+            --output reports/phase15b/review-manifest.json
+
+      - name: Run deterministic multi-round regtest drill
+        run: |
+          python3 scripts/run_phase15b_extended_drill.py \
+            --root . \
+            --rounds 2 \
+            --proof-every 2 \
+            --pause-seconds 0 \
+            --output reports/phase15b/drill-report.json
+
+      - name: Verify drill report
+        run: |
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+
+          p = Path("reports/phase15b/drill-report.json")
+          report = json.loads(p.read_text())
+          assert report["result"] == "PASS_HARNESS_DRILL"
+          assert report["completed_rounds"] == 2
+          assert report["drill_counts"]["deep_300_block_reorg_suites"] == 2
+          assert report["drill_counts"]["wallet_restart_recovery_reorg_suites"] == 2
+          assert report["drill_counts"]["generated_core_contract_suites"] == 2
+          assert report["drill_counts"]["real_proof_core_state_suites"] >= 1
+          assert report["drill_counts"]["real_proof_ffi_suites"] >= 1
+          assert report["public_testnet_history"] is False
+          PY
+
+      - name: Upload Phase 15B evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: phase15b-extended-regtest-drill
+          path: |
+            reports/phase15b/review-manifest.json
+            reports/phase15b/drill-report.json
+            reports/phase15b/logs/
+          if-no-files-found: error
