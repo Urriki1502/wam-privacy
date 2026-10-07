@@ -58,8 +58,8 @@ See [docs/EXISTING-ASSETS.md](docs/EXISTING-ASSETS.md) and [docs/WAM-CORE-COMPAT
 | Phase 13B–13D — Core regtest/state/resource integration | **INTERNAL ENGINEERING PASS** |
 | Phase 14A — Reproducible release identity | **INTERNAL ENGINEERING PASS** |
 | Phase 14B — Parser/verifier fuzzing | **INTERNAL ENGINEERING PASS** |
-| Phase 14C — Performance/resource benchmarks | **UNDER QUALIFICATION** |
-| Phase 14D — Upgrade/migration/static-review + final evidence | **PENDING** |
+| Phase 14C — Performance/resource benchmarks | **INTERNAL ENGINEERING PASS** |
+| Phase 14D — Upgrade/migration/static-review + final evidence | **UNDER QUALIFICATION** |
 | Phase 15 — Independent review/testnet/handoff | **PENDING** |
 
 An internal engineering PASS is not a production-readiness, anonymity, audit, or mainnet claim.
