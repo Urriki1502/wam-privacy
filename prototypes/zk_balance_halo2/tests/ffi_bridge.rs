@@ -1,4 +1,4 @@
-use std::ptr;
+use std::{ptr, time::Instant};
 
 use halo2_proofs::{
     pasta::{EqAffine, Fp},
@@ -144,6 +144,8 @@ fn core_facing_ffi_contract() {
     );
     assert_eq!(actual_vk_id, expected_vk_id);
 
+    assert!(encoded.len() <= MAX_PROOF_BYTES + 1024);
+    let verify_start = Instant::now();
     let valid = unsafe {
         wam_privacy_halo2_verify_hardened_v1(
             handle,
@@ -158,6 +160,11 @@ fn core_facing_ffi_contract() {
         )
     };
     assert_eq!(valid, FfiStatus::Ok as i32);
+    eprintln!("PHASE13D_ENVELOPE_BYTES={}", encoded.len());
+    eprintln!(
+        "PHASE13D_VERIFY_MICROS={}",
+        verify_start.elapsed().as_micros()
+    );
 
     let mainnet = unsafe {
         wam_privacy_halo2_verify_hardened_v1(
