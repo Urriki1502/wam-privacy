@@ -85,6 +85,7 @@ new_pool_balance
 old_pool_balance
 + transparent_in
 - transparent_out
+- fee
 ```
 
 and the pool balance may never become negative.
@@ -115,7 +116,7 @@ No transition may create shielded or transparent value outside the conservation 
 
 ### SHIELD-INV-06 — Pool solvency
 
-Unshielding cannot drive the modeled shielded pool below zero.
+Unshielding or fee payment cannot drive the modeled shielded pool below zero. The aggregate value of notes spent by one transition must not exceed the pool value represented by the pre-state.
 
 ### SHIELD-INV-07 — Commitment uniqueness
 
