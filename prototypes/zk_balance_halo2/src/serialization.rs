@@ -70,14 +70,7 @@ impl BundleProofEnvelope {
         let proof_len =
             u32::try_from(self.proof.len()).map_err(|_| EnvelopeError::ProofTooLarge)?;
         let mut out = Vec::with_capacity(
-            MAGIC.len()
-                + 2
-                + 2
-                + VK_ID_BYTES
-                + 1
-                + PUBLIC_INPUT_COUNT * 32
-                + 4
-                + self.proof.len(),
+            MAGIC.len() + 2 + 2 + VK_ID_BYTES + 1 + PUBLIC_INPUT_COUNT * 32 + 4 + self.proof.len(),
         );
         out.extend_from_slice(&MAGIC);
         out.extend_from_slice(&FORMAT_VERSION.to_le_bytes());
@@ -185,21 +178,11 @@ pub fn verify_bundle_envelope(
     let mut transcript =
         Blake2bRead::<_, EqAffine, Challenge255<_>>::init(envelope.proof.as_slice());
 
-    verify_proof(
-        params,
-        vk,
-        strategy,
-        &[instance_columns],
-        &mut transcript,
-    )
-    .map_err(|_| EnvelopeError::ProofRejected)
+    verify_proof(params, vk, strategy, &[instance_columns], &mut transcript)
+        .map_err(|_| EnvelopeError::ProofRejected)
 }
 
-fn take<'a>(
-    encoded: &'a [u8],
-    cursor: &mut usize,
-    len: usize,
-) -> Result<&'a [u8], EnvelopeError> {
+fn take<'a>(encoded: &'a [u8], cursor: &mut usize, len: usize) -> Result<&'a [u8], EnvelopeError> {
     let end = cursor.checked_add(len).ok_or(EnvelopeError::Truncated)?;
     if end > encoded.len() {
         return Err(EnvelopeError::Truncated);
