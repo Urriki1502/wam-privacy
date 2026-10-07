@@ -27,6 +27,7 @@ pub mod nullifier;
 pub mod serialization;
 pub mod serialization_v2;
 pub mod transfer_action;
+pub mod wallet_state;
 
 use halo2_proofs::{
     circuit::{Layouter, SimpleFloorPlanner, Value},
