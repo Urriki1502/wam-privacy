@@ -50,7 +50,9 @@ See [docs/EXISTING-ASSETS.md](docs/EXISTING-ASSETS.md) and [docs/WAM-CORE-COMPAT
 | Phase 8 — Isolated ZK prototype | Stages A/B/B2/C/D/E/F **INTERNAL ENGINEERING PASS**; real proofs + Phase 7/8 semantic differential bridge verified |
 | Phase 9A — Integrated anchored-spend action | **INTERNAL ENGINEERING PASS**; one note-identity cell binds anchor + authority + nullifier in one circuit |
 | Phase 9B — In-circuit note commitment | **INTERNAL ENGINEERING PASS**; private note fields derive the anchored/nullified identity with WAM cap constraints |
-| Phase 9C — Integrated shielded value action | **INTERNAL ENGINEERING PASS**; one input note → one output note + explicit fee with in-circuit conservation and real-proof tamper rejection |\n| Phase 10A — Shielded bundle semantics | **INTERNAL ENGINEERING PASS**; multi-input/output state semantics + fee-correct pool accounting + aggregate cap checks |
+| Phase 9C — Integrated shielded value action | **INTERNAL ENGINEERING PASS**; one input note → one output note + explicit fee with in-circuit conservation and real-proof tamper rejection |
+| Phase 10A — Executable bundle semantics | **INTERNAL ENGINEERING PASS**; multi-input/output, transparent flow, fee-correct pool accounting and uniqueness invariants verified |
+| Phase 10B — Fixed 2×2 Halo2 bundle | **UNDER QUALIFICATION**; shared anchor, two nullifiers, two output commitments, aggregate conservation and real-proof binding |
 
 An internal engineering PASS is not a production-readiness, anonymity, audit, or mainnet claim.
 
