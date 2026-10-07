@@ -12,6 +12,7 @@ RPC_MARKERS = (
     "WAM-PRIVACY-P13B: experimental verifier RPC",
     "WAM-PRIVACY-P13B: register experimental verifier RPC",
 )
+CLIENT_MARKER = "WAM-PRIVACY-P13B: verifier RPC numeric conversion"
 MAKE_MARKERS = (
     "WAM-PRIVACY-P13B: verifier compile gate",
     "WAM-PRIVACY-P13B: verifier link gate",
@@ -30,20 +31,32 @@ def main() -> int:
     tree = args.tree.resolve()
 
     rpc = tree / "src/wam/rpc/wam_rpc.cpp"
+    rpc_client = tree / "src/rpc/client.cpp"
     makefile = tree / "src/Makefile.am"
     verifier_cpp = tree / "src/wam/privacy/privacy_verifier.cpp"
     verifier_h = tree / "src/wam/privacy/privacy_verifier.h"
     ffi_h = tree / "src/wam/privacy/wam_privacy_halo2.h"
 
-    for path in (rpc, makefile, verifier_cpp, verifier_h, ffi_h):
+    for path in (rpc, rpc_client, makefile, verifier_cpp, verifier_h, ffi_h):
         require(path.is_file(), f"missing Phase 13B generated path: {path}")
 
     rpc_text = rpc.read_text(encoding="utf-8")
+    client_text = rpc_client.read_text(encoding="utf-8")
     make_text = makefile.read_text(encoding="utf-8")
     verifier_text = verifier_cpp.read_text(encoding="utf-8")
 
     for marker in RPC_MARKERS:
         require(rpc_text.count(marker) == 1, f"RPC marker count != 1: {marker}")
+    require(client_text.count(CLIENT_MARKER) == 1, "RPC client conversion marker count != 1")
+    for name, index in (
+        ("transparent_in", 2),
+        ("transparent_out", 3),
+        ("fee", 4),
+    ):
+        require(
+            f'{{ "verifyshieldedproof", {index}, "{name}" }},' in client_text,
+            f"RPC client numeric conversion missing: {name}",
+        )
     for marker in MAKE_MARKERS:
         require(make_text.count(marker) == 1, f"Makefile marker count != 1: {marker}")
     require(
