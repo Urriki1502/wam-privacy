@@ -1,6 +1,6 @@
 # Phase 10C — Canonical Research Serialization and Verifier Contract
 
-**Status:** under qualification.
+**Status:** internal engineering PASS.
 
 Phase 10C defines a strict research envelope for the fixed 2×2 Phase 10B Halo2 proof.
 
@@ -69,3 +69,11 @@ Phase 10C does not yet bind:
 - WAM Core consensus parsing.
 
 Those are later gates. This envelope is versioned so those changes do not need to be silently reinterpreted.
+
+## Qualification
+
+Dedicated workflow run `37568843380` passed formatting, clippy, strict parser tests and real Halo2 proof verification through the canonical envelope. All Phase 1–10B repository regressions also passed on the same head.
+
+## Claim
+
+`PHASE 10C CANONICAL RESEARCH SERIALIZATION / VERIFIER CONTRACT — INTERNAL ENGINEERING PASS`
