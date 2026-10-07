@@ -7,23 +7,13 @@
 | 14A — reproducible dependency / release identity | **PASS (internal engineering)** | run `37610249058`; locked dependency graph, same-runner double-build artifact hashes and deterministic VK identity PASS |
 | 14B — parser/verifier fuzzing + adversarial corpus | **PASS (internal engineering)** | run `37615083459`; 100k executions/target + real-proof adversarial corpus + full regressions PASS |
 | 14C — proving/verifying performance + memory/resource benchmarks | **PASS (internal engineering)** | run `37620295551`; proof/verify/RSS/size profile within explicit ceilings |
-| 14D — upgrade/migration/static-review + final evidence ledger | **UNDER QUALIFICATION** | version rejection + static boundary review + deterministic ledger |
-
-## Phase 14A invariants
-
-- Rust toolchain is explicitly pinned;
-- dependency resolution is committed and consumed with `--locked`;
-- release identity binds the exact source revision and dependency lock;
-- circuit id / protocol version / VK identity are reproducible;
-- independently repeated release builds on the same qualification runner produce identical verifier library hashes;
-- qualification evidence records hashes rather than relying on filenames or mutable tags.
+| 14D — upgrade/migration/static-review + final evidence ledger | **PASS (internal engineering)** | run `37623838673`; version/migration rejection + static boundary inventory + deterministic final ledger PASS |
 
 ## Current claim
 
-`PHASE 14C INTERNAL ENGINEERING PASS — PHASE 14D FINAL HARDENING IN PROGRESS`
+`PHASE 14 INTERNAL HARDENING COMPLETE — READY FOR PHASE 15 EXTERNAL REVIEW / TESTNET QUALIFICATION`
 
-No external-audit, production-release, consensus-activation or mainnet claim is implied.
-
+This is an internal engineering result. It is not an external audit, production release, mainnet activation, or anonymity guarantee.
 
 ## Phase 14A evidence
 
@@ -41,16 +31,6 @@ No external-audit, production-release, consensus-activation or mainnet claim is 
 - shared library SHA-256: `8716395a55b431b8b92ec2abe23f8096a251375f741b26dbcaee0756aa1d31df`;
 - same-runner double-build match: **true**.
 
-## Phase 14B invariants
-
-- arbitrary envelope bytes cannot panic the parser;
-- any accepted decode canonicalizes deterministically;
-- verifier precheck cannot accept wrong VK/context/transparent balance;
-- real proof mutations fail closed;
-- fuzz input length and resource use are bounded;
-- corpus/evidence hashes are archived.
-
-
 ## Phase 14B evidence
 
 - qualification head: `9798d4aa4d1367f91ce3eaea7d30d14d8133a76c`;
@@ -60,16 +40,6 @@ No external-audit, production-release, consensus-activation or mainnet claim is 
 - deterministic corpus + SHA-256 manifest: **PASS**;
 - real Phase 10D proof adversarial mutations: **PASS / fail-closed**;
 - Phase 1–14A regression workflows on the same head: **PASS**.
-
-## Phase 14C invariants
-
-- benchmark uses the pinned Phase 10D hardened 2×2 circuit;
-- proof generation and verification are measured separately;
-- proof and encoded-envelope sizes are recorded;
-- peak RSS is measured on the already-built benchmark process, not the compiler;
-- benchmark runner/toolchain identity is archived;
-- broad fail-closed ceilings catch pathological performance/resource regressions without pretending CI timing is a production SLA.
-
 
 ## Phase 14C evidence
 
@@ -86,13 +56,24 @@ No external-audit, production-release, consensus-activation or mainnet claim is 
 - qualification ceilings: **PASS with zero violations**;
 - Phase 1–14B regression workflows on the same head: **PASS**.
 
-## Phase 14D invariants
+## Phase 14D evidence
 
-- legacy Phase 10C and hardened Phase 10D envelopes are never silently cross-decoded;
-- unknown/future format and circuit identifiers fail closed;
-- protocol/network context changes produce distinct context digests;
-- FFI ABI version remains explicit;
-- production-facing boundary files contain no TODO/unimplemented/debug placeholders;
-- Rust unsafe code in the reviewed boundary is confined to the C FFI module and inventory-hashed;
-- Core experimental gate, non-blocking verifier concurrency and panic containment remain machine-checked;
-- final ledger binds source, dependency, circuit/VK and Phase 14 evidence identities.
+- qualification head: `7976d0bc56542d5a2501aade924ee17846ff4e52`;
+- merged qualification baseline: `00f8065c4f7b48fec01e4d97626ecbf2cc125852`;
+- workflow run: `37623838673`;
+- artifact: `phase14d-final-hardening`;
+- artifact digest: `sha256:a41c7bb7eaa04e370acfdedc9f5c33d0b426c4c8051f6ac0efc610cfc42bdaec`;
+- legacy v1 / hardened v2 cross-decoding rejection: **PASS**;
+- unknown/future format and circuit rejection: **PASS**;
+- protocol/network context separation: **PASS**;
+- production-facing static boundary inventory: **PASS**;
+- unsafe-code inventory: **PASS**;
+- panic containment / regtest gating / experimental Core gate / non-blocking verifier concurrency checks: **PASS**;
+- final deterministic evidence ledger build: **PASS**;
+- Phase 1–14C regression workflows on the same head: **PASS**.
+
+## Phase 14 completion boundary
+
+All project-owned internal hardening gates are closed.
+
+The remaining work begins at Phase 15 and deliberately depends on external review and extended testnet evidence before any maintainer activation decision.

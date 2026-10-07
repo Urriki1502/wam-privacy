@@ -1,0 +1,49 @@
+name: Phase 15A - Review and handoff freeze
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  review-package:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Build machine-checkable review manifest
+        run: |
+          python3 scripts/build_phase15_review_package.py \
+            --root . \
+            --output reports/phase15/review-manifest.json
+
+      - name: Build reviewer archive
+        run: |
+          mkdir -p reports/phase15/package
+          cp ARCHITECTURE.md THREAT-MODEL.md SECURITY.md reports/phase15/package/
+          cp docs/PRIVACY-ROADMAP.md docs/SHIELDED-PROTOCOL-MODEL.md docs/SHIELDED-REVIEW-PLAN.md reports/phase15/package/
+          cp docs/PHASE10D-HARDENING.md docs/PHASE11-NOTE-ENCRYPTION.md docs/PHASE12B-WALLET-STATE.md reports/phase15/package/
+          cp docs/PHASE13A-CORE-VERIFIER-FFI.md docs/PHASE13B-GENERATED-CORE-HOOK.md docs/PHASE13C-ATOMIC-STATE.md docs/PHASE13D-RESOURCE-DOS.md reports/phase15/package/
+          cp docs/PHASE14A-RELEASE-IDENTITY.md docs/PHASE14B-FUZZING.md docs/PHASE14C-PERFORMANCE.md docs/PHASE14D-FINAL-HARDENING.md docs/PHASE15-REVIEW-HANDOFF.md reports/phase15/package/
+          cp qualification/PHASE14-STATUS.md qualification/PHASE15-STATUS.md reports/phase15/package/
+          tar -czf reports/phase15/wam-privacy-review-package.tgz -C reports/phase15/package .
+
+      - name: Hash reviewer archive
+        run: sha256sum reports/phase15/wam-privacy-review-package.tgz | tee reports/phase15/review-package.sha256
+
+      - name: Upload Phase 15A evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: phase15a-review-handoff-package
+          path: |
+            reports/phase15/review-manifest.json
+            reports/phase15/review-package.sha256
+            reports/phase15/wam-privacy-review-package.tgz
+          if-no-files-found: error
