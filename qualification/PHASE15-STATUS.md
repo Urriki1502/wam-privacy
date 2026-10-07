@@ -9,7 +9,7 @@
 | 15C — independent state-machine review | **READY FOR EXTERNAL REVIEW** | reviewer intake package + issue required |
 | 15D — independent cryptographic/circuit review | **READY FOR EXTERNAL REVIEW** | reviewer intake package + issue required |
 | 15E — remediation closure | **PENDING EXTERNAL FINDINGS** | confirmed findings require fixes + regression evidence |
-| 15F — maintainer handoff | **PENDING** | exact review/testnet evidence + maintainer decision |
+| 15F — maintainer handoff | **PENDING — V1 FINAL INTERNAL AUDIT UNDER QUALIFICATION** | final V1 audit + exact review/testnet evidence + maintainer decision |
 
 ## Candidate baseline
 
@@ -66,3 +66,19 @@ Phase 15 does not claim:
 extended testnet evidence, remediation closure, and maintainer package are complete.
 
 Activation remains a separate WAM maintainer/governance decision.
+
+## V1 final internal audit
+
+Phase 15F preparation now includes a dedicated final internal audit gate:
+
+- active runtime source/boundary inventory;
+- post-Phase-14D source-drift rejection;
+- panic/unsafe inventory;
+- monetary-cap and checked-arithmetic requirements;
+- parser/verifier/context/VK binding;
+- wallet/Core atomicity and rollback requirements;
+- generated-Core regtest/compile/resource gates;
+- critical regression suite on the exact audit head.
+
+This gate is internal qualification only. It does not convert 15C/15D into
+independent-review PASS and does not claim public-testnet or mainnet readiness.
