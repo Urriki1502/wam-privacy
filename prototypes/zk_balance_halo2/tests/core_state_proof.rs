@@ -113,8 +113,7 @@ fn verified_proof_metadata_drives_atomic_state_and_rollback() {
     .expect("proof");
     let proof = transcript.finalize();
 
-    let envelope =
-        HardenedBundleEnvelope::new(pk.get_vk(), public_array, proof).expect("envelope");
+    let envelope = HardenedBundleEnvelope::new(pk.get_vk(), public_array, proof).expect("envelope");
     let encoded = envelope.encode().expect("canonical encode");
 
     let verified =
@@ -122,8 +121,7 @@ fn verified_proof_metadata_drives_atomic_state_and_rollback() {
             .expect("verified transition");
 
     let initial_pool = 100_000;
-    let mut state =
-        CoreShieldedState::new(verified.anchor, initial_pool).expect("initial state");
+    let mut state = CoreShieldedState::new(verified.anchor, initial_pool).expect("initial state");
     let before = state.clone();
 
     let block = StateBlock {
