@@ -15,8 +15,7 @@ fn legacy_v1_bytes() -> Vec<u8> {
 }
 
 fn hardened_v2_bytes() -> Vec<u8> {
-    let public: [Fp; PUBLIC_INPUT_COUNT] =
-        core::array::from_fn(|i| Fp::from((i as u64) + 1));
+    let public: [Fp; PUBLIC_INPUT_COUNT] = core::array::from_fn(|i| Fp::from((i as u64) + 1));
     HardenedBundleEnvelope {
         vk_id: [0x22; 32],
         public_inputs: public,
