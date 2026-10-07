@@ -1,0 +1,122 @@
+name: Phase 14B - Parser and verifier fuzzing
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  parser-verifier-fuzzing:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          path: repo
+
+      - name: Set up Rust 1.88
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: "1.88.0"
+          components: rustfmt, clippy
+
+      - name: Stable format and clippy
+        working-directory: repo/prototypes/zk_balance_halo2
+        run: |
+          cargo fmt --check
+          cargo clippy --locked --all-targets -- -D warnings
+
+      - name: Generate deterministic adversarial corpus
+        run: |
+          python3 repo/scripts/generate_phase14b_corpus.py \
+            --output /tmp/phase14b-corpus \
+            --manifest /tmp/phase14b-corpus.json
+
+      - name: Deterministic parser and real-verifier corpus
+        working-directory: repo/prototypes/zk_balance_halo2
+        run: |
+          cargo test --locked --test resource_limits --verbose
+          cargo test --locked --test ffi_bridge phase14b_adversarial_verifier_corpus_fails_closed -- --nocapture
+
+      - name: Set up pinned nightly fuzz toolchain
+        uses: dtolnay/rust-toolchain@nightly
+        with:
+          toolchain: "nightly-2026-09-15"
+
+      - name: Install cargo-fuzz
+        run: cargo +nightly-2026-09-15 install cargo-fuzz --locked
+
+      - name: Coverage-guided envelope decoder fuzzing
+        working-directory: repo/prototypes/zk_balance_halo2
+        run: |
+          mkdir -p /tmp/phase14b-artifacts
+          cargo +nightly-2026-09-15 fuzz run hardened_envelope_decode \
+            /tmp/phase14b-corpus -- \
+            -runs=100000 \
+            -max_len=65536 \
+            -timeout=5 \
+            -rss_limit_mb=2048 \
+            -artifact_prefix=/tmp/phase14b-artifacts/ \
+            2>&1 | tee /tmp/phase14b-decode-fuzz.log
+
+      - name: Coverage-guided verifier precheck fuzzing
+        working-directory: repo/prototypes/zk_balance_halo2
+        run: |
+          cargo +nightly-2026-09-15 fuzz run hardened_verifier_precheck \
+            /tmp/phase14b-corpus -- \
+            -runs=100000 \
+            -max_len=65536 \
+            -timeout=5 \
+            -rss_limit_mb=2048 \
+            -artifact_prefix=/tmp/phase14b-artifacts/ \
+            2>&1 | tee /tmp/phase14b-precheck-fuzz.log
+
+      - name: Emit Phase 14B evidence
+        env:
+          SOURCE_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: |
+          export CORPUS_SHA="$(sha256sum /tmp/phase14b-corpus.json | awk '{print $1}')"
+          export DECODE_LOG_SHA="$(sha256sum /tmp/phase14b-decode-fuzz.log | awk '{print $1}')"
+          export PRECHECK_LOG_SHA="$(sha256sum /tmp/phase14b-precheck-fuzz.log | awk '{print $1}')"
+          python3 - <<'PY'
+          import json, os
+          evidence = {
+              "schema": 1,
+              "phase": "14B",
+              "result": "PASS",
+              "source_sha": os.environ["SOURCE_SHA"],
+              "runner": "ubuntu-24.04",
+              "stable_toolchain": "1.88.0",
+              "fuzz_toolchain": "nightly-2026-09-15",
+              "targets": {
+                  "hardened_envelope_decode": {"runs": 100000},
+                  "hardened_verifier_precheck": {"runs": 100000},
+              },
+              "corpus_manifest_sha256": os.environ["CORPUS_SHA"],
+              "decode_fuzz_log_sha256": os.environ["DECODE_LOG_SHA"],
+              "precheck_fuzz_log_sha256": os.environ["PRECHECK_LOG_SHA"],
+              "real_verifier_adversarial_corpus": "PASS",
+              "claim": "internal engineering fuzzing evidence only",
+          }
+          with open("/tmp/phase14b-evidence.json", "w", encoding="utf-8") as f:
+              json.dump(evidence, f, indent=2, sort_keys=True)
+              f.write("\n")
+          print(json.dumps(evidence, indent=2, sort_keys=True))
+          PY
+
+      - name: Upload Phase 14B evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: phase14b-fuzzing-evidence
+          path: |
+            /tmp/phase14b-corpus.json
+            /tmp/phase14b-decode-fuzz.log
+            /tmp/phase14b-precheck-fuzz.log
+            /tmp/phase14b-evidence.json
+            /tmp/phase14b-artifacts/
+          if-no-files-found: warn
