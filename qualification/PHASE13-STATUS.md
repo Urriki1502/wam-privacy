@@ -7,7 +7,7 @@
 | 13A — Rust/C verifier ABI | **PASS (internal engineering)** | run `37587354356`; real Phase 10D proof verified through C ABI; static/shared library + exported symbols PASS |
 | 13B — generated WAM Core regtest-only verifier hook | **PASS (internal engineering)** | run `37597535877`; generated-Core build/link/RPC qualification PASS; merge `a2bd4cd7bb21679ee0e64a174046c1b7b0b5ff09` |
 | 13C — atomic shielded state / reorg integration | **PASS (internal engineering)** | run `37600960274`; atomic failure, proof-bound metadata, disconnect and 300-block rollback/replay PASS |
-| 13D — resource / DoS qualification | **UNDER QUALIFICATION** | parser bounds, block transition cap and non-blocking verifier concurrency gate |
+| 13D — resource / DoS qualification | **PASS (internal engineering)** | run `37606364731`; parser bounds, transition cap, atomic cap failure and non-blocking verifier concurrency gate PASS |
 
 ## Phase 13A invariants
 
@@ -55,7 +55,7 @@
 
 ## Current claim
 
-`PHASE 13A/13B/13C PASS — PHASE 13D RESOURCE/DoS QUALIFICATION IN PROGRESS`
+`PHASE 13 CORE REGTEST / STATE / RESOURCE INTEGRATION — INTERNAL ENGINEERING PASS`
 
 No WAM Core consensus activation, shielded mempool acceptance, persistent production
 chainstate, testnet, or mainnet claim is implied.
