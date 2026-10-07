@@ -70,6 +70,6 @@ A future production proposal must not rely only on this repository's internal CI
 
 ## Current status
 
-Stage A is **READY FOR EXTERNAL REVIEW** after Phase 7 merges.
+Stage A is **READY FOR EXTERNAL REVIEW**.
 
-Stage B is **NOT STARTED** because no production ZK construction exists.
+Stage B is **NOT STARTED**. A substantial Halo2 research prototype now exists through the fixed-bundle and verifier-contract work, but the production cryptographic profile is not frozen. Domain separation, production tree/key parameters, note encryption, context binding, serialization hardening and verifier integration must be completed before Stage B is commissioned.
