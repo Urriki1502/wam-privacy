@@ -57,7 +57,8 @@ type DerivedInput = (
     AssignedCell<Fp, Fp>,
 );
 
-#[derive(Clone, Debug)]
+// Do not expose witness or note fields through Debug.
+#[derive(Clone)]
 pub struct BundleInput {
     pub value: u64,
     pub recipient_tag: Fp,
@@ -92,7 +93,8 @@ impl BundleInput {
     }
 }
 
-#[derive(Clone, Debug)]
+// Do not expose witness or note fields through Debug.
+#[derive(Clone)]
 pub struct BundleOutput {
     pub value: u64,
     pub recipient_tag: Fp,
@@ -113,7 +115,8 @@ impl BundleOutput {
     }
 }
 
-#[derive(Clone, Debug)]
+// Do not expose witness or note fields through Debug.
+#[derive(Clone)]
 pub struct BundleActionCircuit {
     pub inputs: [BundleInput; 2],
     pub outputs: [BundleOutput; 2],
