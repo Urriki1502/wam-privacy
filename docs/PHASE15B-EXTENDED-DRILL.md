@@ -10,7 +10,7 @@ Phase 14D candidate.
 
 The corrected, internally requalified source candidate is:
 
-`8bfbced65299a8491345b54b38bff0db498b618d`
+`15fafa199871f7a1688b1beda5e27005ae473d27`
 
 The superseded source baseline `00f8065c4f7b48fec01e4d97626ecbf2cc125852` is historical only.
 The prior Phase 15B PASS is not evidence for this corrected candidate;
