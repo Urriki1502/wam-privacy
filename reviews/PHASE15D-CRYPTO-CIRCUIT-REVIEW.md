@@ -1,6 +1,8 @@
 # Phase 15D — Independent Cryptographic / Circuit Review Intake
 
-**Frozen candidate:** `00f8065c4f7b48fec01e4d97626ecbf2cc125852`
+**Current internally requalified source candidate (review still pending):** `8bfbced65299a8491345b54b38bff0db498b618d`
+
+Earlier candidate `00f8065c4f7b48fec01e4d97626ecbf2cc125852` is superseded; new VK identity must be reviewed.
 
 This document defines the minimum independent review contract for Phase 15D.
 It is an intake specification, not a cryptographic-audit result.
