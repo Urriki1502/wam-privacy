@@ -163,6 +163,16 @@ class PolicyTests(unittest.TestCase):
         restored = PolicyAuthority.restore(self.authority.snapshot(), GKEY, CKEY)
         self.assertEqual(self.check(req, now=101, consent=receipt, authority=restored), "DENY")
 
+    def test_nonascii_consent_tokens_fail_closed(self):
+        req = self._disclosure()
+        good = self.consent_issuer.issue_after_user_confirmation(req, expires_at=500)
+        for field, malformed in (("mac", "é" * 64),
+                                 ("request_digest", "é" * 64),
+                                 ("nonce", "é" * 32)):
+            with self.subTest(field=field):
+                self.assertEqual(self.check(req, consent=replace(good, **{field: malformed})),
+                                 "DENY")
+
     def test_extra_consent_on_scan_rejected(self):
         req = self._disclosure()
         receipt = self.consent_issuer.issue_after_user_confirmation(req, expires_at=500)

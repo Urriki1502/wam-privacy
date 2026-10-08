@@ -54,6 +54,12 @@ class AuditEvent:
     code: str
 
 
+def _hex_token(value: object, size: int) -> bool:
+    """Untrusted signed tokens must be bounded lowercase ASCII hex."""
+    return (type(value) is str and len(value) == size
+            and all(ch in "0123456789abcdef" for ch in value))
+
+
 def _selection_fields(fields: object) -> bool:
     return (
         type(fields) is tuple
@@ -118,8 +124,7 @@ class SelectionIssuer:
         if (not _request_valid(request)
                 or request["action"] != "DISCLOSE"
                 or not isinstance(consent, ConsentReceipt)
-                or type(consent.nonce) is not str
-                or len(consent.nonce) != 32
+                or not _hex_token(consent.nonce, 32)
                 or not _selection_fields(fields)
                 or type(expires_at) is not int
                 or not 0 < expires_at <= MAX_TIMESTAMP):
@@ -171,9 +176,9 @@ class DisclosureService:
                 or not isinstance(consent, ConsentReceipt)
                 or not isinstance(selection, SelectionReceipt)
                 or not _selection_fields(selection.approved_fields)
-                or type(selection.request_digest) is not str
-                or type(selection.consent_nonce) is not str
-                or type(selection.mac) is not str
+                or not _hex_token(selection.request_digest, 64)
+                or not _hex_token(selection.consent_nonce, 32)
+                or not _hex_token(selection.mac, 64)
                 or type(selection.expires_at) is not int
                 or not 0 <= selection.expires_at <= MAX_TIMESTAMP
                 or now >= selection.expires_at):

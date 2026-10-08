@@ -182,6 +182,15 @@ class SelectiveDisclosureTests(unittest.TestCase):
         self.assertNotIn("capability_id", payload)
         self.assertNotIn("spend_authority", payload)
 
+    def test_nonascii_signed_tokens_fail_closed(self):
+        c, s = self.receipts()
+        for field, malformed in (("mac", "é" * 64),
+                                 ("consent_nonce", "é" * 32),
+                                 ("request_digest", "é" * 64)):
+            with self.subTest(field=field):
+                self.assertIsNone(self.release(consent=c,
+                    selection=replace(s, **{field: malformed}))[0])
+
     def test_malformed_selection_and_request(self):
         c, s = self.receipts()
         for val in (None, [], {}, "wrong"):
