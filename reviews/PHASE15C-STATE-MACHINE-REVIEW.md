@@ -1,6 +1,6 @@
 # Phase 15C — Independent State-Machine Review Intake
 
-**Current internally requalified source candidate (review still pending):** `8bfbced65299a8491345b54b38bff0db498b618d`
+**Current internally requalified source candidate (review still pending):** `15fafa199871f7a1688b1beda5e27005ae473d27`
 
 Earlier candidate `00f8065c4f7b48fec01e4d97626ecbf2cc125852` is superseded; no independent review has been completed.
 

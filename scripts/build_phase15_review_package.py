@@ -10,7 +10,7 @@ from pathlib import Path
 import subprocess
 import sys
 
-BASELINE = "8bfbced65299a8491345b54b38bff0db498b618d"
+BASELINE = "15fafa199871f7a1688b1beda5e27005ae473d27"
 
 REQUIRED = [
     "ARCHITECTURE.md",

@@ -4,7 +4,7 @@
 
 Current **Phase 14 internally requalified source candidate**:
 
-`8bfbced65299a8491345b54b38bff0db498b618d`
+`15fafa199871f7a1688b1beda5e27005ae473d27`
 
 The original internal-hardening baseline `00f8065c4f7b48fec01e4d97626ecbf2cc125852` is superseded.
 Original Phase 14D/15A/15B artifacts cited below are historical and
@@ -73,3 +73,11 @@ The final maintainer package must contain exact candidate commits, WAM Core depe
 Completion of this repository does not activate anything.
 
 Mainnet or consensus activation remains solely a WAM maintainer/governance decision.
+
+## Merge identity note
+
+The current mainline source anchor is the PR #47 squash merge
+`15fafa199871f7a1688b1beda5e27005ae473d27`; the earlier PR-internal
+commit `8bfbced65299a8491345b54b38bff0db498b618d` is a historical
+requalification reference, not an ancestor on main. Independent review and
+public testnet evidence are still pending.
