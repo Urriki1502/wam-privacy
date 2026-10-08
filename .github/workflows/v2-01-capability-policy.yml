@@ -1,0 +1,20 @@
+name: V2-01 - Capability policy tests
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  v2-policy:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Compile V2 policy and tests
+        run: python3 -m py_compile v2/policy.py v2/test_policy.py
+      - name: Run deterministic V2 policy tests
+        working-directory: v2
+        run: python3 -m unittest -v test_policy
