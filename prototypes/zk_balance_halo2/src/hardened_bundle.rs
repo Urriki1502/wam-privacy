@@ -60,7 +60,8 @@ type DerivedInput = (
     AssignedCell<Fp, Fp>,
 );
 
-#[derive(Clone, Debug)]
+// Private witness contents must not appear in accidental debug logs.
+#[derive(Clone)]
 pub struct HardenedBundleInput {
     pub value: u64,
     pub recipient_tag: Fp,
@@ -95,7 +96,8 @@ impl HardenedBundleInput {
     }
 }
 
-#[derive(Clone, Debug)]
+// Private witness contents must not appear in accidental debug logs.
+#[derive(Clone)]
 pub struct HardenedBundleOutput {
     pub value: u64,
     pub recipient_tag: Fp,
@@ -116,7 +118,8 @@ impl HardenedBundleOutput {
     }
 }
 
-#[derive(Clone, Debug)]
+// Private witness contents must not appear in accidental debug logs.
+#[derive(Clone)]
 pub struct HardenedBundleCircuit {
     pub inputs: [HardenedBundleInput; 2],
     pub outputs: [HardenedBundleOutput; 2],
