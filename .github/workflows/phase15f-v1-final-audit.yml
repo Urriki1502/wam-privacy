@@ -1,0 +1,72 @@
+name: Phase 15F - V1 final internal audit
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  v1-final-audit:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+
+    steps:
+      - name: Checkout full history
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Rust 1.88
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: "1.88.0"
+          components: rustfmt, clippy
+
+      - name: Python syntax
+        run: python3 -m py_compile scripts/run_phase15f_v1_final_audit.py scripts/build_phase15_review_package.py
+
+      - name: Final V1 static and freeze audit
+        run: |
+          python3 scripts/run_phase15f_v1_final_audit.py \
+            --root . \
+            --output reports/phase15f/v1-final-audit.json
+
+      - name: Rebuild Phase 15 review manifest
+        run: |
+          python3 scripts/build_phase15_review_package.py \
+            --root . \
+            --output reports/phase15f/review-manifest.json
+
+      - name: Rust format
+        run: cargo fmt --check
+        working-directory: prototypes/zk_balance_halo2
+
+      - name: Rust clippy
+        run: cargo clippy --locked --all-targets -- -D warnings
+        working-directory: prototypes/zk_balance_halo2
+
+      - name: Critical runtime regression set
+        run: |
+          cargo test --locked \
+            --test hardened_bundle \
+            --test hardened_bundle_proof \
+            --test ffi_bridge \
+            --test core_state_proof \
+            --test wallet_state \
+            --test note_encryption \
+            --test security_domain_binding \
+            --verbose
+        working-directory: prototypes/zk_balance_halo2
+
+      - name: Rust doctests (proof-origin transition visibility)
+        run: cargo test --locked --doc
+        working-directory: prototypes/zk_balance_halo2
+
+      - name: Upload final audit evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: phase15f-v1-final-audit
+          path: reports/phase15f/
+          if-no-files-found: error
