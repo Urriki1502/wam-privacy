@@ -50,18 +50,41 @@ impl From<HardenedEnvelopeError> for CoreStateError {
     }
 }
 
+/// Shielded transition metadata that must originate from a successfully
+/// verified, canonical proof envelope. External code cannot construct or mutate
+/// these fields directly, even when it can assemble a `StateBlock`.
+///
+/// A struct literal outside this module must not compile:
+///
+/// ```compile_fail
+/// use wam_privacy_halo2_prototype::core_state::VerifiedTransition;
+/// let _forged = VerifiedTransition {
+///     anchor: [0; 32],
+///     nullifiers: [[0; 32]; 2],
+///     output_commitments: [[0; 32]; 2],
+///     transparent_in: 0,
+///     transparent_out: 0,
+///     fee: 0,
+///     context_digest: [0; 32],
+/// };
+/// ```
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct VerifiedTransition {
-    pub anchor: [u8; 32],
-    pub nullifiers: [[u8; 32]; 2],
-    pub output_commitments: [[u8; 32]; 2],
-    pub transparent_in: u64,
-    pub transparent_out: u64,
-    pub fee: u64,
-    pub context_digest: [u8; 32],
+    anchor: [u8; 32],
+    nullifiers: [[u8; 32]; 2],
+    output_commitments: [[u8; 32]; 2],
+    transparent_in: u64,
+    transparent_out: u64,
+    fee: u64,
+    context_digest: [u8; 32],
 }
 
 impl VerifiedTransition {
+    /// The anchor the verifier established as a public proof input.
+    pub fn anchor(&self) -> [u8; 32] {
+        self.anchor
+    }
+
     pub fn from_verified_envelope(
         params: &Params<EqAffine>,
         vk: &VerifyingKey<EqAffine>,
