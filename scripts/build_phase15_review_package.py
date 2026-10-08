@@ -66,6 +66,7 @@ ALLOWED_AFTER_BASELINE = (
     "scripts/qualify_v1_logical_freeze.py",
     ".github/workflows/v2-01-capability-policy.yml",
     ".github/workflows/v2-02-selective-disclosure.yml",
+    ".github/workflows/v2-03-relay-metadata.yml",
     "docs/v2/",   # Isolated V2 docs; protected V1 source remains immutable.
     "v2/",        # Isolated V2 policy/tests; not a Core or V1 runtime path.
 )
