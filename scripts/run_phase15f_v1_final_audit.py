@@ -36,6 +36,8 @@ ALLOWED_AFTER_BASELINE = (
     "qualification/PHASE15",
     "qualification/PHASE14-STATUS.md",
     "reviews/",
+    "docs/v2/",  # V2-only documentation; frozen V1 paths remain guarded.
+    "v2/",       # Standalone V2 prototype; no V1 runtime/protocol paths.
     "README.md",
     "scripts/build_phase15_review_package.py",
     "scripts/run_phase15",
