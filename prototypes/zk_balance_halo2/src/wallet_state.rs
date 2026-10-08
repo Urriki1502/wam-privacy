@@ -44,13 +44,19 @@ pub struct ShieldedBlock {
     pub outputs: Vec<ShieldedOutputRecord>,
 }
 
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, PartialEq, Eq)]
 pub struct WalletNote {
     pub plaintext: NotePlaintext,
     pub commitment: [u8; 32],
     pub position: usize,
     pub block_height: u64,
     pub block_hash: [u8; 32],
+}
+
+impl std::fmt::Debug for WalletNote {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str("WalletNote(<redacted>)")
+    }
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
