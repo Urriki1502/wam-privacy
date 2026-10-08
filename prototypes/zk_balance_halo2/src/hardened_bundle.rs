@@ -531,11 +531,11 @@ fn derive_output(
                 || Value::known(output.rseed),
             )?;
             let note_domain = region.assign_advice_from_constant(
-                    || "note domain",
-                    config.witness,
-                    4,
-                    Fp::from(NOTE_DOMAIN),
-                )?;
+                || "note domain",
+                config.witness,
+                4,
+                Fp::from(NOTE_DOMAIN),
+            )?;
             Ok((recipient, authority, rho, rseed, note_domain))
         },
     )?;
