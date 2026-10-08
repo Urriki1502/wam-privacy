@@ -1,0 +1,51 @@
+name: V2-03 - Offline route policy and metadata observer
+
+on:
+  push:
+    branches:
+      - v2/03-relay-metadata-simulator
+  pull_request:
+    paths:
+      - 'v2/**'
+      - 'docs/v2/**'
+      - '.github/workflows/v2-03-relay-metadata.yml'
+      - 'scripts/build_phase15_review_package.py'
+      - 'scripts/run_phase15f_v1_final_audit.py'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  v2-offline-routing:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Compile all V2 standalone modules and fixtures
+        run: |
+          python3 -m py_compile v2/policy.py v2/test_policy.py v2/disclosure.py v2/test_disclosure.py v2/routing.py v2/test_routing.py
+      - name: Run V2-01/02/03 deterministic negative and positive tests
+        working-directory: v2
+        run: python3 -m unittest -v test_policy test_disclosure test_routing
+      - name: Reject sockets and network dependencies in simulator
+        run: |
+          if grep -nE '(^import socket|^import requests|^import urllib|^import http|^from socket|^from requests|^from urllib|^from http|subprocess|os.system)' v2/routing.py; then
+            echo 'V2-03 must remain offline and deterministic'
+            exit 1
+          fi
+  v1-unchanged:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Frozen V1 runtime and crypto files must not change
+        run: |
+          git merge-base --is-ancestor 95dfe0abf04b4e4dcbdbe9eb6d9bd0439a45a127 HEAD
+          git diff --exit-code 95dfe0abf04b4e4dcbdbe9eb6d9bd0439a45a127 HEAD -- prototypes/zk_balance_halo2/ integration/core/ tests/ scripts/phase14d_static_review.py scripts/build_phase14d_ledger.py
+      - name: Existing V1 Phase 15A and 15F safeguards remain operational
+        run: |
+          python3 scripts/run_phase15f_v1_final_audit.py --root . --output /tmp/v1-final-audit.json
+          python3 scripts/build_phase15_review_package.py --root . --output /tmp/v1-review-package.json
