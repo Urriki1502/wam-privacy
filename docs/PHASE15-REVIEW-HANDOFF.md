@@ -1,10 +1,14 @@
 # Phase 15 — External Review, Testnet and Maintainer Handoff
 
-## Frozen internal candidate
+## Corrected internal source candidate (P0 remediation)
 
-Internal hardening baseline:
+Current **Phase 14 internally requalified source candidate**:
 
-`00f8065c4f7b48fec01e4d97626ecbf2cc125852`
+`8bfbced65299a8491345b54b38bff0db498b618d`
+
+The original internal-hardening baseline `00f8065c4f7b48fec01e4d97626ecbf2cc125852` is superseded.
+Original Phase 14D/15A/15B artifacts cited below are historical and
+must not be treated as qualification of the corrected source.
 
 Phase 14D workflow:
 
@@ -14,7 +18,7 @@ Phase 14D artifact digest:
 
 `sha256:a41c7bb7eaa04e370acfdedc9f5c33d0b426c4c8051f6ac0efc610cfc42bdaec`
 
-The Phase 15 package may add review documentation, qualification scripts and evidence metadata. Any change to protocol, circuit, wallet, verifier, Core integration or cryptographic code invalidates this frozen candidate and requires a new Phase 14 qualification baseline.
+Only review documentation, qualification scripts and evidence metadata may change after the corrected source candidate. Any further protocol/circuit/wallet/verifier/Core or cryptographic source change invalidates this candidate and requires new requalification. See the updated Phase 14 status for P0 remediation runs and the changed VK identifier.
 
 ## Reviewer package
 
