@@ -4,8 +4,8 @@
 
 | Stage | Status | Evidence |
 | --- | --- | --- |
-| 15A — external-review / handoff package freeze | **PR REQUALIFICATION PASS — POST-MERGE VALIDATION PENDING** | run `37629367529`; artifact digest `sha256:bf80b30c36478f2b03d40e8be19166d8d075c56f048e3303138821444c4eab49`; merge `e5d436a201d3fdf26f2a6bb2ea750be8ce213aab` |
-| 15B — extended regtest/testnet drill harness | **PR REQUALIFICATION PASS — POST-MERGE VALIDATION PENDING** | run `37634670000`; artifact digest `sha256:60c7ed387a4d5d47778257806359add698100e6df52581a08fc040ea8a5b3e47`; merge `d50e0c18b65734aa160df8b38b80f7f243160316` |
+| 15A — external-review / handoff package freeze | **PASS (corrected candidate; internal engineering)** | PR #48 run `37723681184`; artifact `sha256:5eb4ab6c26fd59224e496ea4473659fd81cf3ad8058780908d66c2a90d3c520a` |
+| 15B — extended regtest/testnet drill harness | **PASS (corrected candidate; internal engineering)** | PR #48 run `37723681154`; artifact `sha256:edac503835d364e9585cdc7e3c0047488784e6873cce7d84e79e5a8105fe16fc` |
 | 15C — independent state-machine review | **READY FOR EXTERNAL REVIEW** | reviewer intake package + issue required |
 | 15D — independent cryptographic/circuit review | **READY FOR EXTERNAL REVIEW** | reviewer intake package + issue required |
 | 15E — remediation closure | **PENDING EXTERNAL FINDINGS** | confirmed findings require fixes + regression evidence |
@@ -95,3 +95,22 @@ This qualification-metadata update moves the baseline pin to the reachable
 mainline squash commit. On this follow-up PR, repeat all required workflow
 checks before merge to revalidate the integration lineage and final documentation.
 No release tag or independent review claim is implied.
+
+## V1 final internal audit and logical-freeze candidate — 2026-10-08
+
+- PR #49 / run `37732873456`: **30/30 workflows PASS**; Phase 15F
+  **internal audit** artifact
+  `sha256:8b726dbba8162eeadb5855754878136bd6c157d4836349907a0990d4df4407e8`.
+- Internal audit merged at
+  `95dfe0abf04b4e4dcbdbe9eb6d9bd0439a45a127`, the chosen immutable
+  **V1 logical-freeze candidate**.
+- New release evidence is generated from *two separate fresh checkouts* of
+  this exact source, with SHA-256 binary comparisons and the corrected VK ID;
+  see `docs/PHASE15-V1-LOGICAL-FREEZE.md`.
+- **Pending on this PR:** clean-checkout qualification and exact-head CI PASS.
+  This section is a proposal, not a preemptive freeze PASS.
+- Phase 15F **maintainer handoff** in the status table remains **PENDING**;
+  Phase 15F *internal audit* PASS does not close maintainer handoff.
+- Phase 15C/15D attributed external reviews, real operator testnet history,
+  public release/tag and activation remain incomplete and may not be
+  self-certified.
