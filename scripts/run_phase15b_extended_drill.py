@@ -17,8 +17,8 @@ import time
 from datetime import datetime, timezone
 
 
-FROZEN_BASELINE = "00f8065c4f7b48fec01e4d97626ecbf2cc125852"
-PHASE15A_MERGE = "e5d436a201d3fdf26f2a6bb2ea750be8ce213aab"
+FROZEN_BASELINE = "8bfbced65299a8491345b54b38bff0db498b618d"
+PHASE15A_LEGACY_MERGE = "e5d436a201d3fdf26f2a6bb2ea750be8ce213aab"
 
 
 def sha256(path: Path) -> str:
@@ -84,11 +84,11 @@ def main() -> int:
     if not (crate / "Cargo.toml").is_file():
         raise SystemExit(f"missing Halo2 crate: {crate}")
 
-    # The internal candidate is frozen at Phase 14D. Phase 15 may add only
-    # qualification/review material; the dedicated freeze validator enforces
-    # that policy independently.
+    # Verify the corrected Phase 14-requalified source candidate exists.
+    # Only Phase 15 review/qualification metadata may differ after this SHA.
+    # The Phase 15A historical merge proves lineage only, not qualification.
     git(root, "cat-file", "-e", f"{FROZEN_BASELINE}^{{commit}}")
-    git(root, "cat-file", "-e", f"{PHASE15A_MERGE}^{{commit}}")
+    git(root, "cat-file", "-e", f"{PHASE15A_LEGACY_MERGE}^{{commit}}")
     head = git(root, "rev-parse", "HEAD")
 
     output = args.output.resolve()
@@ -189,7 +189,7 @@ def main() -> int:
         "network_mode": "isolated-regtest-research",
         "public_testnet_history": False,
         "frozen_internal_baseline": FROZEN_BASELINE,
-        "phase15a_merge": PHASE15A_MERGE,
+        "phase15a_prior_merge": PHASE15A_LEGACY_MERGE,
         "qualification_head": head,
         "started_at_utc": started_at.isoformat(),
         "finished_at_utc": finished_at.isoformat(),
