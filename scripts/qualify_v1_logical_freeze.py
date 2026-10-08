@@ -23,7 +23,6 @@ FROZEN_PREFIXES = (
     "tests/",
     "scripts/phase14d_static_review.py",
     "scripts/build_phase14d_ledger.py",
-    "scripts/run_phase15f_v1_final_audit.py",
 )
 
 
