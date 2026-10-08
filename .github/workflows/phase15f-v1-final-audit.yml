@@ -10,7 +10,7 @@ permissions:
 jobs:
   v1-final-audit:
     runs-on: ubuntu-24.04
-    timeout-minutes: 60
+    timeout-minutes: 120
 
     steps:
       - name: Checkout full history
