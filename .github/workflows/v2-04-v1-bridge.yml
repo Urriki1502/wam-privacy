@@ -129,7 +129,7 @@ jobs:
               ["git", "show", base + ":" + audited_exception], text=True
           )
           original = '    ".github/workflows/v2-03-relay-metadata.yml",'
-          replacement = original + '\\n' + (
+          replacement = original + '\n' + (
               '    ".github/workflows/v2-04-v1-bridge.yml",  '
               '# V2-only regression CI, no V1 runtime change.'
           )
