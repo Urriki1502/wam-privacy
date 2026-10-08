@@ -120,24 +120,31 @@ jobs:
               ["git", "diff", "--name-only", base, "HEAD"], text=True
           ).splitlines()
           allowed = ("v2/", "docs/v2/", ".github/workflows/v2-")
-          audited_exception = "scripts/run_phase15f_v1_final_audit.py"
+          # Two V1 review scripts need an explicit new V2-only workflow
+          # path so their freeze guards recognize this experimental CI.
+          # Both edits are asserted byte-for-byte against the V2-03 parent.
+          allowed_review_scripts = {
+              "scripts/run_phase15f_v1_final_audit.py": (
+                  '    ".github/workflows/v2-03-relay-metadata.yml",',
+                  '    ".github/workflows/v2-04-v1-bridge.yml",  '
+                  '# V2-only regression CI, no V1 runtime change.',
+              ),
+              "scripts/build_phase15_review_package.py": (
+                  '    ".github/workflows/v2-03-relay-metadata.yml",',
+                  '    ".github/workflows/v2-04-v1-bridge.yml",  '
+                  '# V2-only signer bridge CI; no V1 runtime changes.',
+              ),
+          }
           bad = [name for name in changed
-                 if not (name.startswith(allowed) or name == audited_exception)]
-          # Permit ONLY the single exact append of the V2-04 workflow path
-          # to the existing Phase15F V1 source-freeze audit allowlist.
-          historical = subprocess.check_output(
-              ["git", "show", base + ":" + audited_exception], text=True
-          )
-          original = '    ".github/workflows/v2-03-relay-metadata.yml",'
-          replacement = original + '\n' + (
-              '    ".github/workflows/v2-04-v1-bridge.yml",  '
-              '# V2-only regression CI, no V1 runtime change.'
-          )
-          actual = open(audited_exception, encoding="utf-8").read()
-          if historical.count(original) != 1 or actual != historical.replace(
-              original, replacement
-          ):
-              raise SystemExit("V1 audit allowlist changed beyond exact V2-04 entry")
+                 if not (name.startswith(allowed) or name in allowed_review_scripts)]
+          for filename, (original, appended) in allowed_review_scripts.items():
+              historical = subprocess.check_output(
+                  ["git", "show", base + ":" + filename], text=True
+              )
+              actual = open(filename, encoding="utf-8").read()
+              expected = historical.replace(original, original + "\\n" + appended)
+              if historical.count(original) != 1 or actual != expected:
+                  raise SystemExit("Unexpected review script change: " + filename)
           if bad:
               raise SystemExit("Forbidden post-freeze paths: " + repr(bad))
           print("V1 runtime unchanged; V2-04 changes only:", len(changed), "paths")
