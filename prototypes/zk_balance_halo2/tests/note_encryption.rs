@@ -212,3 +212,12 @@ fn amount_memo_and_address_mismatch_rules_are_enforced() {
         NoteCryptoError::AddressMismatch
     );
 }
+
+#[test]
+fn private_note_debug_never_prints_value_keys_or_memo() {
+    let (_keys, note) = fixture();
+    let debug = format!("{note:?}");
+    assert_eq!(debug, "NotePlaintext(<redacted>)");
+    assert!(!debug.contains("phase-11-private-memo"));
+    assert!(!debug.contains("123456"));
+}
