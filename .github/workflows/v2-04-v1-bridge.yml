@@ -142,7 +142,7 @@ jobs:
                   ["git", "show", base + ":" + filename], text=True
               )
               actual = open(filename, encoding="utf-8").read()
-              expected = historical.replace(original, original + "\\n" + appended)
+              expected = historical.replace(original, original + "\n" + appended)
               if historical.count(original) != 1 or actual != expected:
                   raise SystemExit("Unexpected review script change: " + filename)
           if bad:
