@@ -87,6 +87,12 @@ def _request_valid(request: object) -> bool:
     return True
 
 
+def _hex_token(value: object, size: int) -> bool:
+    """Reject non-ASCII or malformed untrusted HMAC tokens before comparison."""
+    return (type(value) is str and len(value) == size
+            and all(ch in "0123456789abcdef" for ch in value))
+
+
 def _valid_key(key: bytes) -> bool:
     return type(key) is bytes and len(key) >= 32
 
@@ -188,9 +194,9 @@ class PolicyAuthority:
             digest = hashlib.sha256(_canonical(dict(request))).hexdigest()
             payload = {"request_digest": consent.request_digest,
                        "nonce": consent.nonce, "expires_at": consent.expires_at}
-            if (type(consent.request_digest) is not str
-                    or type(consent.nonce) is not str
-                    or type(consent.mac) is not str
+            if (not _hex_token(consent.request_digest, 64)
+                    or not _hex_token(consent.nonce, 32)
+                    or not _hex_token(consent.mac, 64)
                     or type(consent.expires_at) is not int
                     or not 0 <= consent.expires_at <= MAX_TIMESTAMP
                     or consent.request_digest != digest
