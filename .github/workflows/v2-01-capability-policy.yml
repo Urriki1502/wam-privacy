@@ -1,0 +1,45 @@
+name: V2-01 - Capability policy and V1 isolation
+
+on:
+  push:
+    branches:
+      - v2/research-base
+  pull_request:
+    paths:
+      - 'v2/**'
+      - 'docs/v2/**'
+      - 'scripts/build_phase15_review_package.py'
+      - 'scripts/run_phase15f_v1_final_audit.py'
+      - '.github/workflows/v2-01-capability-policy.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  v2-policy:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Compile V2 capability policy and tests
+        run: python3 -m py_compile v2/policy.py v2/test_policy.py
+      - name: Run V2 positive, negative and restart/replay cases
+        working-directory: v2
+        run: python3 -m unittest -v test_policy
+
+  v1-boundary:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Verify frozen V1 runtime and cryptographic source unchanged
+        run: |
+          git merge-base --is-ancestor 95dfe0abf04b4e4dcbdbe9eb6d9bd0439a45a127 HEAD
+          git diff --exit-code 95dfe0abf04b4e4dcbdbe9eb6d9bd0439a45a127 HEAD -- prototypes/zk_balance_halo2/ integration/core/ tests/ scripts/phase14d_static_review.py scripts/build_phase14d_ledger.py
+      - name: V1 static freeze and reviewer package gates
+        run: |
+          python3 scripts/run_phase15f_v1_final_audit.py --root . --output /tmp/v1-final-audit.json
+          python3 scripts/build_phase15_review_package.py --root . --output /tmp/v1-review-package.json

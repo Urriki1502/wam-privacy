@@ -45,6 +45,9 @@ ALLOWED_AFTER_BASELINE = (
     ".github/workflows/v1-logical-freeze-clean-clone.yml",
     "qualification/v1-freeze/candidate.json",
     "scripts/qualify_v1_logical_freeze.py",
+    ".github/workflows/v2-01-capability-policy.yml",
+    "docs/v2/",   # Isolated V2 docs; protected V1 source remains immutable.
+    "v2/",        # Isolated V2 policy/tests; not a Core or V1 runtime path.
 )
 
 FORBIDDEN_PLACEHOLDERS = (
