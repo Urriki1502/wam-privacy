@@ -174,9 +174,10 @@ pub struct ShieldedKeyBundle {
 
 impl ShieldedKeyBundle {
     pub fn derive(seed: [u8; 32]) -> Self {
-        let spend_vec = derive_bytes(&seed, b"spend-authority", 64);
-        let incoming_vec = derive_bytes(&seed, b"incoming-view", 32);
-        let audit_vec = derive_bytes(&seed, b"audit-view", 32);
+        let seed = Zeroizing::new(seed);
+        let spend_vec = Zeroizing::new(derive_bytes(&seed, b"spend-authority", 64));
+        let incoming_vec = Zeroizing::new(derive_bytes(&seed, b"incoming-view", 32));
+        let audit_vec = Zeroizing::new(derive_bytes(&seed, b"audit-view", 32));
 
         let mut spend = [0u8; 64];
         spend.copy_from_slice(&spend_vec);
@@ -232,7 +233,7 @@ pub struct ShieldedAddress {
     pub spend_authority_tag: Fp,
 }
 
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, PartialEq, Eq)]
 pub struct NotePlaintext {
     pub value: u64,
     pub recipient_tag: Fp,
@@ -240,6 +241,12 @@ pub struct NotePlaintext {
     pub rho: Fp,
     pub rseed: Fp,
     pub memo: Vec<u8>,
+}
+
+impl std::fmt::Debug for NotePlaintext {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str("NotePlaintext(<redacted>)")
+    }
 }
 
 impl NotePlaintext {

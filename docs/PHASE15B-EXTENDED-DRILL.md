@@ -8,9 +8,13 @@ Phase 14D candidate.
 
 ## Freeze boundary
 
-The frozen internal candidate remains:
+The corrected, internally requalified source candidate is:
 
-`00f8065c4f7b48fec01e4d97626ecbf2cc125852`
+`8bfbced65299a8491345b54b38bff0db498b618d`
+
+The superseded source baseline `00f8065c4f7b48fec01e4d97626ecbf2cc125852` is historical only.
+The prior Phase 15B PASS is not evidence for this corrected candidate;
+a fresh isolated-regtest drill must pass.
 
 Phase 15B changes only qualification scripts, workflows, documentation and
 evidence metadata. It does not modify protocol, circuit, wallet, verifier,

@@ -121,7 +121,7 @@ fn verified_proof_metadata_drives_atomic_state_and_rollback() {
             .expect("verified transition");
 
     let initial_pool = 100_000;
-    let mut state = CoreShieldedState::new(verified.anchor, initial_pool).expect("initial state");
+    let mut state = CoreShieldedState::new(verified.anchor(), initial_pool).expect("initial state");
     let before = state.clone();
 
     let block = StateBlock {

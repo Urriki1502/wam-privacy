@@ -1,6 +1,8 @@
 # Phase 15C — Independent State-Machine Review Intake
 
-**Frozen candidate:** `00f8065c4f7b48fec01e4d97626ecbf2cc125852`
+**Current internally requalified source candidate (review still pending):** `8bfbced65299a8491345b54b38bff0db498b618d`
+
+Earlier candidate `00f8065c4f7b48fec01e4d97626ecbf2cc125852` is superseded; no independent review has been completed.
 
 This document defines the minimum independent review contract for Phase 15C.
 It is an intake specification, not a review result.

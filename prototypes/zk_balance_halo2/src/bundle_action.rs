@@ -57,7 +57,8 @@ type DerivedInput = (
     AssignedCell<Fp, Fp>,
 );
 
-#[derive(Clone, Debug)]
+// Do not expose witness or note fields through Debug.
+#[derive(Clone)]
 pub struct BundleInput {
     pub value: u64,
     pub recipient_tag: Fp,
@@ -92,7 +93,8 @@ impl BundleInput {
     }
 }
 
-#[derive(Clone, Debug)]
+// Do not expose witness or note fields through Debug.
+#[derive(Clone)]
 pub struct BundleOutput {
     pub value: u64,
     pub recipient_tag: Fp,
@@ -113,7 +115,8 @@ impl BundleOutput {
     }
 }
 
-#[derive(Clone, Debug)]
+// Do not expose witness or note fields through Debug.
+#[derive(Clone)]
 pub struct BundleActionCircuit {
     pub inputs: [BundleInput; 2],
     pub outputs: [BundleOutput; 2],
@@ -394,23 +397,23 @@ fn derive_input(
                     3,
                     || Value::known(input.rseed),
                 )?;
-                let note_domain = region.assign_advice(
+                let note_domain = region.assign_advice_from_constant(
                     || "note domain",
                     config.witness,
                     4,
-                    || Value::known(Fp::from(NOTE_DOMAIN)),
+                    Fp::from(NOTE_DOMAIN),
                 )?;
-                let authority_domain = region.assign_advice(
+                let authority_domain = region.assign_advice_from_constant(
                     || "authority domain",
                     config.witness,
                     5,
-                    || Value::known(Fp::from(AUTHORITY_DOMAIN)),
+                    Fp::from(AUTHORITY_DOMAIN),
                 )?;
-                let nullifier_domain = region.assign_advice(
+                let nullifier_domain = region.assign_advice_from_constant(
                     || "nullifier domain",
                     config.witness,
                     6,
-                    || Value::known(Fp::from(NULLIFIER_DOMAIN)),
+                    Fp::from(NULLIFIER_DOMAIN),
                 )?;
                 Ok((
                     recipient,
@@ -514,11 +517,11 @@ fn derive_output(
                 3,
                 || Value::known(output.rseed),
             )?;
-            let note_domain = region.assign_advice(
+            let note_domain = region.assign_advice_from_constant(
                 || "note domain",
                 config.witness,
                 4,
-                || Value::known(Fp::from(NOTE_DOMAIN)),
+                Fp::from(NOTE_DOMAIN),
             )?;
             Ok((recipient, authority, rho, rseed, note_domain))
         },

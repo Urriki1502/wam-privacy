@@ -83,6 +83,10 @@ fn scanner_recognizes_only_its_notes_and_has_no_spend_authority() {
     assert_eq!(scanner.notes().len(), 1);
     assert_eq!(scanner.notes()[0].plaintext.value, 50_000);
     assert_eq!(scanner.notes()[0].commitment, ours.aad.note_commitment);
+    assert_eq!(
+        format!("{:?}", scanner.notes()[0]),
+        "WalletNote(<redacted>)"
+    );
 }
 
 #[test]

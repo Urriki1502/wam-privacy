@@ -77,3 +77,30 @@ This is an internal engineering result. It is not an external audit, production 
 All project-owned internal hardening gates are closed.
 
 The remaining work begins at Phase 15 and deliberately depends on external review and extended testnet evidence before any maintainer activation decision.
+
+
+## P0 remediation requalification — 2026-10-08
+
+The earlier Phase 14D baseline `00f8065c4f7b48fec01e4d97626ecbf2cc125852` is **superseded** for the
+corrected circuit and Core transition source; historical runs above remain
+accurate evidence **only for their original source commits**.
+
+Corrected source candidate: `8bfbced65299a8491345b54b38bff0db498b618d`.
+
+Requalification on the exact candidate (internal engineering, not independent audit):
+
+| Gate | CI run | Result |
+| --- | --- | --- |
+| Phase 14A — locked release identity / duplicate build | `37713224400` | PASS; artifact `sha256:a7ce56ef87ac3a24d88f6bca59a82388bdb82071226207fb6d819d43a6c01c69` |
+| Phase 14B — parser/verifier fuzzing | `37713224436` | PASS; artifact `sha256:fdbba56710d2b0b85b6864e50803862263a3831c09dba1dcd7cbef9e87cc2794` |
+| Phase 14C — resource benchmarks | `37713224312` | PASS; artifact `sha256:1136b523708ae1b6f879f63b8f7c572a058ccf8c15e26a37ad92eadfdf4845ac` |
+| Phase 14D — internal hardening ledger | `37713224314` | PASS; artifact `sha256:4d40d3292e46777ee6f211b53b84e93c168dd17a2b4fbae72a1bbe64cea4e64e` |
+
+Verified new Phase 14A circuit profile: protocol version `1`,
+circuit ID `2564`, verifier k `15`, VK ID
+`1e7850f15106f20f35dbfb282b696703d0263264ba10a4eaef71601fa46312da`.
+This differs from the old VK identifier and must not be silently interchanged.
+
+The corrected candidate is **not** an independently reviewed or mainnet-qualified release.
+Any subsequent changes to cryptography, circuit, wallet, verifier or Core source
+require further requalification; do not tag/release V1 automatically.
