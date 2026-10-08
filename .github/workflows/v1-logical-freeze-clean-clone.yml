@@ -1,0 +1,97 @@
+name: V1 - Logical freeze clean-clone qualification
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  v1-clean-clone-freeze:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+    steps:
+      - name: Checkout qualification branch with full history
+        uses: actions/checkout@v4
+        with:
+          path: qualification
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Fresh checkout A of pinned immutable V1
+        uses: actions/checkout@v4
+        with:
+          path: frozen-a
+          ref: 95dfe0abf04b4e4dcbdbe9eb6d9bd0439a45a127
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Independent fresh checkout B of the same pinned V1
+        uses: actions/checkout@v4
+        with:
+          path: frozen-b
+          ref: 95dfe0abf04b4e4dcbdbe9eb6d9bd0439a45a127
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Set up pinned Rust toolchain 1.88.0
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: "1.88.0"
+          components: rustfmt, clippy
+
+      - name: Check Python syntax and immutable source boundary
+        run: |
+          python3 -m py_compile qualification/scripts/qualify_v1_logical_freeze.py
+          python3 qualification/scripts/qualify_v1_logical_freeze.py \
+            --qualification qualification \
+            --source-a frozen-a \
+            --source-b frozen-b \
+            --candidate qualification/qualification/v1-freeze/candidate.json \
+            --mode preflight
+
+      - name: Validate locked dependencies in clean checkout A
+        run: |
+          cd frozen-a/prototypes/zk_balance_halo2
+          cargo metadata --locked --format-version 1 >/tmp/v1-freeze-cargo-metadata.json
+          git diff --exit-code -- Cargo.lock
+
+      - name: Build verifier static and shared libraries in clean checkout A
+        run: |
+          cd frozen-a/prototypes/zk_balance_halo2
+          CARGO_TARGET_DIR="$RUNNER_TEMP/v1-freeze-target-a" cargo build --release --locked
+          CARGO_TARGET_DIR="$RUNNER_TEMP/v1-freeze-target-a" cargo run --release --locked --quiet --example release_identity >"$RUNNER_TEMP/v1-freeze-identity-a.txt"
+          cat "$RUNNER_TEMP/v1-freeze-identity-a.txt"
+
+      - name: Independently rebuild in fresh checkout B
+        run: |
+          cd frozen-b/prototypes/zk_balance_halo2
+          CARGO_TARGET_DIR="$RUNNER_TEMP/v1-freeze-target-b" cargo build --release --locked
+          CARGO_TARGET_DIR="$RUNNER_TEMP/v1-freeze-target-b" cargo run --release --locked --quiet --example release_identity >"$RUNNER_TEMP/v1-freeze-identity-b.txt"
+          diff -u "$RUNNER_TEMP/v1-freeze-identity-a.txt" "$RUNNER_TEMP/v1-freeze-identity-b.txt"
+
+      - name: Verify frozen P0 regressions, no source drift, and record hashed artifacts
+        run: |
+          cd frozen-a/prototypes/zk_balance_halo2
+          CARGO_TARGET_DIR="$RUNNER_TEMP/v1-freeze-target-a" cargo test --locked --test security_domain_binding
+          cd ../../..
+          python3 qualification/scripts/qualify_v1_logical_freeze.py \
+            --qualification qualification \
+            --source-a frozen-a \
+            --source-b frozen-b \
+            --candidate qualification/qualification/v1-freeze/candidate.json \
+            --mode finalize \
+            --output qualification/reports/v1-freeze \
+            --identity-a "$RUNNER_TEMP/v1-freeze-identity-a.txt" \
+            --identity-b "$RUNNER_TEMP/v1-freeze-identity-b.txt" \
+            --library-a "$RUNNER_TEMP/v1-freeze-target-a/release" \
+            --library-b "$RUNNER_TEMP/v1-freeze-target-b/release"
+
+      - name: Upload immutable V1 research freeze evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: v1-internal-logical-freeze-evidence
+          path: qualification/reports/v1-freeze/
+          if-no-files-found: error
+          retention-days: 90
