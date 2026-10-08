@@ -1,0 +1,48 @@
+name: V2-02 - Selective disclosure and V1 isolation
+
+on:
+  push:
+    branches:
+      - v2/02-selective-disclosure
+  pull_request:
+    paths:
+      - 'v2/**'
+      - 'docs/v2/**'
+      - '.github/workflows/v2-02-selective-disclosure.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  v2-selective-disclosure:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Compile V2-01 and V2-02 policy/test modules
+        run: python3 -m py_compile v2/policy.py v2/test_policy.py v2/disclosure.py v2/test_disclosure.py
+      - name: Capability and disclosure adversarial tests
+        working-directory: v2
+        run: python3 -m unittest -v test_policy test_disclosure
+      - name: Confirm no dynamic outbound networking in V2-02 module
+        run: |
+          if grep -nE '(^import socket|^import requests|^import urllib|^from socket|^from requests|^from urllib)' v2/disclosure.py; then
+            echo "Network dependency not allowed in V2-02"
+            exit 1
+          fi
+  v1-source-freeze:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Assert no V1 runtime or crypto source drift
+        run: |
+          git merge-base --is-ancestor 95dfe0abf04b4e4dcbdbe9eb6d9bd0439a45a127 HEAD
+          git diff --exit-code 95dfe0abf04b4e4dcbdbe9eb6d9bd0439a45a127 HEAD -- prototypes/zk_balance_halo2/ integration/core/ tests/ scripts/phase14d_static_review.py scripts/build_phase14d_ledger.py
+      - name: Phase 15 A/F unchanged freeze gates
+        run: |
+          python3 scripts/run_phase15f_v1_final_audit.py --root . --output /tmp/v1-final-audit.json
+          python3 scripts/build_phase15_review_package.py --root . --output /tmp/v1-review-package.json
