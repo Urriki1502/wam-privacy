@@ -1,7 +1,14 @@
 name: V2-01 - Capability policy tests
 
 on:
+  push:
+    branches:
+      - v2/research-base
   pull_request:
+    paths:
+      - 'v2/**'
+      - 'docs/v2/**'
+      - '.github/workflows/v2-01-capability-policy.yml'
   workflow_dispatch:
 
 permissions:
