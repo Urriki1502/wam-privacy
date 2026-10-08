@@ -1,0 +1,40 @@
+{
+  "schema": 1,
+  "milestone": "V1_LOGICAL_FREEZE_CANDIDATE",
+  "candidate_source_commit": "95dfe0abf04b4e4dcbdbe9eb6d9bd0439a45a127",
+  "p0_remediated_source_baseline": "15fafa199871f7a1688b1beda5e27005ae473d27",
+  "proof_profile": {
+    "protocol_version": 1,
+    "circuit_id": 2564,
+    "verifier_k": 15,
+    "expected_vk_id": "1e7850f15106f20f35dbfb282b696703d0263264ba10a4eaef71601fa46312da",
+    "supply_cap_atoms": "2200000000000000"
+  },
+  "toolchain": "1.88.0",
+  "upstream_core": {
+    "repository": "wamcoin-core-dev/wam-coin",
+    "qualified_target_commit": "260bc468e5adffea7ce68d8f97fac3e27e4c50b2",
+    "note": "Phase 1 qualification pin; not a claim of latest Core HEAD"
+  },
+  "wsp": {
+    "repository": "Urriki1502/wam-silent-payments",
+    "qualified_commit": "dcf1aecc00a64bfad3151fa202c3e07d47d83e69"
+  },
+  "status": {
+    "logical_freeze": "CANDIDATE_PENDING_CLEAN_CHECKOUT",
+    "github_tag": "TAG_RELEASE_PENDING",
+    "public_release": "BLOCKED_INDEPENDENT_REVIEW_AND_OPERATOR_TESTNET",
+    "independent_state_machine_review": "PENDING_15C",
+    "independent_cryptographic_review": "PENDING_15D",
+    "external_finding_remediation": "PENDING_15E",
+    "maintainer_handoff": "PENDING_15F",
+    "mainnet_activation": "OUT_OF_SCOPE"
+  },
+  "non_claims": [
+    "not independently audited",
+    "not verified public-testnet history",
+    "not production/mainnet ready",
+    "no consensus or mainnet activation",
+    "not a published v1.0.0 release"
+  ]
+}
