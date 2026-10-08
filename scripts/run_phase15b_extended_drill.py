@@ -17,7 +17,7 @@ import time
 from datetime import datetime, timezone
 
 
-FROZEN_BASELINE = "8bfbced65299a8491345b54b38bff0db498b618d"
+FROZEN_BASELINE = "15fafa199871f7a1688b1beda5e27005ae473d27"
 PHASE15A_LEGACY_MERGE = "e5d436a201d3fdf26f2a6bb2ea750be8ce213aab"
 
 
