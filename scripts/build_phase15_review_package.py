@@ -10,7 +10,7 @@ from pathlib import Path
 import subprocess
 import sys
 
-BASELINE = "00f8065c4f7b48fec01e4d97626ecbf2cc125852"
+BASELINE = "8bfbced65299a8491345b54b38bff0db498b618d"
 
 REQUIRED = [
     "ARCHITECTURE.md",
@@ -123,17 +123,19 @@ def main() -> int:
         "schema": 1,
         "stage": "phase-15a-review-handoff-freeze",
         "qualification_baseline_commit": BASELINE,
+        "prior_superseded_baseline": "00f8065c4f7b48fec01e4d97626ecbf2cc125852",
         "package_commit": head,
         "phase14d": {
-            "workflow_run": 37623838673,
-            "artifact_digest": "sha256:a41c7bb7eaa04e370acfdedc9f5c33d0b426c4c8051f6ac0efc610cfc42bdaec",
+            "workflow_run": 37713224314,
+            "artifact_digest": "sha256:4d40d3292e46777ee6f211b53b84e93c168dd17a2b4fbae72a1bbe64cea4e64e",
             "status": "PASS_INTERNAL_ENGINEERING",
         },
         "external_review": {
             "state_machine": "PENDING_EXTERNAL",
             "cryptographic_circuit": "PENDING_EXTERNAL",
         },
-        "extended_testnet": "PENDING_EXECUTION",
+        "extended_testnet": "PENDING_OPERATOR_EVIDENCE",
+        "v1_public_release": "BLOCKED_PENDING_INDEPENDENT_REVIEW",
         "maintainer_activation": "OUT_OF_SCOPE_FOR_AUTOMATIC_PASS",
         "changed_after_baseline": changed,
         "files": files,
