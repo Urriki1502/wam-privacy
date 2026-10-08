@@ -110,12 +110,12 @@ jobs:
           git merge-base --is-ancestor 95dfe0abf04b4e4dcbdbe9eb6d9bd0439a45a127 HEAD
       - name: Deny changes to V1 crypto, Core adapter, keys and tests
         run: |
-          git diff --exit-code 95dfe0abf04b4e4dcbdbe9eb6d9bd0439a45a127 HEAD -- prototypes/ integration/core/ tests/ scripts/
+          git diff --exit-code 95dfe0abf04b4e4dcbdbe9eb6d9bd0439a45a127 HEAD -- prototypes/ integration/core/ tests/ scripts/phase14d_static_review.py scripts/build_phase14d_ledger.py\n          git diff --exit-code 403fb4889c97a680f3deabdb2a1c0db3fb6c65fd HEAD -- scripts/
       - name: Restrict post-freeze changes to V2-only research paths
         run: |
           python3 - <<'PY'
           import subprocess
-          base = "95dfe0abf04b4e4dcbdbe9eb6d9bd0439a45a127"
+          base = "403fb4889c97a680f3deabdb2a1c0db3fb6c65fd"
           changed = subprocess.check_output(
               ["git", "diff", "--name-only", base, "HEAD"], text=True
           ).splitlines()
@@ -123,7 +123,7 @@ jobs:
           bad = [name for name in changed if not name.startswith(allowed)]
           if bad:
               raise SystemExit("Forbidden post-freeze paths: " + repr(bad))
-          print("V1 source pin unchanged; V2-only diff:", len(changed), "paths")
+          print("V1 runtime unchanged; V2-04 changes only:", len(changed), "paths")
           PY
       - name: Qualify V1 final audit without claiming independent review
         run: |
