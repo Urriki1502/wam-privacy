@@ -60,6 +60,10 @@ ALLOWED_AFTER_BASELINE = (
     "scripts/build_phase15_review_package.py",
     "scripts/run_phase15",
     "reviews/",
+    # Exact freeze qualification metadata only. No protected source prefix.
+    ".github/workflows/v1-logical-freeze-clean-clone.yml",
+    "qualification/v1-freeze/candidate.json",
+    "scripts/qualify_v1_logical_freeze.py",
 )
 
 
