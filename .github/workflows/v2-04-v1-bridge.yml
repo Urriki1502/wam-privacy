@@ -110,7 +110,7 @@ jobs:
           git merge-base --is-ancestor 95dfe0abf04b4e4dcbdbe9eb6d9bd0439a45a127 HEAD
       - name: Deny changes to V1 crypto, Core adapter, keys and tests
         run: |
-          git diff --exit-code 95dfe0abf04b4e4dcbdbe9eb6d9bd0439a45a127 HEAD -- prototypes/ integration/core/ tests/ scripts/phase14d_static_review.py scripts/build_phase14d_ledger.py\n          git diff --exit-code 403fb4889c97a680f3deabdb2a1c0db3fb6c65fd HEAD -- scripts/
+          git diff --exit-code 95dfe0abf04b4e4dcbdbe9eb6d9bd0439a45a127 HEAD -- prototypes/ integration/core/ tests/ scripts/phase14d_static_review.py scripts/build_phase14d_ledger.py
       - name: Restrict post-freeze changes to V2-only research paths
         run: |
           python3 - <<'PY'
@@ -120,7 +120,24 @@ jobs:
               ["git", "diff", "--name-only", base, "HEAD"], text=True
           ).splitlines()
           allowed = ("v2/", "docs/v2/", ".github/workflows/v2-")
-          bad = [name for name in changed if not name.startswith(allowed)]
+          audited_exception = "scripts/run_phase15f_v1_final_audit.py"
+          bad = [name for name in changed
+                 if not (name.startswith(allowed) or name == audited_exception)]
+          # Permit ONLY the single exact append of the V2-04 workflow path
+          # to the existing Phase15F V1 source-freeze audit allowlist.
+          historical = subprocess.check_output(
+              ["git", "show", base + ":" + audited_exception], text=True
+          )
+          original = '    ".github/workflows/v2-03-relay-metadata.yml",'
+          replacement = original + '\\n' + (
+              '    ".github/workflows/v2-04-v1-bridge.yml",  '
+              '# V2-only regression CI, no V1 runtime change.'
+          )
+          actual = open(audited_exception, encoding="utf-8").read()
+          if historical.count(original) != 1 or actual != historical.replace(
+              original, replacement
+          ):
+              raise SystemExit("V1 audit allowlist changed beyond exact V2-04 entry")
           if bad:
               raise SystemExit("Forbidden post-freeze paths: " + repr(bad))
           print("V1 runtime unchanged; V2-04 changes only:", len(changed), "paths")
