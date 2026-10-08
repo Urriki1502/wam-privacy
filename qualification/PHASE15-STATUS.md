@@ -4,8 +4,8 @@
 
 | Stage | Status | Evidence |
 | --- | --- | --- |
-| 15A — external-review / handoff package freeze | **LEGACY PASS — corrected candidate REQUALIFICATION IN PROGRESS** | run `37629367529`; artifact digest `sha256:bf80b30c36478f2b03d40e8be19166d8d075c56f048e3303138821444c4eab49`; merge `e5d436a201d3fdf26f2a6bb2ea750be8ce213aab` |
-| 15B — extended regtest/testnet drill harness | **LEGACY PASS — corrected candidate REQUALIFICATION IN PROGRESS** | run `37634670000`; artifact digest `sha256:60c7ed387a4d5d47778257806359add698100e6df52581a08fc040ea8a5b3e47`; merge `d50e0c18b65734aa160df8b38b80f7f243160316` |
+| 15A — external-review / handoff package freeze | **PR REQUALIFICATION PASS — POST-MERGE VALIDATION PENDING** | run `37629367529`; artifact digest `sha256:bf80b30c36478f2b03d40e8be19166d8d075c56f048e3303138821444c4eab49`; merge `e5d436a201d3fdf26f2a6bb2ea750be8ce213aab` |
+| 15B — extended regtest/testnet drill harness | **PR REQUALIFICATION PASS — POST-MERGE VALIDATION PENDING** | run `37634670000`; artifact digest `sha256:60c7ed387a4d5d47778257806359add698100e6df52581a08fc040ea8a5b3e47`; merge `d50e0c18b65734aa160df8b38b80f7f243160316` |
 | 15C — independent state-machine review | **READY FOR EXTERNAL REVIEW** | reviewer intake package + issue required |
 | 15D — independent cryptographic/circuit review | **READY FOR EXTERNAL REVIEW** | reviewer intake package + issue required |
 | 15E — remediation closure | **PENDING EXTERNAL FINDINGS** | confirmed findings require fixes + regression evidence |
@@ -20,7 +20,7 @@ legacy source candidate.
 
 **Current corrected source candidate (internal requalification):**
 
-`8bfbced65299a8491345b54b38bff0db498b618d`
+`15fafa199871f7a1688b1beda5e27005ae473d27`
 
 Phase 14A/B/C/D gates have passed on this exact candidate (see
 `qualification/PHASE14-STATUS.md`). The corrected Phase 15A review
@@ -76,3 +76,22 @@ Phase 15 does not claim:
 extended testnet evidence, remediation closure, and maintainer package are complete.
 
 Activation remains a separate WAM maintainer/governance decision.
+
+## Merge provenance and qualification refresh (2026-10-08)
+
+PR #47 source remediation qualified 29/29 GitHub workflows at
+`74ce4f06f02c0a86cc67e2f1b393c91ab41a4888`, including Phase 15A
+(run `37717858440`, artifact `sha256:460e6456fccf49b76161a39b48492fe1f9dffc64f0bbece2a8e3d5652116713c`)
+and Phase 15B (run `37717858296`, artifact `sha256:ccf7a1461b4f2b240a5fd491881acbd50ab075592481add9ae68fb2bd4fe6d98`).
+
+GitHub squash-merged PR #47 into main as
+`15fafa199871f7a1688b1beda5e27005ae473d27`.
+The separate PR-internal source checkpoint `8bfbced65299a8491345b54b38bff0db498b618d`
+was not part of the squash-merged ancestry; it is retained only as historical
+source qualification evidence. Representative critical source and lockfile blob
+SHAs match between the PR head and the squash-merge commit.
+
+This qualification-metadata update moves the baseline pin to the reachable
+mainline squash commit. On this follow-up PR, repeat all required workflow
+checks before merge to revalidate the integration lineage and final documentation.
+No release tag or independent review claim is implied.
