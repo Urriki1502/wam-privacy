@@ -103,6 +103,10 @@ jobs:
           git diff --exit-code 95dfe0abf04b4e4dcbdbe9eb6d9bd0439a45a127 HEAD -- prototypes/zk_balance_halo2/ integration/core/ tests/ scripts/phase14d_static_review.py scripts/build_phase14d_ledger.py
       - name: Run standalone CORE-003 canonical-root adversarial tests
         run: |
+          # Diagnostic: Cargo resolves the new standalone root package against
+          # the original frozen V1 lock graph. Report exact lock changes.
+          cargo metadata --manifest-path v2/core003_research/Cargo.toml --format-version 1 > /dev/null
+          git diff -- v2/core003_research/Cargo.lock
           cargo test --locked --manifest-path v2/core003_research/Cargo.toml --lib --verbose
       - name: Verify frozen source checkout remained clean
         run: |
