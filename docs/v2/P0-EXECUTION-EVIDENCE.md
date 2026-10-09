@@ -54,3 +54,30 @@ fixtures; no public node, real wallet, real keys, funds or deployment.
 Production anti-rollback depends on independently trusted monotonic storage and
 reviewed key management. File fsync and process fault tests do not prove physical
 power-loss durability. Production readiness and external audits remain pending.
+
+## Independent lane reproduction and historical guard conflict
+
+E workflow separately checks out pinned lane source, verifies frozen paths,
+executes each lane suite and stores source SHA + test output artifacts:
+A b8a5d84e3c981ce1d97b52d6c0af4aa23422d7be (12 durability tests);
+B fc90ff5962d4c354f28e631d56f79c5efd09fa44 (11 journal + 19 original signer);
+C 89773e82fc1d46a58cf6189ac5b670308be0f199 (8 DESIGN CONTRACT ONLY);
+D f8c8623bfda2789507dccbc0ea18fcff49c3076a (8 adapter + 28 policy + 23 disclosure).
+This is separate reproduction of isolated lanes, not atomic A/B/C integration.
+B review prompted corrupt DB and shared process provider-count tests; those
+tests and identity/capabilities binding fixes were independently read at B pin.
+
+Observed historical inherited Phase15F run 37915791762 associated with E
+246246371bd2bda6faf83c695b3dde85019f4925 failed V1-FREEZE-001, rejecting added
+.github/workflows/v2-p0-regression-research.yml. Job 113771515226 actually
+checked out synthetic merge 8feaf327824561ab4b6c3e7780edd077dc6282f8.
+Historical audit/review package permits explicit v2-01 through v2-05 workflow
+filenames; the broad v2-* naming allowed elsewhere does not satisfy that gate.
+The protected sources are unchanged; full inherited CI is not green.
+Historical guards are preserved. A reviewed research scope decision is needed
+before full inherited qualification can accept additive research workflows.
+
+All targeted and reproduction CI results remain subject to current-head
+GitHub verification. Pending/queued is never PASS. Runtime physical durability,
+trusted monotonic deployment, real consent UI, atomic recovery integration,
+CORE-003 approval and external audits remain blockers.
