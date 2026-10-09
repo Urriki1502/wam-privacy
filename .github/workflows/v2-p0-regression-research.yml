@@ -1,0 +1,31 @@
+name: V2 P0 independent baseline regression
+on:
+  push:
+    branches: ['research/p0-regression-handoff']
+  pull_request:
+    paths:
+      - 'v2/p0_regression/**'
+      - 'docs/v2/P0-EXECUTION*'
+      - '.github/workflows/v2-p0-regression-research.yml'
+permissions:
+  contents: read
+jobs:
+  independent-baseline:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Offline regression at exact research HEAD
+        env:
+          EXPECTED_HEAD: ${{ github.event.pull_request.head.sha || github.sha }}
+          PYTHONDONTWRITEBYTECODE: '1'
+        run: python3 -B v2/p0_regression/run_baseline.py --output "$RUNNER_TEMP/p0-baseline.json"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: p0-baseline-evidence
+          path: ${{ runner.temp }}/p0-baseline.json
+          if-no-files-found: error
