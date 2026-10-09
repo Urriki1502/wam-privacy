@@ -81,6 +81,13 @@ fn commitments(records: &[ShieldedOutputRecord]) -> Vec<[u8; 32]> {
     records.iter().map(|o| o.aad.note_commitment).collect()
 }
 
+fn vector_root(label: &str, count: usize, root: [u8; 32]) {
+    let hex = root.iter().map(|v| format!("{v:02x}")).collect::<String>();
+    // Exactly one line per checkpoint; CI compares two independently staged
+    // source trees on an identical deterministic set of note commitments.
+    println!("\\nCORE003_VECTOR {label} {count} {hex}");
+}
+
 fn append_both(
     scanner: &mut WalletScanner,
     reference: &mut OrderedRootGate,
@@ -110,10 +117,15 @@ fn boundaries_zero_one_two_fifteen_sixteen_match_actual_wallet_scanner() {
     // Fixed synthetic set describes boundary vectors; the root derives from
     // deterministic note fields, never from ciphertext randomness.
     assert_eq!(bytes(scanner.root()), gate.current_root().unwrap()); // count 0
+    vector_root("tree", 0, bytes(scanner.root()));
     append_both(&mut scanner, &mut gate, 0, 1, 0, outputs[0..1].to_vec()); // 1
+    vector_root("tree", 1, bytes(scanner.root()));
     append_both(&mut scanner, &mut gate, 1, 2, 1, outputs[1..2].to_vec()); // 2
+    vector_root("tree", 2, bytes(scanner.root()));
     append_both(&mut scanner, &mut gate, 2, 3, 2, outputs[2..15].to_vec()); // 15
+    vector_root("tree", 15, bytes(scanner.root()));
     append_both(&mut scanner, &mut gate, 3, 4, 3, outputs[15..16].to_vec()); // 16
+    vector_root("tree", 16, bytes(scanner.root()));
     assert_eq!(scanner.notes().len(), 16);
 }
 
