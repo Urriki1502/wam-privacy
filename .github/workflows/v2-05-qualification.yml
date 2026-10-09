@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - v2/05-qualification-handoff
+      - research/sec001-snapshot-durability
   pull_request:
     paths:
       - 'v2/**'
@@ -13,6 +14,10 @@ on:
       - 'scripts/build_phase15_review_package.py'
       - 'scripts/run_phase15f_v1_final_audit.py'
   workflow_dispatch:
+
+concurrency:
+  group: v2-05-${{ github.head_ref || github.ref_name }}
+  cancel-in-progress: true
 
 permissions:
   contents: read
@@ -82,3 +87,36 @@ jobs:
           path: ${{ runner.temp }}/v2-05-a.json
           if-no-files-found: error
           retention-days: 90
+
+  sec001-durable-policy:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Verify exact head and frozen files
+        env:
+          EXPECTED_HEAD: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: |
+          test "$(git rev-parse HEAD)" = "$EXPECTED_HEAD"
+          git diff --exit-code 5af86cfd5be27a3275079cbccde2abd2366ebb2b HEAD -- v2/policy.py v2/bridge.py v2/disclosure.py v2/routing.py
+          git diff --exit-code 95dfe0abf04b4e4dcbdbe9eb6d9bd0439a45a127 HEAD -- prototypes integration/core tests
+          git rev-parse HEAD > exact-head.txt
+      - name: Frozen API regression and durability tests
+        env:
+          PYTHONPATH: 'v2:prototypes:.'
+          PYTHONDONTWRITEBYTECODE: '1'
+        run: |
+          set -o pipefail
+          python3 -B -m unittest -v v2.test_policy v2.test_disclosure v2.test_routing v2.test_bridge v2.sec001_research.test_durable_policy 2>&1 | tee tests.txt
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: sec001-exact-head-evidence
+          path: |
+            exact-head.txt
+            tests.txt
+          if-no-files-found: error
