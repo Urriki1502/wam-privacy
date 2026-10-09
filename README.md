@@ -1,142 +1,140 @@
+<div align="center">
+
 # WAM Privacy
 
-Research, specifications, prototypes, and validation for privacy technologies proposed for WAM.
+### Privacy research • Wallet security • Reproducible validation
 
-> **Status:** Research / Prototype  
-> **Mainnet:** No mainnet integration is implied by this repository.  
-> **Consensus:** No consensus change is implied unless a future proposal is separately specified, reviewed, tested, and accepted by WAM maintainers.
+**A modular research stack for privacy capabilities in WAM — from address scanning and wallet controls to shielded-state experiments.**
 
-## Mission
+![Scope](https://img.shields.io/badge/scope-research%20%26%20regtest-244765)
+![V1](https://img.shields.io/badge/V1-internal%20qualification-307b65)
+![V2](https://img.shields.io/badge/V2-review%20branches-3269a8)
+![Mainnet](https://img.shields.io/badge/mainnet-not%20approved-916142)
+![License](https://img.shields.io/badge/license-MIT-424a59)
 
-Build a privacy stack for WAM by adapting well-studied ideas from mature privacy and Bitcoin ecosystems without blindly cloning another chain.
+[**Architecture**](#architecture-at-a-glance) · [**Research tracks**](#research-tracks) · [**Branch map**](#branch-and-review-map) · [**Evidence**](#verification-and-evidence) · [**Maintainer guide**](docs/v2/PROJECT-GUIDE.md)
 
-The project prioritizes:
+</div>
 
-- privacy without sacrificing monetary-policy auditability;
-- separation of scanning authority and spending authority;
-- standard cryptographic constructions over custom cryptography;
-- testable security invariants;
-- fail-closed behavior at trust boundaries;
-- incremental deployment with explicit review gates;
-- reuse of already-qualified WAM privacy work instead of unnecessary reimplementation.
+---
 
-## Existing WSP-1 baseline
+> [!IMPORTANT]
+> **Research and prototype only.** This repository does **not** ship a WAM mainnet privacy upgrade, enable a consensus rule, demonstrate production anonymity, or provide an independent cryptographic audit. All integration and release decisions remain with WAM maintainers.
 
-WAM already has a substantial Silent Payments qualification implementation in:
+## What this repository does
 
-- `Urriki1502/wam-silent-payments`
-- branch: `feat/wsp1-v1.0`
-- package status: `1.0.0.dev0`
-- previously qualified node profile: WAM Core v0.1.11 / regtest
+WAM Privacy brings together multiple privacy and security research tracks under one verifiable, layered design. The objective is to improve privacy **without confusing wallet behavior with blockchain consensus**, and without relaxing value conservation, spend authority, or recovery requirements.
 
-That repository already contains BIP-352 derivation, durable scanning, recovery, PSBTv2 signing, adversarial tests, deep reorg tests, differential tests and fuzz evidence.
+| Research area | Engineering focus | Current boundary |
+| :--- | :--- | :--- |
+| **Address privacy** | WSP-1 / Silent Payments, receiver scanning, deterministic recovery | Prior WSP implementation; WAM adoption still requires review |
+| **Transaction privacy** | PayJoin policy, proposal validation, signing constraints | Local models and regtest evidence |
+| **Wallet privacy** | Scoped capabilities, consent, disclosure, signer isolation | V1/V2 research; trusted hardware/UI still required |
+| **Network privacy** | Relay choices, metadata observability, safe routing failures | Simulator; no live anonymity claim |
+| **Shielded research** | Halo2, commitments, nullifiers, value conservation, reorg recovery | Experimental; **no Core activation** |
 
-Therefore this repository does **not** restart WSP-1 from zero. Its first implementation task is to adopt, review and requalify that baseline against current WAM Core.
+### Design principles
 
-See [docs/EXISTING-ASSETS.md](docs/EXISTING-ASSETS.md) and [docs/WAM-CORE-COMPATIBILITY.md](docs/WAM-CORE-COMPATIBILITY.md).
+**Fail closed** at uncertain boundaries · **Separate scan and spend authority** · **Bind all decisions to exact contexts** · **Pin and reproduce evidence** · **Never equate green CI with deployment approval**
 
-## Current engineering status
+## Architecture at a glance
 
-| Phase | Status |
-| --- | --- |
-| Phase 0 — Architecture / threat model | **MERGED** |
-| Phase 1 — WSP-1 / current-Core requalification | **INTERNAL ENGINEERING PASS** |
-| Phase 2 — Privacy-aware wallet policy | **INTERNAL ENGINEERING PASS** |
-| Phase 3 — Signer abstraction | **INTERNAL ENGINEERING PASS** |
-| Phase 4 — PayJoin safety | **INTERNAL ENGINEERING PASS** |
-| Phase 5 — Network privacy policy | **INTERNAL ENGINEERING PASS** |
-| Phase 6 — Stack integration contract | **INTERNAL ENGINEERING PASS** |
-| Phase 7 — Shielded state model | **INTERNAL ENGINEERING PASS** |
-| Phase 8 — Isolated Halo2 prototype | **INTERNAL ENGINEERING PASS** |
-| Phase 9A–9C — Integrated shielded action | **INTERNAL ENGINEERING PASS** |
-| Phase 10A–10C — Bundle + serialization | **INTERNAL ENGINEERING PASS** |
-| Phase 10D — Protocol hardening/context binding | **INTERNAL ENGINEERING PASS** |
-| Phase 11 — Key hierarchy + HPKE note encryption | **INTERNAL ENGINEERING PASS** |
-| Phase 12A — Real WAM/WSP adapters | **INTERNAL ENGINEERING PASS** |
-| Phase 12B — Shielded wallet state/recovery | **INTERNAL ENGINEERING PASS** |
-| Phase 13A — Core-facing Halo2 verifier C ABI | **INTERNAL ENGINEERING PASS** |
-| Phase 13B–13D — Core regtest/state/resource integration | **INTERNAL ENGINEERING PASS** |
-| Phase 14A — Reproducible release identity | **INTERNAL ENGINEERING PASS** |
-| Phase 14B — Parser/verifier fuzzing | **INTERNAL ENGINEERING PASS** |
-| Phase 14C — Performance/resource benchmarks | **INTERNAL ENGINEERING PASS** |
-| Phase 14D — Upgrade/migration/static-review + final evidence | **INTERNAL ENGINEERING PASS** |
-| Phase 15A — Review/handoff package freeze | **PASS — REVIEW PACKAGE READY** |
-| Phase 15B — Extended regtest drill harness | **INTERNAL ENGINEERING PASS** |
-| Phase 15C–15D — Independent state-machine / crypto review | **READY FOR EXTERNAL REVIEW** |
-| Phase 15E–15F — Remediation / maintainer handoff | **PENDING EXTERNAL DEPENDENCY** |
+~~~mermaid
+flowchart LR
+    CORE["WAM Core / chain history"] --> SCAN["WSP-1 scanner"]
+    SCAN --> WALLET["Wallet state + recovery"]
+    WALLET --> POLICY["V2 capability policy"]
+    POLICY --> CONSENT["Trusted consent boundary"]
+    CONSENT --> SIGNER["V1 signer / PSBT"]
+    SIGNER --> TX["Transaction construction / PayJoin"]
+    TX --> RELAY["Broadcast policy / relay"]
+    WALLET -. "research state inputs" .-> SHIELD["Shielded notes / commitments"]
+    SHIELD --> PROOFS["Halo2 proof + verifier model"]
+    PROOFS -. "proposal only · Core review required" .-> CORE
 
-An internal engineering PASS is not a production-readiness, anonymity, audit, or mainnet claim.
+    classDef chain fill:#24364b,color:#fff,stroke:#536b84
+    classDef wallet fill:#e8f4ff,color:#123a60,stroke:#92badb
+    classDef research fill:#fff2df,color:#644317,stroke:#d4ad70
+    class CORE chain
+    class SCAN,WALLET,POLICY,CONSENT,SIGNER,TX,RELAY wallet
+    class SHIELD,PROOFS research
+~~~
 
-## Initial research tracks
+**Trust boundary:** observing payments must not grant spending authority. Research proof verification is **not** equivalent to a WAM consensus rule. See [architecture](ARCHITECTURE.md), [threat model](THREAT-MODEL.md), and the [detailed dependency map](docs/v2/PROJECT-GUIDE.md#system-dependencies).
 
-1. **WSP-1 — Silent Payments adoption / requalification**
-   - BIP-352-derived static payment addressing;
-   - receiver scanning;
-   - scan/spend authority separation;
-   - deterministic recovery and rescan behavior;
-   - qualification of the existing WSP implementation against current WAM Core.
+## Research tracks
 
-2. **Wallet privacy**
-   - privacy-aware coin selection;
-   - change and transaction fingerprint reduction;
-   - metadata minimization.
+| Track | Implemented / evidenced | Still required |
+| :--- | :--- | :--- |
+| **V1 · Foundation** | Wallet/signer models, Halo2 experiments, verification and regtest suites, Phase 15 internal review package | External Phase 15C/D reviews, operator evidence, maintainer approval |
+| **V2 · Wallet controls** | Policy, selective disclosure, relay simulation, V1 bridge, 29-case evidence classifications | Real trusted UI/storage, long-lived integration and broader testing |
+| **SEC-001/002/003** | Durable policy, signer journal, conservative multi-store composition tests | Trusted anti-rollback service, signer identity/reconciliation, distributed recovery design |
+| **AUTH-001** | Local consent/disclosure guard and adversarial fixtures | Actual wallet UI ownership and C++ FFI lifetime review |
+| **P0 E** | Pinned A/B/C/D regression and reproducibility evidence | New-head CI qualification, external review, production dependencies |
+| **CORE-003** | Canonical-root model, differential vectors, reorg journal, proposed Core interface | Maintainer protocol decisions and consensus-sensitive implementation review |
 
-3. **Signer architecture**
-   - software signer;
-   - offline signer;
-   - future hardware-backed signer through one interface.
+The detailed state of each gate lives in [V2 review notes](https://github.com/Urriki1502/wam-privacy/blob/v2/research-freeze-2026-10-09/docs/v2/V2-05-REVIEW-HANDOFF.md), the [Phase 15 review plan](docs/SHIELDED-REVIEW-PLAN.md), and [Issue #66](https://github.com/Urriki1502/wam-privacy/issues/66).
 
-4. **PayJoin**
-   - BIP-78 compatibility research;
-   - BIP-77 asynchronous PayJoin research;
-   - no custodial mixer design.
+## Branch and review map
 
-5. **Network privacy**
-   - broadcast privacy;
-   - RPC isolation;
-   - optional privacy transports.
+Research branches are **separate proposals**, not features merged into main.
 
-6. **Shielded research**
-   - Zcash Orchard / Halo 2 as research references;
-   - note commitments, nullifiers, viewing capabilities, value conservation;
-   - research only until formal protocol, test vectors, independent review, and testnet validation exist.
+~~~mermaid
+flowchart TD
+    MAIN["main · V1 baseline"] --> V201["V2-01 · PR #52"]
+    V201 --> V202["V2-02 · PR #53"]
+    V202 --> V203["V2-03 · PR #54"]
+    V203 --> V204["V2-04 · PR #55"]
+    V204 --> V205["V2-05 · PR #56"]
+    V205 --> FREEZE["V2 research freeze · original 5af86cfd"]
+    FREEZE --> SEC["SEC-001 / 002 / 003"]
+    FREEZE --> AUTH["AUTH-001"]
+    FREEZE --> P0["P0 E · evidence matrix"]
+    FREEZE --> C1["CORE-003 · step 01"]
+    C1 --> C2["step 02"]
+    C2 --> C3["step 03"]
+    C3 --> C4["step 04"]
 
-## Repository map
+    classDef stable fill:#e5eee9,stroke:#65957b,color:#213c2b
+    classDef pending fill:#eaf0ff,stroke:#7896cd,color:#233e71
+    classDef open fill:#fff2df,stroke:#d3a464,color:#65471f
+    class MAIN,FREEZE stable
+    class V201,V202,V203,V204,V205,C1,C2,C3,C4 pending
+    class SEC,AUTH,P0 open
+~~~
 
-- [ARCHITECTURE.md](ARCHITECTURE.md) — system layers and trust boundaries.
-- [THREAT-MODEL.md](THREAT-MODEL.md) — assets, attackers, security goals, and invariants.
-- [SECURITY.md](SECURITY.md) — disclosure and research-safety policy.
-- [docs/DESIGN-PRINCIPLES.md](docs/DESIGN-PRINCIPLES.md) — engineering rules.
-- [docs/PRIVACY-ROADMAP.md](docs/PRIVACY-ROADMAP.md) — staged delivery gates.
-- [docs/REFERENCES.md](docs/REFERENCES.md) — upstream standards and research references.
-- [docs/EXISTING-ASSETS.md](docs/EXISTING-ASSETS.md) — reusable work already completed.
-- [docs/WAM-CORE-COMPATIBILITY.md](docs/WAM-CORE-COMPATIBILITY.md) — current Core qualification target.
-- [wsp/wsp-1/SPEC.md](wsp/wsp-1/SPEC.md) — WSP-1 architecture/profile contract.
-- [docs/SHIELDED-PROTOCOL-MODEL.md](docs/SHIELDED-PROTOCOL-MODEL.md) — Phase 7 shielded state semantics.
-- [docs/SHIELDED-REVIEW-PLAN.md](docs/SHIELDED-REVIEW-PLAN.md) — external review gates for shielded work.
-- [qualification/PHASE7-STATUS.md](qualification/PHASE7-STATUS.md) — Phase 7 qualification status.
-- [docs/ZK-PROTOTYPE.md](docs/ZK-PROTOTYPE.md) — Phase 8 Halo2 prototype stages and non-claims.
-- [qualification/PHASE8-STATUS.md](qualification/PHASE8-STATUS.md) — Phase 8 internal qualification status.
-- [docs/PHASE9C-VALUE-ACTION.md](docs/PHASE9C-VALUE-ACTION.md) — Phase 9C integrated value-action relation.
-- [qualification/PHASE9-STATUS.md](qualification/PHASE9-STATUS.md) — Phase 9 qualification status.
-- [docs/PHASE10C-SERIALIZATION.md](docs/PHASE10C-SERIALIZATION.md) — Phase 10C canonical research envelope/verifier contract.
-- [qualification/PHASE10-STATUS.md](qualification/PHASE10-STATUS.md) — Phase 10 qualification status.
+Full clickable branches, PR dependencies, frozen SHA provenance and owner decisions: **[Project guide →](docs/v2/PROJECT-GUIDE.md#branch-topology-and-review-links)**.
 
-## Development rule
+## Verification and evidence
 
-Every implementation phase must define, before code is promoted:
+Internal workflow success establishes **only the checks actually exercised at their exact source SHAs**.
 
-```
-scope
-→ threat model
-→ trust boundary
-→ test environment
-→ security invariants
-→ exit criteria
-```
+- **V1:** [Phase 15 status](qualification/PHASE15-STATUS.md), [state-machine review intake](reviews/PHASE15C-STATE-MACHINE-REVIEW.md), [cryptography review intake](reviews/PHASE15D-CRYPTO-CIRCUIT-REVIEW.md).
+- **V2:** [29-case qualification handoff](https://github.com/Urriki1502/wam-privacy/blob/v2/research-freeze-2026-10-09/docs/v2/V2-05-REVIEW-HANDOFF.md), [acceptance matrix](https://github.com/Urriki1502/wam-privacy/blob/v2/research-freeze-2026-10-09/v2/acceptance_matrix.json), [CI workflow](https://github.com/Urriki1502/wam-privacy/blob/v2/research-freeze-2026-10-09/.github/workflows/v2-05-qualification.yml).
+- **P0 research:** [SEC-001](https://github.com/Urriki1502/wam-privacy/pull/70) · [SEC-002](https://github.com/Urriki1502/wam-privacy/pull/67) · [SEC-003](https://github.com/Urriki1502/wam-privacy/pull/71) · [AUTH-001](https://github.com/Urriki1502/wam-privacy/pull/69) · [P0 E](https://github.com/Urriki1502/wam-privacy/pull/68).
+- **Core design:** [CORE-003 steps 01–04](https://github.com/Urriki1502/wam-privacy/pull/61) and [maintainer decision record](https://github.com/Urriki1502/wam-privacy/issues/57).
+- **Current pool finding:** [WS-POOL-JOB-001 deterministic reproduction](https://github.com/Urriki1502/wam-security/pull/18) is **a separate WAM Security issue**, not an accepted privacy feature.
 
-If an invariant cannot be tested, it is not considered complete.
+### Release gates that remain open
 
-## License
+Trusted monotonic storage · real signer identity and crash reconciliation · authenticated wallet consent/UI · FFI lifetime qualification · Phase 15C/15D attributed external review · operator testnet history · Core consensus decisions · WSP-1 deployment profile.
 
-MIT. See [LICENSE](LICENSE).
+## Repository and related projects
+
+| Resource | Purpose |
+| :--- | :--- |
+| [Project guide](docs/v2/PROJECT-GUIDE.md) | Clickable module map, branch structure, diagrams and reviewer workflow |
+| [Architecture](ARCHITECTURE.md) / [Threat model](THREAT-MODEL.md) | Layering, assets, attackers and invariants |
+| [WSP-1 specification](wsp/wsp-1/SPEC.md) | Silent Payments research interface |
+| [WAM Silent Payments](https://github.com/Urriki1502/wam-silent-payments) | Prior WSP-1 scanner/signer implementation |
+| [WAM Silent Wallet](https://github.com/Urriki1502/wam-silent-wallet) | Independent wallet prototype |
+| [WAM Security](https://github.com/Urriki1502/wam-security) | Pool, payout, Redis and broader security regression tracks |
+| [WAM Core](https://github.com/wamcoin-core-dev/wam-coin) | Upstream consensus and node authority |
+
+## For maintainers
+
+Start with the [project guide](docs/v2/PROJECT-GUIDE.md), inspect the pinned source and negative tests, then respond to the architecture and security decisions linked there. **No research branch is an implicit merge request for production deployment.**
+
+> **Source provenance:** V1 logical baseline [95dfe0ab](https://github.com/Urriki1502/wam-privacy/commit/95dfe0abf04b4e4dcbdbe9eb6d9bd0439a45a127); V2 pre-documentation snapshot [5af86cfd](https://github.com/Urriki1502/wam-privacy/commit/5af86cfd5be27a3275079cbccde2abd2366ebb2b). Documentation refreshes do not retroactively qualify the newer commit.
+
+[Security policy](SECURITY.md) · [License](LICENSE) · [Research roadmap](docs/PRIVACY-ROADMAP.md)
