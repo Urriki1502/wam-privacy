@@ -130,11 +130,11 @@ jobs:
             modules: v2.sec002_research.test_journal tests.test_phase3_signer_abstraction
             pythonpath: 'v2:prototypes:.'
           - lane: C
-            source_sha: 4bcca5aa333c9b98ff936a269afecf315e492504
+            source_sha: 618c69d63ef1b0447474ac61a826e40bcd0f6857
             modules: v2.sec003_research.test_contract v2.sec003_research.test_composition
             pythonpath: 'v2:prototypes:.'
           - lane: D
-            source_sha: c1bb25fdf1f16a710901a570f51846fb5be2f644
+            source_sha: 2e127bb068be90890e396b8dfc2a5b7d3120322b
             modules: v2.auth001_research.test_boundary v2.test_policy v2.test_disclosure
             pythonpath: 'v2:v2/auth001_research:prototypes:.'
     steps:

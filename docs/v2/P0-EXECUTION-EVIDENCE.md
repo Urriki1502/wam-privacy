@@ -1,7 +1,7 @@
 # P0 research evidence and CI stabilization
 
-Implementation owner: root Codex. Independent reviewer: E, read-only.
-The implementation team is now one author and one reviewer. Agents A-D no longer write branches.
+Implementation owner: designated project maintainer. Review scope: separate internal read-only evidence check; no independent human audit claimed.
+Research branches are updated sequentially by the project maintainer; reproducibility is independently checked by isolated CI executions.
 
 Frozen V1 source: 95dfe0abf04b4e4dcbdbe9eb6d9bd0439a45a127.
 Frozen V2 source: 5af86cfd5be27a3275079cbccde2abd2366ebb2b.
@@ -20,7 +20,7 @@ Root moved each isolated research job into .github/workflows/v2-05-qualification
 Original V2-05 qualification jobs, PR paths and dispatch event are preserved.
 P0 E uses pull_request checks on its research branch; duplicate push events were removed, while default V2-05 push, PR and manual triggers remain enabled.
 Historical guard scripts and every runtime/test-source blob are unchanged.
-The staged trees were reviewed before branch updates. Root owns the common CI file sequentially across research branches; independent agents do not edit it.
+Each staged tree is checked for change scope before branch update. The shared CI workflow is updated sequentially to avoid conflicting edits.
 
 ## Current reproducible matrix
 
@@ -28,8 +28,8 @@ The staged trees were reviewed before branch updates. Root owns the common CI fi
 | --- | --- | --- |
 | A | #70 | 4f2a81acb66bfe35ae2ea0ec878e21f608f76130 |
 | B | #67 | 059658db638229abac23f077e9318466bf501a63 |
-| C | #71 | 4bcca5aa333c9b98ff936a269afecf315e492504 |
-| D | #69 | c1bb25fdf1f16a710901a570f51846fb5be2f644 |
+| C | #71 | 618c69d63ef1b0447474ac61a826e40bcd0f6857 |
+| D | #69 | 2e127bb068be90890e396b8dfc2a5b7d3120322b |
 
 E reproduces these current immutable source SHAs, checks protected baseline files, runs the original historical freeze audit and review-package generation, and executes each isolated suite.
 C's private runtime dependencies now use verified research heads A 4f2a81acb66bfe35ae2ea0ec878e21f608f76130 and B 059658db638229abac23f077e9318466bf501a63.
@@ -54,12 +54,16 @@ Require successful current-head historical guards, targeted restart/rollback/con
 A/B/C storage is trusted and outside the rollback attacker domain. SQLite does not supply a hardware monotonic checkpoint or detect jointly rolling back all trusted stores.
 C permanently blocks interrupted non-COMPLETE intents and never refunds consumed authority or retries an uncertain provider. This sacrifices liveness and does not implement distributed ACID.
 Real trusted UI deployment, C++ FFI lifetime integration, independent external state-machine/crypto reviews and CORE-003 approval remain open.
-Internal source review and separate-agent reproduction do not substitute for external audit. No production or mainnet readiness claim is made.
+Internal source review and separately pinned CI reproduction do not substitute for external audit. No production or mainnet readiness claim is made.
 
 ## Latest pinned-lane refresh — October 9, 2026
 
-The independently qualified research lanes now pin A `4f2a81acb66bfe35ae2ea0ec878e21f608f76130` (PR #70), B `059658db638229abac23f077e9318466bf501a63` (PR #67), C `4bcca5aa333c9b98ff936a269afecf315e492504` (PR #71) and D `c1bb25fdf1f16a710901a570f51846fb5be2f644` (PR #69), each of which had a completed successful V2-05 workflow before this E refresh. C overlays exactly the updated pinned A/B research adapters in its isolated fixture tests. The historical earlier SHAs and their logs remain historical evidence, not qualification of the current refresh.
+The currently pinned research lanes in this CI attempt are A `4f2a81acb66bfe35ae2ea0ec878e21f608f76130` (PR #70), B `059658db638229abac23f077e9318466bf501a63` (PR #67), C `618c69d63ef1b0447474ac61a826e40bcd0f6857` (PR #71) and D `2e127bb068be90890e396b8dfc2a5b7d3120322b` (PR #69), with A/B previously verified and C/D advanced by documentation-only cleanup commits. These new C/D SHA pins and this refreshed E head require new exact-HEAD CI evidence before qualification can be claimed. C overlays exactly the updated pinned A/B research adapters in its isolated fixture tests. The historical earlier SHAs and their logs remain historical evidence, not qualification of the current refresh.
 
 This PR modifies only the already allowed V2-05 workflow and this E evidence document; the original baseline runner, CI qualification jobs, frozen V1/V2 implementation, Core and consensus are unchanged. P0 E's redundant push event is removed to prevent cancelled push/PR duplicates. This commit requires a new exact-head CI success; previous E green results are insufficient for the refreshed lane matrix.
 
 All lanes use offline synthetic tests. Production integration, trusted monotonic storage, distributed atomicity, independent security audit, FFI/UI integration and CORE-003 remain BLOCKED or pending maintainer approval.
+
+## Documentation provenance cleanup
+
+The research source code and test runners are unchanged by the C/D document-only revisions. Internal analysis is not independent external security review; maintainers should rely on exact-source tests, named reviewer signoff and clearly bounded claims, not on historical contributor workflow labels. Git history and earlier evidence remain intact. Full P0 E qualification requires all checks at this new source/merge context to pass.
