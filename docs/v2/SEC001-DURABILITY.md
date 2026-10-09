@@ -13,3 +13,39 @@ Exported checkpoints contain generation, frozen authenticated snapshot, and SHA2
 C contract: DurablePolicy(path,gkey,ckey,provision=False); issue_local_grant, revoke, authorize(request,now,consent), export_checkpoint, validate_checkpoint, close. C must not call provider/sign/disclosure before durable policy authorization. Shared atomic signer-policy storage is not implemented: SEC-003 integration remains pending. Direct frozen LocalV1SignerBridge expects PolicyAuthority isinstance and cannot use this wrapper without a separately reviewed research composition.
 
 Tests: 12 SEC-001 tests plus original V2 policy/bridge/disclosure/routing tests in exact-head CI. Process exit tests uncommitted rollback; restart tests validate committed consume/revoke/consent. Power-loss fault injection, disk-full, cross-process contention and hardware checkpoint qualification remain outstanding. No test result is claimed before GitHub run verification.
+
+## SEC-001 follow-up: separately trusted monotonic witness
+
+The initial research wrapper cannot detect a **whole database rollback**: an
+old HMAC-valid row with an old generation and grants is internally consistent.
+The new optional `checkpoint_witness` protocol is an independent, atomic
+compare-and-advance generation/digest witness. This adds a fail-closed
+**research integration contract**: every read compares the authenticated
+SQLite snapshot to independently witnessed generation/digest; on every
+mutation the witness must durably advance before SQLite COMMIT; only after
+SQLite COMMIT returns may `ALLOW_POLICY_ONLY` leave the adapter.
+
+If the process fails after the trusted witness advanced but before SQLite
+commit, the DB is intentionally stranded behind the witness. Recovery MUST
+fail closed and escalate to a trusted recovery procedure; automatic reset,
+resigning old state or rewinding the witness is forbidden. This prioritizes
+safety over availability and **does not implement crash-recovery liveness**.
+
+The test `MemoryWitnessForTests` is process-memory *only* and therefore
+**not suitable for production** or a true restart after losing the witness.
+Production requires an independently provisioned tamper/rollback-resistant
+storage provider with atomic durable CAS, stable identity/key custody and
+tested power-loss behavior. Passing tests with the memory fixture is not
+proof of that provider.
+
+Backwards compatibility: SEC-003 pinned to prior A research SHA still uses
+the original `DurablePolicy(path,grant_key,consent_key)` call signature. That
+mode is intentionally unprotected from whole-DB rollback and remains
+production BLOCKED. The new keyword is opt-in to avoid breaking other
+unmerged research; production callers must never silently treat an
+unwitnessed instance as secure.
+
+New adversarial tests include an old authenticated **whole-store rollback**,
+unwitnessed replay negative evidence, absence/outage of witness, trusted
+advance failure, crash after witness CAS before SQLite COMMIT, concurrent
+connections sharing a trusted witness, and restart/revocation/consumption.

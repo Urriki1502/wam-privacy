@@ -7,6 +7,7 @@ the entire trusted store. Never expose this adapter or its keys through RPC.
 import hashlib
 import sqlite3
 from policy import PolicyAuthority
+from v2.sec001_research.witness import CheckpointStamp, stamp_for
 
 
 class CheckpointRejected(ValueError):
@@ -14,8 +15,12 @@ class CheckpointRejected(ValueError):
 
 
 class DurablePolicy:
-    def __init__(self, path, grant_key, consent_key, *, provision=False):
+    def __init__(self, path, grant_key, consent_key, *, provision=False, checkpoint_witness=None):
         self.path = str(path)
+        # Optional research adapter: the witness itself MUST live outside the
+        # rollbackable wallet DB and support atomic durable compare-and-advance.
+        # Without this adapter, a valid whole-DB rollback remains undetectable.
+        self._witness = checkpoint_witness
         self._grant_key, self._consent_key = grant_key, consent_key
         self._conn = sqlite3.connect(self.path, timeout=10, isolation_level=None,
                                      check_same_thread=False)
@@ -49,6 +54,16 @@ class DurablePolicy:
             raise CheckpointRejected("CHECKPOINT_UNAVAILABLE")
         # Always authenticate the stored authority; corrupt state never resets.
         authority = PolicyAuthority.restore(row[1], self._grant_key, self._consent_key)
+        if self._witness is not None:
+            # A valid HMAC on old policy bytes does not prove freshness.
+            # Compare against an independently protected generation + digest.
+            try:
+                observed = self._witness.read()
+            except Exception:
+                raise CheckpointRejected("CHECKPOINT_WITNESS_UNAVAILABLE") from None
+            if (type(observed) is not CheckpointStamp
+                    or observed != stamp_for(row[0], row[1])):
+                raise CheckpointRejected("CHECKPOINT_ROLLBACK_OR_FORK")
         return row[0], row[1], authority
 
     def _apply(self, operation):
@@ -59,8 +74,21 @@ class DurablePolicy:
                 result = operation(authority)
                 if generation >= (1 << 63) - 1:
                     raise CheckpointRejected("CHECKPOINT_EXHAUSTED")
+                next_snapshot = authority.snapshot()
+                if self._witness is not None:
+                    # Security-first ordering: trusted witness MUST commit
+                    # before SQLite. Crash in between makes the store fail
+                    # closed at restart instead of resurrecting old grants.
+                    current = self._conn.execute(
+                        "SELECT snapshot FROM checkpoint WHERE id=1").fetchone()[0]
+                    try:
+                        self._witness.advance(
+                            stamp_for(generation, current),
+                            stamp_for(generation + 1, next_snapshot))
+                    except Exception:
+                        raise CheckpointRejected("CHECKPOINT_WITNESS_ADVANCE_FAILED") from None
                 self._conn.execute("UPDATE checkpoint SET generation=?,snapshot=? WHERE id=1",
-                                   (generation + 1, authority.snapshot()))
+                                   (generation + 1, next_snapshot))
                 # No ALLOW or external side effect before durable commit.
                 self._conn.execute("COMMIT")
                 return result
@@ -76,6 +104,12 @@ class DurablePolicy:
 
     def authorize(self, request, *, now, consent=None):
         return self._apply(lambda a: a.authorize(request, now=now, consent=consent))
+
+    def checkpoint_stamp(self):
+        """Public non-secret digest for trusted installer/review, NOT authority."""
+        with self._lock:
+            generation, snapshot, _ = self._read()
+            return stamp_for(generation, snapshot)
 
     def export_checkpoint(self):
         with self._lock:

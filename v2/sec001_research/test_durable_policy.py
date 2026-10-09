@@ -10,9 +10,36 @@ import tempfile
 import unittest
 from policy import ConsentIssuer, Grant
 from v2.sec001_research.durable_policy import DurablePolicy, CheckpointRejected
+from v2.sec001_research.witness import CheckpointStamp
+import threading
 
 GKEY = b"G" * 32
 CKEY = b"C" * 32
+
+class MemoryWitnessForTests:
+    """Trusted independent highwater *fixture*, not production secure storage."""
+    def __init__(self, stamp):
+        self._stamp = stamp
+        self._lock = threading.Lock()
+        self.available = True
+        self.fail_advance = False
+
+    def read(self):
+        with self._lock:
+            if not self.available:
+                raise OSError("witness offline")
+            return self._stamp
+
+    def advance(self, expected, updated):
+        with self._lock:
+            if not self.available or self.fail_advance:
+                raise OSError("witness unavailable")
+            if (self._stamp != expected
+                    or type(updated) is not CheckpointStamp
+                    or updated.generation != expected.generation + 1):
+                raise ValueError("nonmonotonic witness")
+            self._stamp = updated
+
 
 class DurableTests(unittest.TestCase):
     def setUp(self):
@@ -28,9 +55,14 @@ class DurableTests(unittest.TestCase):
         self.a.close()
         self.tmp.cleanup()
 
-    def restart(self):
+    def restart(self, *, witness=None):
         self.a.close()
-        self.a = DurablePolicy(self.path, GKEY, CKEY)
+        self.a = DurablePolicy(self.path, GKEY, CKEY, checkpoint_witness=witness)
+
+    def trusted_witness(self):
+        w = MemoryWitnessForTests(self.a.checkpoint_stamp())
+        self.restart(witness=w)
+        return w
 
     def test_single_use_durable_before_allow(self):
         old = self.a.export_checkpoint()
@@ -121,6 +153,99 @@ class DurableTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             self.a.issue_local_grant(self.grant)
         self.assertEqual(self.a.export_checkpoint(), before)
+
+    def test_external_witness_rejects_old_hmac_valid_full_store_rollback(self):
+        older = self.a.export_checkpoint()
+        w = self.trusted_witness()
+        self.a.revoke("cap")
+        self.assertGreater(w.read().generation, older["generation"])
+        self.a.close()
+        # Attacker restores an older but authenticated DB row.
+        with sqlite3.connect(self.path) as c:
+            c.execute("UPDATE checkpoint SET generation=?,snapshot=? WHERE id=1",
+                      (older["generation"], older["snapshot"]))
+        with self.assertRaises(CheckpointRejected):
+            DurablePolicy(self.path, GKEY, CKEY, checkpoint_witness=w)
+
+    def test_without_external_witness_full_store_rollback_is_still_possible(self):
+        old = self.a.export_checkpoint()
+        self.a.revoke("cap")
+        self.a.close()
+        with sqlite3.connect(self.path) as c:
+            c.execute("UPDATE checkpoint SET generation=?,snapshot=? WHERE id=1",
+                      (old["generation"], old["snapshot"]))
+        self.a = DurablePolicy(self.path, GKEY, CKEY)
+        # NEGATIVE SECURITY EVIDENCE: this is why the research default is
+        # not an adequate rollback-resistant production wallet backend.
+        self.assertEqual(self.a.authorize(self.request, now=100), "ALLOW_POLICY_ONLY")
+
+    def test_external_witness_persists_revoke_and_single_use_across_restart(self):
+        w = self.trusted_witness()
+        self.assertEqual(self.a.authorize(self.request, now=100), "ALLOW_POLICY_ONLY")
+        self.restart(witness=w)
+        self.assertEqual(self.a.authorize(self.request, now=101), "DENY")
+        self.a.revoke("cap")
+        self.restart(witness=w)
+        self.assertEqual(self.a.authorize(self.request, now=102), "DENY")
+        self.assertEqual(self.a.checkpoint_stamp(), w.read())
+
+    def test_external_witness_rejects_same_generation_state_fork(self):
+        w = self.trusted_witness()
+        row = self.a.export_checkpoint()
+        changed = row["snapshot"].replace('"highwater":-1', '"highwater":0')
+        # A forged-but-MAC-invalid state is already rejected by V2.
+        self.assertNotEqual(changed, row["snapshot"])
+        self.a.close()
+        with sqlite3.connect(self.path) as c:
+            c.execute("UPDATE checkpoint SET snapshot=? WHERE id=1", (changed,))
+        with self.assertRaises(CheckpointRejected):
+            DurablePolicy(self.path, GKEY, CKEY, checkpoint_witness=w)
+
+    def test_external_witness_unavailable_fails_closed(self):
+        w = self.trusted_witness()
+        w.available = False
+        with self.assertRaises(CheckpointRejected):
+            self.a.authorize(self.request, now=100)
+        self.assertEqual(self.a._conn.execute(
+            "SELECT generation FROM checkpoint").fetchone()[0], 1)
+        w.available = True
+        self.assertEqual(self.a.authorize(self.request, now=100), "ALLOW_POLICY_ONLY")
+
+    def test_external_witness_advance_failure_does_not_commit_policy(self):
+        w = self.trusted_witness()
+        before = self.a.export_checkpoint()
+        w.fail_advance = True
+        with self.assertRaises(CheckpointRejected):
+            self.a.revoke("cap")
+        w.fail_advance = False
+        self.assertEqual(self.a.export_checkpoint(), before)
+        self.assertEqual(self.a.authorize(self.request, now=100), "ALLOW_POLICY_ONLY")
+
+    def test_after_witness_advance_but_before_db_commit_restart_fails_closed(self):
+        w = self.trusted_witness()
+        self.a._conn.execute(
+            "CREATE TEMP TRIGGER fail_commit BEFORE UPDATE ON checkpoint "
+            "BEGIN SELECT RAISE(ABORT, 'injected failure'); END")
+        with self.assertRaises(sqlite3.DatabaseError):
+            self.a.revoke("cap")
+        # Trusted witness advanced but DB did not: safety-first hard failure.
+        with self.assertRaises(CheckpointRejected):
+            self.a.export_checkpoint()
+        self.a.close()
+        with self.assertRaises(CheckpointRejected):
+            DurablePolicy(self.path, GKEY, CKEY, checkpoint_witness=w)
+
+    def test_external_witness_two_connections_single_authorization(self):
+        w = self.trusted_witness()
+        b = DurablePolicy(self.path, GKEY, CKEY, checkpoint_witness=w)
+        try:
+            with ThreadPoolExecutor(2) as pool:
+                results = list(pool.map(
+                    lambda p: p.authorize(self.request, now=100), (self.a, b)))
+            self.assertEqual(sorted(results), ["ALLOW_POLICY_ONLY", "DENY"])
+            self.assertEqual(self.a.checkpoint_stamp(), w.read())
+        finally:
+            b.close()
 
 if __name__ == "__main__":
     unittest.main()
