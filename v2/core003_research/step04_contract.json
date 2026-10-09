@@ -1,0 +1,275 @@
+{
+  "schema_version": 1,
+  "contract_id": "WAM-PRIVACY-CORE003-STEP04-DRAFT-01",
+  "review_status": "PROPOSED_UNAPPROVED",
+  "production_status": "BLOCKED",
+  "core_change_authorized": false,
+  "activation_authorized": false,
+  "maintainer_signoff": false,
+  "pins": {
+    "v1": "95dfe0abf04b4e4dcbdbe9eb6d9bd0439a45a127",
+    "v2": "5af86cfd5be27a3275079cbccde2abd2366ebb2b",
+    "step01": "1b2718a8e1ab6852949665dbb07af8ac75d2480a",
+    "step02": "55158e872b758febc3ca5135d2f47e13744cd386",
+    "step03": "ff604db70f5a635e406bd0a8ffd7cdfa05341a0e",
+    "wam_core": "260bc468e5adffea7ce68d8f97fac3e27e4c50b2",
+    "wsp": "dcf1aecc00a64bfad3151fa202c3e07d47d83e69"
+  },
+  "current_implementation": {
+    "verifier_hook": "READ_ONLY_REGTEST_RPC",
+    "proof_shape": "EXPERIMENTAL_HALO2_FIXED_2_IN_2_OUT",
+    "core_root_derivation": "MISSING",
+    "core_chainstate_mutation": "NOT_IMPLEMENTED",
+    "reference_tree": "POSEIDON_PASTA_DEPTH_4_ZERO_PADDED_NON_CONSENSUS",
+    "actual_core_revision": "PINNED_RESEARCH_SNAPSHOT_NOT_UPSTREAM_APPROVAL"
+  },
+  "candidate_api": [
+    {
+      "name": "parse_canonical_block",
+      "owner": "CONSENSUS_PARSER",
+      "source": "BLOCK_BYTES",
+      "must_not_trust": [
+        "RPC_CLAIMED_ROOT",
+        "RPC_TX_CONTEXT"
+      ]
+    },
+    {
+      "name": "verify_hardened_envelope",
+      "owner": "LOCAL_CRYPTO_VERIFIER",
+      "source": "CANONICAL_BLOCK_CONTEXT",
+      "output": "OPAQUE_VERIFIED_TRANSITION_OR_ERROR"
+    },
+    {
+      "name": "stage_shielded_connect",
+      "owner": "CORE_CHAINSTATE_CANDIDATE",
+      "source": "ONLY_VERIFIED_TRANSITIONS",
+      "output": "DETERMINISTIC_DERIVED_STATE_OR_ERROR"
+    },
+    {
+      "name": "commit_block_atomically",
+      "owner": "CORE_VALIDATION_STATE_STORAGE",
+      "source": "FULLY_VALIDATED_CANDIDATE",
+      "output": "ATOMIC_COMMIT_OR_FAILURE"
+    },
+    {
+      "name": "disconnect_exact_tip",
+      "owner": "CORE_CHAINSTATE_UNDO",
+      "source": "AUTHENTICATED_CURRENT_TIP",
+      "output": "UNDO_AND_COMMIT_OR_FAILURE"
+    },
+    {
+      "name": "recover_and_replay",
+      "owner": "CORE_VALIDATION_STATE_STORAGE",
+      "source": "CANONICAL_CHAIN_HISTORY_AND_TRUSTED_STORAGE",
+      "output": "CONSISTENT_STATE_OR_FAIL_CLOSED"
+    }
+  ],
+  "candidate_ordering": "BLOCK_CANONICAL_TX_INDEX_THEN_SHIELDED_BUNDLE_INDEX_THEN_OUTPUT_INDEX_0_1",
+  "candidate_empty_block_rule": "PENDING_MAINTAINER_DECISION",
+  "candidate_anchor_policy": "PENDING_MAINTAINER_DECISION",
+  "forbidden_inputs": [
+    "TRUSTED_RPC_NEXT_ANCHOR",
+    "RPC_SUPPLIED_NULLIFIER_AS_VERIFIED",
+    "RPC_SUPPLIED_OUTPUT_COMMITMENT_AS_VERIFIED",
+    "RPC_SUPPLIED_TX_DIGEST_FOR_CONSENSUS",
+    "CLIENT_SUPPLIED_PREVIOUS_CHAIN_TIP_AS_AUTHORITY",
+    "SNAPSHOT_MAC_AS_SOLE_ROLLBACK_PROTECTION"
+  ],
+  "invariants": [
+    {
+      "id": "C4-INV-01",
+      "topic": "proof_origin",
+      "negative_test": "tamper verified metadata or use unverified envelope",
+      "status": "TEST_REQUIRED"
+    },
+    {
+      "id": "C4-INV-02",
+      "topic": "ordered_canonical_root",
+      "negative_test": "well-formed forged next root, reorder outputs, duplicate",
+      "status": "TEST_REQUIRED"
+    },
+    {
+      "id": "C4-INV-03",
+      "topic": "canonical_transaction_context",
+      "negative_test": "mismatch WAM tx digest, fee, transparent amounts",
+      "status": "TEST_REQUIRED"
+    },
+    {
+      "id": "C4-INV-04",
+      "topic": "nullifier_uniqueness",
+      "negative_test": "duplicate across transactions or blocks and replacement branches",
+      "status": "TEST_REQUIRED"
+    },
+    {
+      "id": "C4-INV-05",
+      "topic": "anchor_history_reorg",
+      "negative_test": "unknown, stale or orphan anchor on reorg",
+      "status": "TEST_REQUIRED"
+    },
+    {
+      "id": "C4-INV-06",
+      "topic": "atomic_persistence",
+      "negative_test": "injected crash between verify, state, undo, db commit and acknowledgment",
+      "status": "TEST_REQUIRED"
+    },
+    {
+      "id": "C4-INV-07",
+      "topic": "recovery_tip_reconciliation",
+      "negative_test": "disk state root/tip disagrees with canonical block index",
+      "status": "TEST_REQUIRED"
+    },
+    {
+      "id": "C4-INV-08",
+      "topic": "protocol_version_binding",
+      "negative_test": "wrong network, circuit profile, VK, serialization",
+      "status": "TEST_REQUIRED"
+    },
+    {
+      "id": "C4-INV-09",
+      "topic": "no_rpc_consensus_authority",
+      "negative_test": "try to mutate chainstate from experimental RPC",
+      "status": "TEST_REQUIRED"
+    },
+    {
+      "id": "C4-INV-10",
+      "topic": "empty_block_and_2x2_semantics",
+      "negative_test": "empty block / fixed-shape outputs produce inconsistent roots",
+      "status": "TEST_REQUIRED"
+    },
+    {
+      "id": "C4-INV-11",
+      "topic": "authenticated_replay_resistance",
+      "negative_test": "replay older MAC-valid snapshot without trusted monotonic witness",
+      "status": "TEST_REQUIRED"
+    },
+    {
+      "id": "C4-INV-12",
+      "topic": "activation_compatibility",
+      "negative_test": "pre-activation node accepts post-activation shielded state",
+      "status": "TEST_REQUIRED"
+    }
+  ],
+  "decisions": [
+    {
+      "id": "D01",
+      "topic": "tree_hash_depth_empty_root_canonical_encoding",
+      "owner": "WAM_CORE_MAINTAINER",
+      "status": "PENDING_MAINTAINER",
+      "options": [
+        "VERSIONED_TREE_SPEC",
+        "DEFER_CORE"
+      ]
+    },
+    {
+      "id": "D02",
+      "topic": "canonical_bundle_order_and_empty_block_semantics",
+      "owner": "WAM_CORE_MAINTAINER",
+      "status": "PENDING_MAINTAINER",
+      "options": [
+        "SPECIFY_ORDER_AND_NO_OUTPUT_BLOCK",
+        "DEFER_CORE"
+      ]
+    },
+    {
+      "id": "D03",
+      "topic": "anchor_eligibility_and_reorg_window",
+      "owner": "WAM_CORE_MAINTAINER",
+      "status": "PENDING_MAINTAINER",
+      "options": [
+        "DETERMINISTIC_ANCHOR_WINDOW",
+        "CURRENT_ROOT_ONLY",
+        "DEFER_CORE"
+      ]
+    },
+    {
+      "id": "D04",
+      "topic": "transaction_digest_fee_and_utxo_binding",
+      "owner": "WAM_CORE_MAINTAINER",
+      "status": "PENDING_MAINTAINER",
+      "options": [
+        "CANONICAL_TX_CONTEXT_SPEC",
+        "DEFER_CORE"
+      ]
+    },
+    {
+      "id": "D05",
+      "topic": "proof_verified_metadata_and_verifier_lifecycle",
+      "owner": "WAM_CORE_MAINTAINER",
+      "status": "PENDING_MAINTAINER",
+      "options": [
+        "OPAQUE_VERIFIED_TRANSITION_API",
+        "DEFER_CORE"
+      ]
+    },
+    {
+      "id": "D06",
+      "topic": "atomic_chainstate_undo_replay_storage",
+      "owner": "WAM_CORE_MAINTAINER",
+      "status": "PENDING_MAINTAINER",
+      "options": [
+        "TRANSACTIONAL_CHAINSTATE_DESIGN",
+        "DEFER_CORE"
+      ]
+    },
+    {
+      "id": "D07",
+      "topic": "rollback_resistance_threat_model_and_key_custody",
+      "owner": "WAM_CORE_MAINTAINER",
+      "status": "PENDING_MAINTAINER",
+      "options": [
+        "OS_AND_STORAGE_TRUST_MODEL",
+        "OUT_OF_SCOPE_WITH_EXPLICIT_LIMITS",
+        "DEFER_CORE"
+      ]
+    },
+    {
+      "id": "D08",
+      "topic": "resource_limits_dos_tree_and_proof_cost",
+      "owner": "WAM_CORE_MAINTAINER",
+      "status": "PENDING_MAINTAINER",
+      "options": [
+        "MEASURED_LIMITS_AND_MEMPOOL_POLICY",
+        "DEFER_CORE"
+      ]
+    },
+    {
+      "id": "D09",
+      "topic": "activation_versioning_upgrade_and_compatibility",
+      "owner": "WAM_CORE_MAINTAINER",
+      "status": "PENDING_MAINTAINER",
+      "options": [
+        "GOVERNED_CONSENSUS_PROPOSAL",
+        "WALLET_ONLY",
+        "DEFER_CORE"
+      ]
+    },
+    {
+      "id": "D10",
+      "topic": "independent_audit_testnet_and_release_ownership",
+      "owner": "WAM_CORE_MAINTAINER",
+      "status": "PENDING_MAINTAINER",
+      "options": [
+        "ATTRIBUTED_REVIEW_AND_OPERATOR_PLAN",
+        "DEFER_CORE"
+      ]
+    }
+  ],
+  "evidence": {
+    "completed_research": [
+      "STEP01_REFERENCE_9_RUST_TESTS",
+      "STEP02_DIFFERENTIAL_AND_5_INTERNAL_VECTORS",
+      "STEP03_PROCESS_CRASH_REORG_JOURNAL_FIXTURES"
+    ],
+    "not_demonstrated": [
+      "INDEPENDENT_CONSENSUS_SPEC",
+      "REAL_PROOF_TO_DURABLE_CORE",
+      "EXTERNAL_CRYPTO_AUDIT",
+      "PHYSICAL_POWER_LOSS",
+      "PRODUCTION_SIZED_TREE",
+      "OPERATOR_TESTNET",
+      "MAINNET_ACTIVATION",
+      "MAINTAINER_APPROVAL"
+    ],
+    "issue": "https://github.com/Urriki1502/wam-privacy/issues/57"
+  }
+}
