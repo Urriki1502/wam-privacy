@@ -1,6 +1,6 @@
 # SEC-003 cross-module atomic recovery contract
 
-Status: design and contract tests only. A/B integration BLOCKED; no production, atomicity, cryptographic review or security PASS claim.
+Status: conservative actual A/B research composition implemented; tests pending exact-HEAD CI. Distributed atomicity, production integration and full SEC-003 acceptance remain BLOCKED.
 
 ## Scope and source inspection
 
@@ -14,7 +14,7 @@ A proposed interface from agent A: DurablePolicy(db_path, grant_key, consent_ver
 
 B proposed interface from agent B: PersistentSignerGate(provider, journal_path, policy=None).sign(request, approval). A committed RESERVED precedes provider invocation; COMPLETE includes the durable result. Pending/uncertain outcome permanently blocks repeat signing. Identical completed binding returns cached result; changed request/approval/policy binding rejects. B has no public transaction reservation/receipt interface yet.
 
-These proposals are dependencies, not APIs assumed integrated by this PR.
+Pinned concrete dependencies: A b8a5d84e3c981ce1d97b52d6c0af4aa23422d7be; B fc90ff5962d4c354f28e631d56f79c5efd09fa44. The research coordinator composes these actual adapters without editing their files. CI overlays only their isolated research directories after verifying source pins.
 
 ## Threat model and trust boundary
 
@@ -52,7 +52,7 @@ REAUTHORIZE is an instruction for future trusted UI provisioning, not permission
 
 ## Executable evidence scope
 
-v2/sec003_research/contract.py is a pure conservative decision checker, not a coordinator and not a signer. test_contract.py serializes/reloads model intents at each cut and checks uncertain outcomes, missing reservations, policy rollback, swapped receipts, impossible phases and forward-only ordering. It does not implement authenticated receipts, fsync durability, process concurrency, A/B calls or provider side effects. A successful contract test run is CONTRACT TEST PASS only.
+v2/sec003_research/contract.py is a pure conservative decision checker, not a coordinator and not a signer. test_contract.py serializes/reloads model intents at each cut and checks uncertain outcomes, missing reservations, policy rollback, swapped receipts, impossible phases and forward-only ordering. It does not implement authenticated receipts, fsync durability, process concurrency, A/B calls or provider side effects. A successful contract test run is CONTRACT TEST PASS only. Actual composition evidence is separately scoped below.
 
 ## Integration acceptance gates
 
@@ -68,3 +68,20 @@ Before changing status from BLOCKED:
 - Verify exact PR head checkout, test output, logs and artifact manifest at the same SHA. Report inherited freeze-policy CI failures without relaxing frozen rules.
 
 CORE-003 remains production blocked pending maintainer approval. Independent security review and trusted UI integration remain external acceptance gates.
+
+
+## Conservative concrete composition
+
+coordinator.py implements DurableResearchBridge(authority, gate, path, account_scope, provision=False), requiring the actual pinned A/B types and research provider. It copies and validates the capability mapping before binding or callbacks, requires an immutable single-use SIGN grant, and binds exact request, approval, capability, account, signer identity, policy and capabilities.
+
+The durable coordinator commits PREPARED before A authorization, records POLICY_SPENT only after A consumption is confirmed by exact immutable grant fields plus used tombstone, and commits SIGNING before invoking B. SIGNING is a conservative may-have-started phase; it is NOT a claim that B RESERVED already exists. COMPLETE is committed only after matching B's trusted durable COMPLETE receipt. An interrupted non-COMPLETE coordinator record remains permanently blocked, including a crash after B completed but before C recorded completion. This deliberately sacrifices recovery liveness.
+
+Completed result delivery returns the durable cache after checking exact C binding, A consumed grant fields, minimum generation, current revocation/expiry/clock highwater and B binding/digest/envelope. Missing or mixed receipts block. B schema reading is private research coupling, pinned to the exact B SHA above. This is not a production adapter interface.
+
+Revocation is ordered at A.authorize. A later concurrent revoke cannot recall a provider operation already authorized/in flight; this PR has no distributed revocation fence. Cached result delivery after observed revocation or expiry is denied.
+
+All three stores and keys remain trusted, outside the rollback attacker domain. Independently rolling back A is detected against a surviving C receipt in the tested case; jointly rolling back all stores is NOT detected. SQLite FULL commits protect the tested process-restart boundaries under filesystem durability assumptions, not arbitrary hardware power loss or malicious storage.
+
+test_composition.py uses actual A/B adapters, fixture provider and process death at PREPARED, A commit before receipt, POLICY_SPENT, SIGNING, provider call, B completion and C completion. It also tests multi-process provider at-most-once, restart cache, changed approval, expired/revoked cache delivery, missing B receipt, independently rolled back A state, missing coordinator, caller-mapping mutation and unrelated generation lacking consumption. No public network/node or real funds are used.
+
+The CI manifest distinguishes conservative research composition tests from distributed ACID and production readiness. A passing targeted run establishes these tests at the recorded C/A/B SHAs only; full SEC-003 exit gates and independent review above remain open.

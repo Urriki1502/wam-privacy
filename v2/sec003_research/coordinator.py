@@ -9,6 +9,7 @@ import hashlib
 import json
 import sqlite3
 
+from policy import _request_valid
 from prototypes.signer_abstraction.model import SignedResult
 from v2.sec001_research.durable_policy import DurablePolicy
 from v2.sec002_research.journal import PersistentSignerGate
@@ -87,15 +88,29 @@ class DurableResearchBridge:
             raise RecoveryBlocked("SIGNER_RECEIPT_INVALID")
         return SignedResult(request.request_id, row[2], row[3])
 
-    def _policy_receipt(self, capability, minimum_generation):
+    def _policy_receipt(self, capability_request, minimum_generation, now):
         checkpoint = self.authority.export_checkpoint()
         state = json.loads(checkpoint["snapshot"])["state"]
+        capability = capability_request.get("capability_id")
+        grant = state["grants"].get(capability)
         if (checkpoint["generation"] < minimum_generation
-                or capability not in state["used"]):
+                or capability not in state["used"]
+                or capability in state["revoked"]
+                or now < state["highwater"]
+                or not grant or grant["grant"]["single_use"] is not True
+                or now >= grant["grant"]["expires_at"]
+                or any(grant["grant"].get(k) != v
+                       for k, v in capability_request.items())):
             raise RecoveryBlocked("POLICY_RECEIPT_INVALID")
         return checkpoint["generation"]
 
     def sign(self, capability_request, request, approval, *, now):
+        try:
+            capability_request = dict(capability_request)
+        except (TypeError, ValueError):
+            raise RecoveryBlocked("BRIDGE_DENIED") from None
+        if not _request_valid(capability_request):
+            raise RecoveryBlocked("BRIDGE_DENIED")
         request.validate_shape()
         approval.validate()
         if (request.network not in ("regtest", "testnet")
@@ -127,7 +142,7 @@ class DurableResearchBridge:
                     raise RecoveryBlocked("REQUEST_BINDING_MISMATCH")
                 if row[1] != "COMPLETE":
                     raise RecoveryBlocked("INTENT_UNCERTAIN")
-                self._policy_receipt(row[3], row[2])
+                self._policy_receipt(capability_request, row[2], now)
                 result = self._signer_receipt(request, approval)
                 if (row[4], row[5]) != (result.tx_digest, result.envelope):
                     raise RecoveryBlocked("RESULT_RECEIPT_INVALID")
@@ -144,7 +159,7 @@ class DurableResearchBridge:
             self._transition(request.request_id, "PREPARED", "DENIED")
             raise RecoveryBlocked("POLICY_DENIED")
         self.fault("POLICY_COMMITTED")
-        generation = self._policy_receipt(capability, checkpoint["generation"] + 1)
+        generation = self._policy_receipt(capability_request, checkpoint["generation"] + 1, now)
         self._transition(request.request_id, "PREPARED", "POLICY_SPENT",
                          generation=generation)
         self.fault("POLICY_SPENT")

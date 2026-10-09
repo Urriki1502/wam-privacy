@@ -1,5 +1,11 @@
 name: SEC-003 research recovery contract
 on:
+  push:
+    branches: [research/sec003-atomic-recovery]
+    paths:
+      - 'v2/sec003_research/**'
+      - 'docs/v2/SEC003*'
+      - '.github/workflows/v2-sec003-research.yml'
   pull_request:
     branches: [v2/research-freeze-2026-10-09]
     paths:
@@ -15,12 +21,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.pull_request.head.sha }}
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
           fetch-depth: 0
           persist-credentials: false
       - name: Exact HEAD and frozen-source evidence
         env:
-          EXPECTED_HEAD: ${{ github.event.pull_request.head.sha }}
+          EXPECTED_HEAD: ${{ github.event.pull_request.head.sha || github.sha }}
         run: |
           mkdir -p evidence
           test "$(git rev-parse HEAD)" = "$EXPECTED_HEAD"
@@ -36,21 +42,52 @@ jobs:
               raise SystemExit("Forbidden paths: " + repr(bad))
           PY
           git diff --exit-code 5af86cfd5be27a3275079cbccde2abd2366ebb2b HEAD -- prototypes integration v2/policy.py v2/bridge.py v2/disclosure.py v2/routing.py
-      - name: Contract model tests (A/B integration remains BLOCKED)
+      - name: Checkout pinned A dependency
+        uses: actions/checkout@v4
+        with:
+          ref: b8a5d84e3c981ce1d97b52d6c0af4aa23422d7be
+          path: dependencies/a
+          persist-credentials: false
+      - name: Checkout pinned B dependency
+        uses: actions/checkout@v4
+        with:
+          ref: fc90ff5962d4c354f28e631d56f79c5efd09fa44
+          path: dependencies/b
+          persist-credentials: false
+      - name: Verify and overlay only pinned A/B research adapters
+        run: |
+          test "$(git -C dependencies/a rev-parse HEAD)" = "b8a5d84e3c981ce1d97b52d6c0af4aa23422d7be"
+          test "$(git -C dependencies/b rev-parse HEAD)" = "fc90ff5962d4c354f28e631d56f79c5efd09fa44"
+          cp -R dependencies/a/v2/sec001_research v2/
+          cp -R dependencies/b/v2/sec002_research v2/
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          Path("evidence/dependency-heads.json").write_text(json.dumps({
+              "A": "b8a5d84e3c981ce1d97b52d6c0af4aa23422d7be",
+              "B": "fc90ff5962d4c354f28e631d56f79c5efd09fa44"}))
+          PY
+      - name: Actual pinned A/B process crash and contract tests
+        env:
+          PYTHONPATH: "v2:."
+
         run: |
           set -o pipefail
-          python3 -m unittest -v v2.sec003_research.test_contract 2>&1 | tee evidence/tests.txt
+          python3 -m unittest -v v2.sec003_research.test_contract v2.sec003_research.test_composition 2>&1 | tee evidence/tests.txt
           python3 - <<'PY'
           import json, pathlib
           head = pathlib.Path("evidence/head.txt").read_text().strip()
           pathlib.Path("evidence/status.json").write_text(json.dumps({
-              "head": head, "scope": "SEC003_CONTRACT_ONLY",
-              "contract_tests": "PASS", "AB_integration": "BLOCKED",
+              "head": head, "scope": "SEC003_CONSERVATIVE_RESEARCH_COMPOSITION",
+              "contract_and_composition_tests": "PASS", "distributed_ACID": "BLOCKED",
+              "whole_store_rollback": "OUTSIDE_TRUST_MODEL",
+              "A_head": "b8a5d84e3c981ce1d97b52d6c0af4aa23422d7be",
+              "B_head": "fc90ff5962d4c354f28e631d56f79c5efd09fa44",
               "production": "BLOCKED", "freeze_base": "5af86cfd5be27a3275079cbccde2abd2366ebb2b"
           }, indent=2))
           PY
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: sec003-contract-${{ github.event.pull_request.head.sha }}
+          name: sec003-contract-${{ github.event.pull_request.head.sha || github.sha }}
           path: evidence/
