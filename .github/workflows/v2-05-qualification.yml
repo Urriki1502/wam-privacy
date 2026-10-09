@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - v2/05-qualification-handoff
-      - research/auth001-boundary-review
   pull_request:
     paths:
       - 'v2/**'
