@@ -57,6 +57,14 @@ jobs:
           PYTHONDONTWRITEBYTECODE: '1'
         run: |
           python3 -B -m unittest -v v2.test_policy v2.test_disclosure v2.test_routing v2.test_bridge v2.test_qualification
+      - name: Validate Step 04 Core interface proposal and source trust boundaries A
+        working-directory: v2-05-a
+        run: |
+          python3 -B v2/core003_research/test_step04_review.py
+      - name: Validate Step 04 design and decisions in independent checkout B
+        working-directory: v2-05-b
+        run: |
+          python3 -B v2/core003_research/test_step04_review.py
       - name: Generate bounded reproducible evidence manifests
         run: |
           python3 -B v2-05-a/v2/qualify_v2.py --root v2-05-a --peer v2-05-b --output "$RUNNER_TEMP/v2-05-a.json"
