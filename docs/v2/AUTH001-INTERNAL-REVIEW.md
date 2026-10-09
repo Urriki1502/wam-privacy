@@ -1,8 +1,8 @@
-# AUTH-001 internal agent review and research contract
+# AUTH-001 internal boundary review and research contract
 
-Reviewer: Codex D boundary agent, 2026-10-09. This is an internal review, not external independent Phase 15C/D audit.
+Review status: internal research assessment, 2026-10-09. No independent external Phase 15C/D audit or independently verified reviewer identity is claimed.
 
-Reviewed V2 5af86cfd5be27a3275079cbccde2abd2366ebb2b and V1 95dfe0abf04b4e4dcbdbe9eb6d9bd0439a45a127. No AGENTS.md exists in the recursive V2 tree. Frozen sources and WAM Core/consensus remain unchanged.
+Reviewed V2 5af86cfd5be27a3275079cbccde2abd2366ebb2b and V1 95dfe0abf04b4e4dcbdbe9eb6d9bd0439a45a127. Frozen sources and WAM Core/consensus remain unchanged.
 
 ## Findings / deployment blockers
 
