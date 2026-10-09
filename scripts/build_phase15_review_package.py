@@ -68,6 +68,7 @@ ALLOWED_AFTER_BASELINE = (
     ".github/workflows/v2-02-selective-disclosure.yml",
     ".github/workflows/v2-03-relay-metadata.yml",
     ".github/workflows/v2-04-v1-bridge.yml",  # V2-only signer bridge CI; no V1 runtime changes.
+    ".github/workflows/v2-05-qualification.yml",  # V2-05 evidence-only CI; no V1 protocol/source change.
     "docs/v2/",   # Isolated V2 docs; protected V1 source remains immutable.
     "v2/",        # Isolated V2 policy/tests; not a Core or V1 runtime path.
 )
