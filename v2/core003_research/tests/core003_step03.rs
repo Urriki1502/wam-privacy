@@ -45,7 +45,7 @@ impl From<RootGateError> for Failure {
     }
 }
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Debug)]
 struct Block {
     height: u64,
     hash: [u8; 32],
