@@ -6,28 +6,28 @@
 
 | Surface | Pin / actual state |
 | --- | --- |
-| Frozen V1 Rust proof/scanner/state model | \`95dfe0abf04b4e4dcbdbe9eb6d9bd0439a45a127\` |
-| Frozen V2 wallet/privacy research | \`5af86cfd5be27a3275079cbccde2abd2366ebb2b\` |
-| CORE-003 Step 01 | \`1b2718a8e1ab6852949665dbb07af8ac75d2480a\` · PR #58 · research PASS |
-| CORE-003 Step 02 | \`55158e872b758febc3ca5135d2f47e13744cd386\` · PR #59 · research PASS |
-| CORE-003 Step 03 | \`ff604db70f5a635e406bd0a8ffd7cdfa05341a0e\` · PR #60 · 36/36 workflow runs PASS |
-| Pinned WAM Core | \`wamcoin-core-dev/wam-coin@260bc468e5adffea7ce68d8f97fac3e27e4c50b2\` — research compatibility pin, NOT protocol adoption |
-| V1 WSP signer | \`dcf1aecc00a64bfad3151fa202c3e07d47d83e69\` |
+| Frozen V1 Rust proof/scanner/state model | `95dfe0abf04b4e4dcbdbe9eb6d9bd0439a45a127` |
+| Frozen V2 wallet/privacy research | `5af86cfd5be27a3275079cbccde2abd2366ebb2b` |
+| CORE-003 Step 01 | `1b2718a8e1ab6852949665dbb07af8ac75d2480a` · PR #58 · research PASS |
+| CORE-003 Step 02 | `55158e872b758febc3ca5135d2f47e13744cd386` · PR #59 · research PASS |
+| CORE-003 Step 03 | `ff604db70f5a635e406bd0a8ffd7cdfa05341a0e` · PR #60 · 36/36 workflow runs PASS |
+| Pinned WAM Core | `wamcoin-core-dev/wam-coin@260bc468e5adffea7ce68d8f97fac3e27e4c50b2` — research compatibility pin, NOT protocol adoption |
+| V1 WSP signer | `dcf1aecc00a64bfad3151fa202c3e07d47d83e69` |
 | Maintainer decisions | [Issue #57](https://github.com/Urriki1502/wam-privacy/issues/57) — **no independent maintainer endorsement has been recorded** |
 
-This proposal changes **only** \`docs/v2/\`, \`v2/core003_research/\` and one project-owned CI workflow. Frozen V1, V2 and real WAM Core source must not be modified here.
+This proposal changes **only** `docs/v2/`, `v2/core003_research/` and one project-owned CI workflow. Frozen V1, V2 and real WAM Core source must not be modified here.
 
 ## What the actual pinned code does — and does not do
 
-- \`integration/core/phase13b/privacy_verifier.cpp\` is a **default-disabled, regtest-only, read-only proof verifier**. Generated-Core RPC \`verifyshieldedproof\` reports validity/status only. It is **not** a chainstate or mempool consensus hook.
-- \`prototypes/zk_balance_halo2/src/core_state.rs\` creates \`VerifiedTransition\` through \`verify_hardened_bundle_envelope_and_decode\`, carries proof-derived nullifiers/commitments, checks tip/nullifier/pool constraints, but stores **caller-provided \`StateBlock.next_anchor\`** after canonical-field validation. A \`HashSet\` of commitments does not carry append order.
-- \`prototypes/zk_balance_halo2/src/hardened_bundle.rs\` uses an experimental **fixed 2-input/2-output Halo2 proof** with nine public input fields (one input root, two nullifiers, two output commitments, fee, transparent in/out, context digest). Its current root validation is a **research** statement, not an adopted consensus encoding.
-- \`prototypes/zk_balance_halo2/src/wallet_state.rs\` has a Poseidon/Pasta depth-4 (16-leaf) zero-padded commitment tree. \`WalletScanner::process_block\` accepts a block with zero shielded outputs, while \`CoreShieldedState::apply_block_inner\` rejects an empty transition vector. Empty-block semantics must be decided, not quietly assumed.
+- `integration/core/phase13b/privacy_verifier.cpp` is a **default-disabled, regtest-only, read-only proof verifier**. Generated-Core RPC `verifyshieldedproof` reports validity/status only. It is **not** a chainstate or mempool consensus hook.
+- `prototypes/zk_balance_halo2/src/core_state.rs` creates `VerifiedTransition` through `verify_hardened_bundle_envelope_and_decode`, carries proof-derived nullifiers/commitments, checks tip/nullifier/pool constraints, but stores **caller-provided `StateBlock.next_anchor`** after canonical-field validation. A `HashSet` of commitments does not carry append order.
+- `prototypes/zk_balance_halo2/src/hardened_bundle.rs` uses an experimental **fixed 2-input/2-output Halo2 proof** with nine public input fields (one input root, two nullifiers, two output commitments, fee, transparent in/out, context digest). Its current root validation is a **research** statement, not an adopted consensus encoding.
+- `prototypes/zk_balance_halo2/src/wallet_state.rs` has a Poseidon/Pasta depth-4 (16-leaf) zero-padded commitment tree. `WalletScanner::process_block` accepts a block with zero shielded outputs, while `CoreShieldedState::apply_block_inner` rejects an empty transition vector. Empty-block semantics must be decided, not quietly assumed.
 - Step 03 modeled single-writer process restarts with atomic-rename/fsync; it did **not** prove real power-loss safety, durable multiwriter chainstate, secret-key custody, protected monotonic checkpoints or real Core integration.
 
 ## Proposed trust-boundary diagram — NOT implemented
 
-\`\`\`text
+```text
 Canonical WAM block bytes from independently validated chain context
     | decode deterministic tx / shielded bundle order and context
     v
@@ -47,28 +47,28 @@ One atomic Core chainstate + shielded state/undo commit
     |        fsync/rollback/restart reconciliation under an approved DB design
     v
 Accept block or reject with NO partial persistent / in-memory mutation
-\`\`\`
+```
 
 ### Candidate API and data ownership (illustrative, not ABI)
 
 | Proposed operation | Trusted input | Output / invariant | Owner |
 | --- | --- | --- | --- |
-| \`parse_canonical_block(bytes, chain_context)\` | Core-validated canonical block bytes and consensus state | Deterministic transaction/bundle index and economic context | Core parser/validation |
-| \`verify_hardened_envelope(context, envelope)\` | Context **derived inside Core**, pinned network, version and VK | Opaque \`VerifiedTransition\` **only after actual proof verification** | Trusted verifier boundary |
-| \`stage_shielded_connect(parent_tip, verified[])\` | Canonical order + verified metadata, resolved anchor rules | Compute *candidate* nullifiers, pool, ordered append commitments and root; fail closed | Core candidate state |
-| \`commit_block_atomically(candidate)\` | Every verifier/state/consensus gate complete | Commit tip, undo, nullifiers, ordered commitments, root and pool together | Core transactional storage |
-| \`disconnect_exact_tip(expected_tip)\` | Verified canonical reorg and exact tip match | Apply undo transactionally, preserve deterministic replay semantics | Core reorg engine |
-| \`recover_and_replay(canonical_history)\` | Committed Core chain index, authenticated state and trusted recovery policy | Reconstruct root/tip/sequence or halt safely; no silent genesis reset | Core recovery path |
+| `parse_canonical_block(bytes, chain_context)` | Core-validated canonical block bytes and consensus state | Deterministic transaction/bundle index and economic context | Core parser/validation |
+| `verify_hardened_envelope(context, envelope)` | Context **derived inside Core**, pinned network, version and VK | Opaque `VerifiedTransition` **only after actual proof verification** | Trusted verifier boundary |
+| `stage_shielded_connect(parent_tip, verified[])` | Canonical order + verified metadata, resolved anchor rules | Compute *candidate* nullifiers, pool, ordered append commitments and root; fail closed | Core candidate state |
+| `commit_block_atomically(candidate)` | Every verifier/state/consensus gate complete | Commit tip, undo, nullifiers, ordered commitments, root and pool together | Core transactional storage |
+| `disconnect_exact_tip(expected_tip)` | Verified canonical reorg and exact tip match | Apply undo transactionally, preserve deterministic replay semantics | Core reorg engine |
+| `recover_and_replay(canonical_history)` | Committed Core chain index, authenticated state and trusted recovery policy | Reconstruct root/tip/sequence or halt safely; no silent genesis reset | Core recovery path |
 
-**Strong requirement:** \`VerifiedTransition\` must not be constructible from arbitrary caller fields, JSON/RPC values or \`precheck\`-only results. Core must derive **transaction digest and all transparent amounts** from its own canonical validation, not a user-provided context object. Never treat a public API returning \`valid=true\` as consensus authorization.
+**Strong requirement:** `VerifiedTransition` must not be constructible from arbitrary caller fields, JSON/RPC values or `precheck`-only results. Core must derive **transaction digest and all transparent amounts** from its own canonical validation, not a user-provided context object. Never treat a public API returning `valid=true` as consensus authorization.
 
 ### Candidate commitment ordering — needs explicit DEV approval
 
-Proposed deterministic order: **block transaction index → shielded bundle index → output index 0, then 1**. Fixed \`2×2\` circuits append the two proof-verified output commitments; reject invalid canonical field encodings, duplicate commitments and over-capacity before state publication. Use only the agreed versioned hash, leaf encoding, tree depth, zero-node rules and empty-tree root. The Step 01/02 Poseidon depth-4 tree is *not* automatically the consensus standard.
+Proposed deterministic order: **block transaction index → shielded bundle index → output index 0, then 1**. Fixed `2×2` circuits append the two proof-verified output commitments; reject invalid canonical field encodings, duplicate commitments and over-capacity before state publication. Use only the agreed versioned hash, leaf encoding, tree depth, zero-node rules and empty-tree root. The Step 01/02 Poseidon depth-4 tree is *not* automatically the consensus standard.
 
 **Unresolved anchor rule:** current Phase 13C checks each transition anchor equals the *current root* at block start. DEV must specify whether historical roots are permitted, the validation window, intra-block spending rules, anchor updates during a block and how reorg invalidates old anchors. Root equality alone does not answer this.
 
-**Unresolved empty block rule:** candidate is to advance the canonical block tip without changing the shielded commitment root if a block has no shielded transitions. This is **PENDING DEV decision**; no draft code may silently reinterpret the existing \`EmptyBlock\` error.
+**Unresolved empty block rule:** candidate is to advance the canonical block tip without changing the shielded commitment root if a block has no shielded transitions. This is **PENDING DEV decision**; no draft code may silently reinterpret the existing `EmptyBlock` error.
 
 ### Proposed atomicity and recovery sequence (requires DB design)
 
@@ -98,7 +98,7 @@ The Step 03 MAC uses a **public fixture key** and its file-rename model does not
 
 ## Adversarial invariants and acceptance requirements
 
-Machine-readable IDs live in \`v2/core003_research/step04_contract.json\`. This design asks for negative tests covering:
+Machine-readable IDs live in `v2/core003_research/step04_contract.json`. This design asks for negative tests covering:
 
 - **C4-INV-01/02:** only verified proof-derived fields enter state; a canonically encoded **wrong root** and reordered output commitments are rejected atomically.
 - **C4-INV-03/04:** fees, transparent balance and transaction digest must match **Core canonical truth**; no nullifier accepted twice across transaction/block/reorg replay.
