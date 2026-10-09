@@ -7,12 +7,19 @@ from prototypes.signer_abstraction.model import SignedResult, SignerPolicy
 from prototypes.signer_abstraction.provider import SignerGate, ProviderError, _validate_request
 
 class PersistentSignerGate:
-    def __init__(self, provider, journal_path, policy=None):
+    def __init__(self, provider, journal_path, policy=None, *, signer_identity="research-fixture"):
         self.provider = provider
         self.policy = policy if policy is not None else SignerPolicy()
+        if not isinstance(signer_identity, str) or not 1 <= len(signer_identity) <= 256:
+            raise ProviderError("SIGNER_IDENTITY")
+        self.signer_identity = signer_identity
         self.path = str(journal_path)
-        with self._db() as db:
+        db = self._db()
+        try:
             db.execute("CREATE TABLE IF NOT EXISTS requests (id TEXT PRIMARY KEY, binding TEXT NOT NULL, state TEXT NOT NULL CHECK(state IN ('RESERVED','COMPLETE')), digest TEXT, envelope BLOB)")
+            db.commit()
+        finally:
+            db.close()
 
     def _db(self):
         db = sqlite3.connect(self.path, timeout=30)
@@ -26,7 +33,8 @@ class PersistentSignerGate:
         request = replace(request, request_id=bytes.fromhex(request.request_id).hex(),
                           tx_digest=bytes.fromhex(request.tx_digest).hex())
         binding = hashlib.sha256(json.dumps(
-            [asdict(request), asdict(approval), asdict(self.policy)],
+            [asdict(request), asdict(approval), asdict(self.policy),
+             self.signer_identity, asdict(self.provider.capabilities)],
             sort_keys=True, separators=(",", ":")).encode()).hexdigest()
         db = self._db()
         try:

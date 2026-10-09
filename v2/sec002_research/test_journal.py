@@ -4,6 +4,7 @@ import multiprocessing
 import os
 from pathlib import Path
 import tempfile
+import sqlite3
 import unittest
 from prototypes.signer_abstraction.model import Approval, PaymentIntent, SignRequest, TransactionOutput
 from prototypes.signer_abstraction.provider import FixtureSigner, ProviderError
@@ -15,7 +16,11 @@ def inputs():
 
 def worker(path):
     try:
-        result = PersistentSignerGate(FixtureSigner(),path).sign(*inputs())
+        class CountSigner(FixtureSigner):
+            def sign(self, request):
+                with open(str(path)+".calls", "ab", buffering=0) as log:log.write(b"call\\n")
+                return super().sign(request)
+        result = PersistentSignerGate(CountSigner(),path).sign(*inputs())
         return result.envelope
     except ProviderError as exc:
         return str(exc)
@@ -75,6 +80,7 @@ class JournalTests(unittest.TestCase):
         PersistentSignerGate(FixtureSigner(),self.path)
         with concurrent.futures.ProcessPoolExecutor(max_workers=4) as pool:
             results=list(pool.map(worker,[self.path]*12))
+        self.assertEqual(Path(str(self.path)+".calls").read_bytes(),b"call\\n")
         self.assertTrue(any(isinstance(x,bytes) for x in results))
         self.assertTrue(all(isinstance(x,bytes) or x=="REQUEST_PENDING" for x in results))
     def test_hex_alias_idempotence(self):
@@ -82,6 +88,18 @@ class JournalTests(unittest.TestCase):
         p=FixtureSigner();g=PersistentSignerGate(p,self.path)
         self.assertEqual(g.sign(r,a),g.sign(replace(r,request_id=r.request_id.upper(),tx_digest=r.tx_digest.upper()),a))
         self.assertEqual(p.calls,1)
+    def test_corrupt_journal_fails_closed(self):
+        self.path.write_bytes(b"corrupt database")
+        after=FixtureSigner()
+        with self.assertRaises(sqlite3.DatabaseError):
+            PersistentSignerGate(after,self.path).sign(*inputs())
+        self.assertEqual(after.calls,0)
+    def test_signer_identity_binding(self):
+        PersistentSignerGate(FixtureSigner(),self.path,signer_identity="fixture-A").sign(*inputs())
+        after=FixtureSigner()
+        with self.assertRaisesRegex(ProviderError,"REQUEST_BINDING_MISMATCH"):
+            PersistentSignerGate(after,self.path,signer_identity="fixture-B").sign(*inputs())
+        self.assertEqual(after.calls,0)
     def test_invalid_policy_before_reservation(self):
         r,a=inputs();p=FixtureSigner();g=PersistentSignerGate(p,self.path)
         with self.assertRaisesRegex(ProviderError,"FEE_NOT_APPROVED"):
