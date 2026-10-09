@@ -246,8 +246,9 @@ mod tests {
     #[test]
     fn empty_append_is_invalid() {
         let mut gate = OrderedRootGate::new();
+        let unchanged_root = gate.current_root().unwrap();
         assert_eq!(
-            gate.verify_and_append(&[], gate.current_root().unwrap()),
+            gate.verify_and_append(&[], unchanged_root),
             Err(RootGateError::EmptyAppend)
         );
     }
