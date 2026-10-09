@@ -315,7 +315,16 @@ impl Journal {
         let mut next = self.state.clone();
         next.blocks.pop();
         next.seq = next.seq.checked_add(1).ok_or(Failure::InvalidState)?;
-        next.root = derive(&next)?.current_root()?;
+        // Reconstruct the candidate tree BEFORE validating its final root.
+        // Calling derive(&next) here would compare the shortened history
+        // with the stale root inherited from the old (pre-rollback) state.
+        let mut rebuilt = OrderedRootGate::new();
+        for block in &next.blocks {
+            rebuilt.verify_and_append(&block.leaves, block.root)?;
+        }
+        next.root = rebuilt.current_root()?;
+        // Full height/parent/root checks remain enforced by encode() before
+        // atomic persistence. Never relax validation to make reorg tests pass.
         write_atomic(&self.dir, &self.key, &next, crash)?;
         self.state = next;
         Ok(())
