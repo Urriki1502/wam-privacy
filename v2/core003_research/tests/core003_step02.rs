@@ -85,7 +85,7 @@ fn vector_root(label: &str, count: usize, root: [u8; 32]) {
     let hex = root.iter().map(|v| format!("{v:02x}")).collect::<String>();
     // Exactly one line per checkpoint; CI compares two independently staged
     // source trees on an identical deterministic set of note commitments.
-    println!("\\nCORE003_VECTOR {label} {count} {hex}");
+    println!("\nCORE003_VECTOR {label} {count} {hex}");
 }
 
 fn append_both(
