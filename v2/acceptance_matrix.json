@@ -1,0 +1,362 @@
+{
+  "schema": 1,
+  "spec_reference": "Urriki1502/wam-privacy PR #50 docs/v2/ACCEPTANCE-TEST-MATRIX.md (unmerged design reference)",
+  "stage": "V2-05-RESEARCH-ONLY",
+  "source_v1_pin": "95dfe0abf04b4e4dcbdbe9eb6d9bd0439a45a127",
+  "source_v2_04_head": "f7914ef9ee9815c573f5bf5c08dc9785deeee231",
+  "statuses": [
+    "FIXTURE_ONLY",
+    "REGTEST_SIGNER",
+    "V1_REGRESSION_ONLY",
+    "SOURCE_GUARD_ONLY",
+    "PARTIAL",
+    "BLOCKED"
+  ],
+  "claims": {
+    "production": false,
+    "external_audit": false,
+    "mainnet_activation": false
+  },
+  "cases": [
+    {
+      "id": "CAP-001",
+      "summary": "Unknown action/version/role denied",
+      "evidence_class": "FIXTURE_ONLY",
+      "evidence_paths": [
+        "v2/test_policy.py"
+      ],
+      "evidence_tests": [
+        "test_unknown_role_action_and_version"
+      ],
+      "limitation": "Standalone typed parser, not a remote runtime API"
+    },
+    {
+      "id": "CAP-002",
+      "summary": "Scanner cannot request SIGN",
+      "evidence_class": "FIXTURE_ONLY",
+      "evidence_paths": [
+        "v2/test_policy.py"
+      ],
+      "evidence_tests": [
+        "test_scanner_cannot_sign"
+      ],
+      "limitation": "Local policy issuance remains trusted"
+    },
+    {
+      "id": "CAP-003",
+      "summary": "Auditor cannot obtain spend authority",
+      "evidence_class": "FIXTURE_ONLY",
+      "evidence_paths": [
+        "v2/test_policy.py"
+      ],
+      "evidence_tests": [
+        "test_viewer_auditor_cannot_sign"
+      ],
+      "limitation": "No external auditor identity attestation"
+    },
+    {
+      "id": "CAP-004",
+      "summary": "Viewer cannot export full account without scope",
+      "evidence_class": "PARTIAL",
+      "evidence_paths": [
+        "v2/test_policy.py"
+      ],
+      "evidence_tests": [
+        "test_long_wildcard_and_numeric_type"
+      ],
+      "limitation": "Wildcard deny at policy layer only; no real full-history wallet export endpoint"
+    },
+    {
+      "id": "CAP-005",
+      "summary": "Duplicate/replayed grant denied",
+      "evidence_class": "FIXTURE_ONLY",
+      "evidence_paths": [
+        "v2/test_bridge.py"
+      ],
+      "evidence_tests": [
+        "test_single_use_grant_consumption_persists_across_restart"
+      ],
+      "limitation": "In-memory/snapshot replay only; no crash-safe persistent store or anti-rollback"
+    },
+    {
+      "id": "CAP-006",
+      "summary": "Expired grant/clock regression denied",
+      "evidence_class": "FIXTURE_ONLY",
+      "evidence_paths": [
+        "v2/test_policy.py"
+      ],
+      "evidence_tests": [
+        "test_clock_rollback_and_checkpoint"
+      ],
+      "limitation": "Trusted local clock and secure monotonic storage not provided"
+    },
+    {
+      "id": "CAP-007",
+      "summary": "Cross-network grant denied",
+      "evidence_class": "FIXTURE_ONLY",
+      "evidence_paths": [
+        "v2/test_policy.py"
+      ],
+      "evidence_tests": [
+        "test_cross_account_network_resource_purpose_session"
+      ],
+      "limitation": "No live chain attestation by V2 policy"
+    },
+    {
+      "id": "CAP-008",
+      "summary": "Cross-account grant denied",
+      "evidence_class": "FIXTURE_ONLY",
+      "evidence_paths": [
+        "v2/test_bridge.py"
+      ],
+      "evidence_tests": [
+        "test_wrong_account_resource_network_role_action_deny_before_v1"
+      ],
+      "limitation": "Wallet ownership of account ID assumed trusted locally"
+    },
+    {
+      "id": "CAP-009",
+      "summary": "Remote claim of local privileges denied",
+      "evidence_class": "FIXTURE_ONLY",
+      "evidence_paths": [
+        "v2/test_policy.py"
+      ],
+      "evidence_tests": [
+        "test_duplicate_or_forged_local_issue"
+      ],
+      "limitation": "No live RPC exposure/path audit"
+    },
+    {
+      "id": "CAP-010",
+      "summary": "Revocation persists after restart",
+      "evidence_class": "PARTIAL",
+      "evidence_paths": [
+        "v2/test_policy.py"
+      ],
+      "evidence_tests": [
+        "test_revocation_persists_after_restart"
+      ],
+      "limitation": "Authenticated snapshots do not prevent rollback to older valid snapshots"
+    },
+    {
+      "id": "FLOW-001",
+      "summary": "SCAN output must not contain spend secrets",
+      "evidence_class": "PARTIAL",
+      "evidence_paths": [
+        "prototypes/zk_balance_halo2/src/wallet_state.rs"
+      ],
+      "evidence_tests": [],
+      "limitation": "Frozen view-key-only Rust scanner; no production serialization/API integration or spend-secret noninterference proof"
+    },
+    {
+      "id": "FLOW-002",
+      "summary": "Scanner approval cannot authorize SIGN",
+      "evidence_class": "REGTEST_SIGNER",
+      "evidence_paths": [
+        "v2/test_wsp_bridge.py"
+      ],
+      "evidence_tests": [
+        "test_authenticated_v2_scope_and_independent_approval_sign_real_psbt"
+      ],
+      "limitation": "Real synthetic regtest WSP signing with independent approval; no trusted UI/remote wallet integration"
+    },
+    {
+      "id": "FLOW-003",
+      "summary": "Audit events redact secret metadata",
+      "evidence_class": "FIXTURE_ONLY",
+      "evidence_paths": [
+        "v2/test_disclosure.py"
+      ],
+      "evidence_tests": [
+        "test_audit_allow_and_deny_fixed_no_sensitive_data"
+      ],
+      "limitation": "Only local decision events tested; external logs/export paths unaudited"
+    },
+    {
+      "id": "FLOW-004",
+      "summary": "Unauthorized facts cannot be disclosed",
+      "evidence_class": "FIXTURE_ONLY",
+      "evidence_paths": [
+        "v2/test_disclosure.py"
+      ],
+      "evidence_tests": [
+        "test_cross_account_network_resource_purpose_rejected"
+      ],
+      "limitation": "Synthetic wallet-owned fact store; not authenticated production wallet data"
+    },
+    {
+      "id": "FLOW-005",
+      "summary": "Schema migration cannot strip scope/purpose",
+      "evidence_class": "PARTIAL",
+      "evidence_paths": [
+        "v2/test_disclosure.py"
+      ],
+      "evidence_tests": [
+        "test_malformed_selection_and_request"
+      ],
+      "limitation": "Strict current schema; no real version migration implementation"
+    },
+    {
+      "id": "FLOW-006",
+      "summary": "DISCLOSE cannot escalate to SIGN",
+      "evidence_class": "FIXTURE_ONLY",
+      "evidence_paths": [
+        "v2/test_disclosure.py"
+      ],
+      "evidence_tests": [
+        "test_disclosure_is_not_signing_or_audit_permission"
+      ],
+      "limitation": "Separate local services only; real process isolation not proven"
+    },
+    {
+      "id": "FLOW-007",
+      "summary": "Reorg rolls back recognized note set deterministically",
+      "evidence_class": "V1_REGRESSION_ONLY",
+      "evidence_paths": [
+        "prototypes/zk_balance_halo2/tests/wallet_state.rs"
+      ],
+      "evidence_tests": [
+        "rollback_then_replacement_branch_updates_notes_and_witnesses"
+      ],
+      "limitation": "Frozen wallet scanner and 300-block Core model separately tested; no joint deployed wallet/Core state"
+    },
+    {
+      "id": "FLOW-008",
+      "summary": "Restart replays same history to equivalent recognized state",
+      "evidence_class": "V1_REGRESSION_ONLY",
+      "evidence_paths": [
+        "prototypes/zk_balance_halo2/tests/wallet_state.rs"
+      ],
+      "evidence_tests": [
+        "full_rescan_reconstructs_identical_wallet_state"
+      ],
+      "limitation": "Deterministic rescan, not crash-consistent atomic wallet/policy DB restoration"
+    },
+    {
+      "id": "NET-001",
+      "summary": "Private route failure never silently falls back to clearnet",
+      "evidence_class": "FIXTURE_ONLY",
+      "evidence_paths": [
+        "v2/test_routing.py"
+      ],
+      "evidence_tests": [
+        "test_net001_private_route_outage_no_cleartext_fallback"
+      ],
+      "limitation": "Offline synthetic route labels, no Tor/I2P traffic"
+    },
+    {
+      "id": "NET-002",
+      "summary": "Cross-role provider correlation explicitly denied/warned",
+      "evidence_class": "FIXTURE_ONLY",
+      "evidence_paths": [
+        "v2/test_routing.py"
+      ],
+      "evidence_tests": [
+        "test_net002_provider_shared_default_denied"
+      ],
+      "limitation": "Provider independence cannot be externally established"
+    },
+    {
+      "id": "NET-003",
+      "summary": "Broadcaster rejects wallet/scan credentials",
+      "evidence_class": "FIXTURE_ONLY",
+      "evidence_paths": [
+        "v2/test_routing.py"
+      ],
+      "evidence_tests": [
+        "test_net003_broadcast_refuses_seed_view_credentials"
+      ],
+      "limitation": "Synthetic request schema only, no real service boundary"
+    },
+    {
+      "id": "NET-004",
+      "summary": "Observer metadata exposure and leakage disclosed",
+      "evidence_class": "PARTIAL",
+      "evidence_paths": [
+        "v2/test_routing.py"
+      ],
+      "evidence_tests": [
+        "test_net004_network_observers_and_residual_linkability"
+      ],
+      "limitation": "Synthetic visibility fields, not empirical privacy measurement or anonymity proof"
+    },
+    {
+      "id": "CORE-001",
+      "summary": "V2 capability layer does not change V1 proof balance",
+      "evidence_class": "V1_REGRESSION_ONLY",
+      "evidence_paths": [
+        "prototypes/zk_balance_halo2/tests/core_state_proof.rs"
+      ],
+      "evidence_tests": [
+        "verified_proof_metadata_drives_atomic_state_and_rollback"
+      ],
+      "limitation": "Unmodified V1 proof/state regression; no active WAM consensus integration"
+    },
+    {
+      "id": "CORE-002",
+      "summary": "Double nullifier rejected by V1 atomic state",
+      "evidence_class": "V1_REGRESSION_ONLY",
+      "evidence_paths": [
+        "prototypes/zk_balance_halo2/src/core_state.rs"
+      ],
+      "evidence_tests": [
+        "block_apply_is_atomic_on_duplicate_nullifier"
+      ],
+      "limitation": "V1 internal unit test rather than deployed Core enforcement"
+    },
+    {
+      "id": "CORE-003",
+      "summary": "Caller-forged canonical next_anchor must be rejected",
+      "evidence_class": "BLOCKED",
+      "evidence_paths": [
+        "prototypes/zk_balance_halo2/src/core_state.rs"
+      ],
+      "evidence_tests": [],
+      "limitation": "Caller-provided canonical next_anchor not independently derived from commitments; PRODUCTION BLOCKER"
+    },
+    {
+      "id": "PERF-001",
+      "summary": "Parser/scope resource usage bounded",
+      "evidence_class": "PARTIAL",
+      "evidence_paths": [
+        "v2/test_policy.py"
+      ],
+      "evidence_tests": [
+        "test_bounded_invalid_snapshot"
+      ],
+      "limitation": "Bounded local snapshots/fields; no load/stress/CPU/peak-memory benchmark of real wallet RPC"
+    },
+    {
+      "id": "PERF-002",
+      "summary": "Wallet/history export bounded",
+      "evidence_class": "PARTIAL",
+      "evidence_paths": [
+        "v2/test_disclosure.py"
+      ],
+      "evidence_tests": [
+        "test_bounded_record_count"
+      ],
+      "limitation": "Local record and byte caps, no full wallet/history export or measured throughput"
+    },
+    {
+      "id": "COMPAT-001",
+      "summary": "No V2 modifications to WAM Core consensus",
+      "evidence_class": "SOURCE_GUARD_ONLY",
+      "evidence_paths": [
+        ".github/workflows/v2-04-v1-bridge.yml"
+      ],
+      "evidence_tests": [],
+      "limitation": "Source drift check, not live Core compatibility or maintainer approval"
+    },
+    {
+      "id": "COMPAT-002",
+      "summary": "No unreviewed key-derivation changes",
+      "evidence_class": "SOURCE_GUARD_ONLY",
+      "evidence_paths": [
+        ".github/workflows/v2-04-v1-bridge.yml"
+      ],
+      "evidence_tests": [],
+      "limitation": "Frozen-key source diff checks, not an independent cryptographic/key audit"
+    }
+  ]
+}
