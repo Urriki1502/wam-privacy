@@ -108,6 +108,7 @@ jobs:
           cp -a prototypes/zk_balance_halo2 "$RUNNER_TEMP/core003-reference"
           cp v2/core003_research/src/lib.rs "$RUNNER_TEMP/core003-reference/tests/core003_reference.rs"
           cp v2/core003_research/tests/core003_step02.rs "$RUNNER_TEMP/core003-reference/tests/core003_step02.rs"
+          cp v2/core003_research/tests/core003_step03.rs "$RUNNER_TEMP/core003-reference/tests/core003_step03.rs"
           cargo test --locked --manifest-path "$RUNNER_TEMP/core003-reference/Cargo.toml" --test core003_reference --verbose
       - name: Step 02 differential WalletScanner tests and candidate vector output A
         run: |
@@ -120,11 +121,18 @@ jobs:
           cp -a prototypes/zk_balance_halo2 "$RUNNER_TEMP/core003-reference-b"
           cp v2/core003_research/src/lib.rs "$RUNNER_TEMP/core003-reference-b/tests/core003_reference.rs"
           cp v2/core003_research/tests/core003_step02.rs "$RUNNER_TEMP/core003-reference-b/tests/core003_step02.rs"
+          cp v2/core003_research/tests/core003_step03.rs "$RUNNER_TEMP/core003-reference-b/tests/core003_step03.rs"
           cargo test --locked --manifest-path "$RUNNER_TEMP/core003-reference-b/Cargo.toml" --test core003_step02 -- --nocapture --test-threads=1 | tee "$RUNNER_TEMP/core003-step02-b.log"
           grep '^CORE003_VECTOR ' "$RUNNER_TEMP/core003-step02-b.log" > "$RUNNER_TEMP/core003-vectors-b.txt"
           test "$(wc -l < "$RUNNER_TEMP/core003-vectors-b.txt")" -eq 5
           diff -u "$RUNNER_TEMP/core003-vectors-a.txt" "$RUNNER_TEMP/core003-vectors-b.txt"
           sha256sum "$RUNNER_TEMP/core003-vectors-a.txt"
+      - name: Step 03 atomic persistence and reorg crash-injection research A
+        run: |
+          cargo test --locked --manifest-path "$RUNNER_TEMP/core003-reference/Cargo.toml" --test core003_step03 -- --test-threads=1
+      - name: Step 03 clean second-copy persistence regression B
+        run: |
+          cargo test --locked --manifest-path "$RUNNER_TEMP/core003-reference-b/Cargo.toml" --test core003_step03 -- --test-threads=1
       - name: Upload bounded Step 02 candidate vectors
         uses: actions/upload-artifact@v4
         with:
