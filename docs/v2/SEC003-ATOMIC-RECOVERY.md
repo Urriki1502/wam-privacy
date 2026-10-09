@@ -14,7 +14,7 @@ A proposed interface from agent A: DurablePolicy(db_path, grant_key, consent_ver
 
 B proposed interface from agent B: PersistentSignerGate(provider, journal_path, policy=None).sign(request, approval). A committed RESERVED precedes provider invocation; COMPLETE includes the durable result. Pending/uncertain outcome permanently blocks repeat signing. Identical completed binding returns cached result; changed request/approval/policy binding rejects. B has no public transaction reservation/receipt interface yet.
 
-Pinned concrete dependencies: A b8a5d84e3c981ce1d97b52d6c0af4aa23422d7be; B fc90ff5962d4c354f28e631d56f79c5efd09fa44. The research coordinator composes these actual adapters without editing their files. CI overlays only their isolated research directories after verifying source pins.
+Pinned concrete dependencies: A 4f2a81acb66bfe35ae2ea0ec878e21f608f76130; B 059658db638229abac23f077e9318466bf501a63. The research coordinator composes these actual adapters without editing their files. CI overlays only their isolated research directories after verifying source pins.
 
 ## Threat model and trust boundary
 
@@ -85,3 +85,11 @@ All three stores and keys remain trusted, outside the rollback attacker domain. 
 test_composition.py uses actual A/B adapters, fixture provider and process death at PREPARED, A commit before receipt, POLICY_SPENT, SIGNING, provider call, B completion and C completion. It also tests multi-process provider at-most-once, restart cache, changed approval, expired/revoked cache delivery, missing B receipt, independently rolled back A state, missing coordinator, caller-mapping mutation and unrelated generation lacking consumption. No public network/node or real funds are used.
 
 The CI manifest distinguishes conservative research composition tests from distributed ACID and production readiness. A passing targeted run establishes these tests at the recorded C/A/B SHAs only; full SEC-003 exit gates and independent review above remain open.
+
+## SEC-003 integration refresh (SEC-001 / SEC-002 passed heads)
+
+The CI checkout pins now use the verified current research heads SEC-001 `4f2a81acb66bfe35ae2ea0ec878e21f608f76130` and SEC-002 `059658db638229abac23f077e9318466bf501a63`, not older intermediate commits. SEC-002 introduced explicit trusted journal first-install `provision=True`; the isolated composition fixture now provisions the B store only on first install. No V1 or V2 freeze/runtime changes are included.
+
+Coordinator bootstrap hardening follows the same fail-closed rule as SEC-002: ordinary opens require an existing SQLite file (`mode=rw`); only trusted first-install code may set `provision=True`, which rejects an existing coordinator file. A missing coordinator, missing B journal or changed local schema cannot silently restore signing authority. New tests cover deleted coordinator journal, prohibited reprovisioning and missing B journal. This addresses **implicit file recreation**, not malicious replacement, replay of all independently trusted stores, disk power-loss durability or distributed transaction atomicity. Full production qualification remains BLOCKED.
+
+Only a same-HEAD GitHub Actions success with its pinned A/B SHA evidence can establish these new integration tests as passing. Earlier SEC-003 successes used older adapter heads and do not qualify this refresh.

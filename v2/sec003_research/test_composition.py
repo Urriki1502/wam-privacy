@@ -47,7 +47,8 @@ def compose(directory, *, provision=False, fault=None, provider_crash=False):
     directory = Path(directory)
     authority = DurablePolicy(directory/"policy.db", KEY, CONSENT, provision=provision)
     gate = PersistentSignerGate(CountSigner(directory, crash=provider_crash),
-                                directory/"signer.db", signer_identity="fixture-A")
+                                directory/"signer.db", signer_identity="fixture-A",
+                                provision=provision)
     bridge = DurableResearchBridge(authority, gate, directory/"intent.db",
                                    account_scope="account", provision=provision, fault=fault)
     return bridge
@@ -190,8 +191,32 @@ class CompositionTests(unittest.TestCase):
     def test_missing_coordinator_is_not_reprovisioned(self):
         self.attempt()
         (self.directory/"intent.db").unlink()
-        with self.assertRaises(sqlite3.DatabaseError):
+        with self.assertRaisesRegex(RecoveryBlocked, "COORDINATOR_UNAVAILABLE"):
             self.attempt()
+        self.assertFalse((self.directory/"intent.db").exists())
+        self.assertEqual(self.calls(), 1)
+
+    def test_reprovision_existing_intent_store_is_rejected(self):
+        self.attempt()
+        authority = DurablePolicy(self.directory/"policy.db", KEY, CONSENT)
+        try:
+            gate = PersistentSignerGate(CountSigner(self.directory),
+                                        self.directory/"signer.db",
+                                        signer_identity="fixture-A")
+            with self.assertRaisesRegex(RecoveryBlocked, "COORDINATOR_ALREADY_EXISTS"):
+                DurableResearchBridge(authority, gate, self.directory/"intent.db",
+                                      account_scope="account", provision=True)
+        finally:
+            authority.close()
+        self.assertEqual(self.attempt().request_id, inputs()[1].request_id)
+        self.assertEqual(self.calls(), 1)
+
+    def test_missing_signer_journal_is_not_recreated(self):
+        self.attempt()
+        (self.directory/"signer.db").unlink()
+        with self.assertRaisesRegex(ProviderError, "JOURNAL_UNAVAILABLE"):
+            self.attempt()
+        self.assertFalse((self.directory/"signer.db").exists())
         self.assertEqual(self.calls(), 1)
 
     def test_mutated_caller_mapping_does_not_change_authorized_binding(self):

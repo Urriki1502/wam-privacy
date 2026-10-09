@@ -7,6 +7,8 @@ remain blocked permanently: safety is retained at the cost of liveness.
 from dataclasses import asdict, replace
 import hashlib
 import json
+import os
+from pathlib import Path
 import sqlite3
 
 from policy import _request_valid
@@ -37,23 +39,45 @@ class DurableResearchBridge:
         self.path, self.account_scope = str(path), account_scope
         # Trusted research fault injection callback, never request supplied.
         self.fault = fault or (lambda stage: None)
+        if provision:
+            # Trusted first install only: an existing journal is never reset.
+            flags = os.O_RDWR | os.O_CREAT | os.O_EXCL
+            if hasattr(os, "O_NOFOLLOW"):
+                flags |= os.O_NOFOLLOW
+            try:
+                fd = os.open(self.path, flags, 0o600)
+            except FileExistsError:
+                raise RecoveryBlocked("COORDINATOR_ALREADY_EXISTS") from None
+            except OSError:
+                raise RecoveryBlocked("COORDINATOR_UNAVAILABLE") from None
+            os.close(fd)
         db = self._db()
         try:
             if provision:
-                db.execute("CREATE TABLE IF NOT EXISTS intents (id TEXT PRIMARY KEY, "
+                db.execute("CREATE TABLE intents (id TEXT PRIMARY KEY, "
                            "binding TEXT NOT NULL, state TEXT NOT NULL, "
                            "generation INTEGER, capability TEXT NOT NULL, "
                            "digest TEXT, envelope BLOB)")
                 db.commit()
+            # Missing schema never creates a replacement.
             db.execute("SELECT id FROM intents LIMIT 1").fetchall()
         finally:
             db.close()
 
     def _db(self):
-        db = sqlite3.connect(self.path, timeout=30)
-        db.execute("PRAGMA synchronous=FULL")
-        db.execute("PRAGMA journal_mode=DELETE")
-        return db
+        # mode=rw never recreates an unlinked journal during restart or retry.
+        uri = Path(self.path).absolute().as_uri() + "?mode=rw"
+        try:
+            db = sqlite3.connect(uri, timeout=30, uri=True)
+        except sqlite3.OperationalError:
+            raise RecoveryBlocked("COORDINATOR_UNAVAILABLE") from None
+        try:
+            db.execute("PRAGMA synchronous=FULL")
+            db.execute("PRAGMA journal_mode=DELETE")
+            return db
+        except BaseException:
+            db.close()
+            raise
 
     def _transition(self, request_id, expected, proposed, **fields):
         db = self._db()
@@ -74,7 +98,7 @@ class DurableResearchBridge:
         expected = _digest([asdict(request), asdict(approval), asdict(self.gate.policy),
                             self.gate.signer_identity, asdict(self.gate.provider.capabilities)])
         # Trusted adapter-owned storage read only; no schema mutation.
-        db = sqlite3.connect("file:" + self.gate.path + "?mode=ro", uri=True)
+        db = sqlite3.connect(Path(self.gate.path).absolute().as_uri() + "?mode=ro", uri=True)
         try:
             row = db.execute("SELECT binding,state,digest,envelope FROM requests WHERE id=?",
                              (request.request_id,)).fetchone()

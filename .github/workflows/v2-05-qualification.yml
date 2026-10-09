@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - v2/05-qualification-handoff
-      - research/sec003-atomic-recovery
   pull_request:
     paths:
       - 'v2/**'
@@ -118,27 +117,27 @@ jobs:
       - name: Checkout pinned A dependency
         uses: actions/checkout@v4
         with:
-          ref: b8a5d84e3c981ce1d97b52d6c0af4aa23422d7be
+          ref: 4f2a81acb66bfe35ae2ea0ec878e21f608f76130
           path: dependencies/a
           persist-credentials: false
       - name: Checkout pinned B dependency
         uses: actions/checkout@v4
         with:
-          ref: fc90ff5962d4c354f28e631d56f79c5efd09fa44
+          ref: 059658db638229abac23f077e9318466bf501a63
           path: dependencies/b
           persist-credentials: false
       - name: Verify and overlay only pinned A/B research adapters
         run: |
-          test "$(git -C dependencies/a rev-parse HEAD)" = "b8a5d84e3c981ce1d97b52d6c0af4aa23422d7be"
-          test "$(git -C dependencies/b rev-parse HEAD)" = "fc90ff5962d4c354f28e631d56f79c5efd09fa44"
+          test "$(git -C dependencies/a rev-parse HEAD)" = "4f2a81acb66bfe35ae2ea0ec878e21f608f76130"
+          test "$(git -C dependencies/b rev-parse HEAD)" = "059658db638229abac23f077e9318466bf501a63"
           cp -R dependencies/a/v2/sec001_research v2/
           cp -R dependencies/b/v2/sec002_research v2/
           python3 - <<'PY'
           import json
           from pathlib import Path
           Path("evidence/dependency-heads.json").write_text(json.dumps({
-              "A": "b8a5d84e3c981ce1d97b52d6c0af4aa23422d7be",
-              "B": "fc90ff5962d4c354f28e631d56f79c5efd09fa44"}))
+              "A": "4f2a81acb66bfe35ae2ea0ec878e21f608f76130",
+              "B": "059658db638229abac23f077e9318466bf501a63"}))
           PY
       - name: Actual pinned A/B process crash and contract tests
         env:
@@ -154,8 +153,8 @@ jobs:
               "head": head, "scope": "SEC003_CONSERVATIVE_RESEARCH_COMPOSITION",
               "contract_and_composition_tests": "PASS", "distributed_ACID": "BLOCKED",
               "whole_store_rollback": "OUTSIDE_TRUST_MODEL",
-              "A_head": "b8a5d84e3c981ce1d97b52d6c0af4aa23422d7be",
-              "B_head": "fc90ff5962d4c354f28e631d56f79c5efd09fa44",
+              "A_head": "4f2a81acb66bfe35ae2ea0ec878e21f608f76130",
+              "B_head": "059658db638229abac23f077e9318466bf501a63",
               "production": "BLOCKED", "freeze_base": "5af86cfd5be27a3275079cbccde2abd2366ebb2b"
           }, indent=2))
           PY
