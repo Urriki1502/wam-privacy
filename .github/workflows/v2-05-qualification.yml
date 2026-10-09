@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - v2/05-qualification-handoff
-      - research/p0-regression-handoff
   pull_request:
     paths:
       - 'v2/**'
@@ -123,19 +122,19 @@ jobs:
       matrix:
         include:
           - lane: A
-            source_sha: 5da526b380d1788875d1133c0a6623b2fcdda09e
+            source_sha: 4f2a81acb66bfe35ae2ea0ec878e21f608f76130
             modules: v2.sec001_research.test_durable_policy
             pythonpath: 'v2:prototypes:.'
           - lane: B
-            source_sha: fe41f504d8f4064fd0bc5f01adc1c13733c22fa9
+            source_sha: 059658db638229abac23f077e9318466bf501a63
             modules: v2.sec002_research.test_journal tests.test_phase3_signer_abstraction
             pythonpath: 'v2:prototypes:.'
           - lane: C
-            source_sha: d4e33ae114fcc1c32c95766b5dfe7f429b599cc3
+            source_sha: 4bcca5aa333c9b98ff936a269afecf315e492504
             modules: v2.sec003_research.test_contract v2.sec003_research.test_composition
             pythonpath: 'v2:prototypes:.'
           - lane: D
-            source_sha: 2ace9ccae6f727d0498cbfbeca20be817e1e8058
+            source_sha: c1bb25fdf1f16a710901a570f51846fb5be2f644
             modules: v2.auth001_research.test_boundary v2.test_policy v2.test_disclosure
             pythonpath: 'v2:v2/auth001_research:prototypes:.'
     steps:
@@ -160,21 +159,21 @@ jobs:
         if: matrix.lane == 'C'
         uses: actions/checkout@v4
         with:
-          ref: b8a5d84e3c981ce1d97b52d6c0af4aa23422d7be
+          ref: 4f2a81acb66bfe35ae2ea0ec878e21f608f76130
           path: dependencies/a
           persist-credentials: false
       - name: Checkout C pinned B dependency
         if: matrix.lane == 'C'
         uses: actions/checkout@v4
         with:
-          ref: fc90ff5962d4c354f28e631d56f79c5efd09fa44
+          ref: 059658db638229abac23f077e9318466bf501a63
           path: dependencies/b
           persist-credentials: false
       - name: Verify C dependencies and stage only research adapters
         if: matrix.lane == 'C'
         run: |
-          test "$(git -C dependencies/a rev-parse HEAD)" = "b8a5d84e3c981ce1d97b52d6c0af4aa23422d7be"
-          test "$(git -C dependencies/b rev-parse HEAD)" = "fc90ff5962d4c354f28e631d56f79c5efd09fa44"
+          test "$(git -C dependencies/a rev-parse HEAD)" = "4f2a81acb66bfe35ae2ea0ec878e21f608f76130"
+          test "$(git -C dependencies/b rev-parse HEAD)" = "059658db638229abac23f077e9318466bf501a63"
           cp -R dependencies/a/v2/sec001_research v2/
           cp -R dependencies/b/v2/sec002_research v2/
           git -C dependencies/a rev-parse HEAD > evidence/A-head.txt

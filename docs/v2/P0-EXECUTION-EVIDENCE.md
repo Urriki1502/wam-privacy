@@ -18,7 +18,7 @@ These observations do not establish that all unexecuted tests pass.
 
 Root moved each isolated research job into .github/workflows/v2-05-qualification.yml, which the existing audit and review-package guards already allow, and deleted the standalone workflow.
 Original V2-05 qualification jobs, PR paths and dispatch event are preserved.
-Research push branches are appended; normalized branch concurrency cancels duplicate push/PR workflow runs.
+P0 E uses pull_request checks on its research branch; duplicate push events were removed, while default V2-05 push, PR and manual triggers remain enabled.
 Historical guard scripts and every runtime/test-source blob are unchanged.
 The staged trees were reviewed before branch updates. Root owns the common CI file sequentially across research branches; independent agents do not edit it.
 
@@ -26,13 +26,13 @@ The staged trees were reviewed before branch updates. Root owns the common CI fi
 
 | Lane | Draft PR | Current reviewed source |
 | --- | --- | --- |
-| A | #70 | 5da526b380d1788875d1133c0a6623b2fcdda09e |
-| B | #67 | fe41f504d8f4064fd0bc5f01adc1c13733c22fa9 |
-| C | #71 | d4e33ae114fcc1c32c95766b5dfe7f429b599cc3 |
-| D | #69 | 2ace9ccae6f727d0498cbfbeca20be817e1e8058 |
+| A | #70 | 4f2a81acb66bfe35ae2ea0ec878e21f608f76130 |
+| B | #67 | 059658db638229abac23f077e9318466bf501a63 |
+| C | #71 | 4bcca5aa333c9b98ff936a269afecf315e492504 |
+| D | #69 | c1bb25fdf1f16a710901a570f51846fb5be2f644 |
 
 E reproduces these current immutable source SHAs, checks protected baseline files, runs the original historical freeze audit and review-package generation, and executes each isolated suite.
-C's private runtime dependencies intentionally remain A b8a5d84e3c981ce1d97b52d6c0af4aa23422d7be and B fc90ff5962d4c354f28e631d56f79c5efd09fa44.
+C's private runtime dependencies now use verified research heads A 4f2a81acb66bfe35ae2ea0ec878e21f608f76130 and B 059658db638229abac23f077e9318466bf501a63.
 Their adapter source blobs match the new CI-only heads. E overlays only those pinned research directories for C, never frozen source.
 The baseline runner qualifies existing baseline tests only. Current C includes 12 actual A/B composition tests and 8 contract tests; process crash, restart, concurrency and mixed receipt cases must execute successfully before runtime acceptance.
 
@@ -55,3 +55,11 @@ A/B/C storage is trusted and outside the rollback attacker domain. SQLite does n
 C permanently blocks interrupted non-COMPLETE intents and never refunds consumed authority or retries an uncertain provider. This sacrifices liveness and does not implement distributed ACID.
 Real trusted UI deployment, C++ FFI lifetime integration, independent external state-machine/crypto reviews and CORE-003 approval remain open.
 Internal source review and separate-agent reproduction do not substitute for external audit. No production or mainnet readiness claim is made.
+
+## Latest pinned-lane refresh — October 9, 2026
+
+The independently qualified research lanes now pin A `4f2a81acb66bfe35ae2ea0ec878e21f608f76130` (PR #70), B `059658db638229abac23f077e9318466bf501a63` (PR #67), C `4bcca5aa333c9b98ff936a269afecf315e492504` (PR #71) and D `c1bb25fdf1f16a710901a570f51846fb5be2f644` (PR #69), each of which had a completed successful V2-05 workflow before this E refresh. C overlays exactly the updated pinned A/B research adapters in its isolated fixture tests. The historical earlier SHAs and their logs remain historical evidence, not qualification of the current refresh.
+
+This PR modifies only the already allowed V2-05 workflow and this E evidence document; the original baseline runner, CI qualification jobs, frozen V1/V2 implementation, Core and consensus are unchanged. P0 E's redundant push event is removed to prevent cancelled push/PR duplicates. This commit requires a new exact-head CI success; previous E green results are insufficient for the refreshed lane matrix.
+
+All lanes use offline synthetic tests. Production integration, trusted monotonic storage, distributed atomicity, independent security audit, FFI/UI integration and CORE-003 remain BLOCKED or pending maintainer approval.
