@@ -1,0 +1,84 @@
+name: V2-05 - Reproducible evidence and maintainer handoff
+
+on:
+  push:
+    branches:
+      - v2/05-qualification-handoff
+  pull_request:
+    paths:
+      - 'v2/**'
+      - 'docs/v2/**'
+      - '.github/workflows/v2-05-qualification.yml'
+      - '.github/workflows/v2-04-v1-bridge.yml'
+      - 'scripts/build_phase15_review_package.py'
+      - 'scripts/run_phase15f_v1_final_audit.py'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  v2-05-two-clean-clones:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - name: Independent immutable source checkout A
+        uses: actions/checkout@v4
+        with:
+          path: v2-05-a
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Independent immutable source checkout B
+        uses: actions/checkout@v4
+        with:
+          path: v2-05-b
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Verify exact clone commit and provenance
+        run: |
+          test "$(git -C v2-05-a rev-parse HEAD)" = "$(git -C v2-05-b rev-parse HEAD)"
+          test -z "$(git -C v2-05-a status --porcelain)"
+          test -z "$(git -C v2-05-b status --porcelain)"
+          git -C v2-05-a merge-base --is-ancestor f7914ef9ee9815c573f5bf5c08dc9785deeee231 HEAD
+          git -C v2-05-a diff --exit-code 95dfe0abf04b4e4dcbdbe9eb6d9bd0439a45a127 HEAD -- prototypes/zk_balance_halo2/ integration/core/ tests/ scripts/phase14d_static_review.py scripts/build_phase14d_ledger.py
+      - name: Run existing V2 research tests in clean clone A
+        working-directory: v2-05-a
+        env:
+          PYTHONPATH: 'v2:prototypes'
+          PYTHONDONTWRITEBYTECODE: '1'
+        run: |
+          python3 -B -m unittest -v v2.test_policy v2.test_disclosure v2.test_routing v2.test_bridge v2.test_qualification
+      - name: Independently reproduce V2 research tests in clone B
+        working-directory: v2-05-b
+        env:
+          PYTHONPATH: 'v2:prototypes'
+          PYTHONDONTWRITEBYTECODE: '1'
+        run: |
+          python3 -B -m unittest -v v2.test_policy v2.test_disclosure v2.test_routing v2.test_bridge v2.test_qualification
+      - name: Generate bounded reproducible evidence manifests
+        run: |
+          python3 -B v2-05-a/v2/qualify_v2.py --root v2-05-a --peer v2-05-b --output "$RUNNER_TEMP/v2-05-a.json"
+          python3 -B v2-05-b/v2/qualify_v2.py --root v2-05-b --peer v2-05-a --output "$RUNNER_TEMP/v2-05-b.json"
+          diff -u "$RUNNER_TEMP/v2-05-a.json" "$RUNNER_TEMP/v2-05-b.json"
+          python3 - <<'PY'
+          import json
+          import os
+          from pathlib import Path
+          report = json.loads((Path(os.environ["RUNNER_TEMP"]) / "v2-05-a.json").read_text())
+          assert report["case_summary"]["cases"] == 29
+          assert report["root_derivation_core_003"] == "BLOCKED"
+          assert report["production"] == "BLOCKED"
+          assert report["mainnet_activation"] == "NOT_AUTHORIZED"
+          assert report["independent_clean_checkout_count"] == 2
+          assert report["ci_verdict"].startswith("NOT_SELF_ATTESTED")
+          print("V2-05 research evidence index reproduced without production claims")
+          PY
+      - name: Upload research-only local evidence index
+        uses: actions/upload-artifact@v4
+        with:
+          name: v2-05-local-qualification-evidence
+          path: ${{ runner.temp }}/v2-05-a.json
+          if-no-files-found: error
+          retention-days: 90
