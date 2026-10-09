@@ -44,6 +44,10 @@ jobs:
             source_sha: fc90ff5962d4c354f28e631d56f79c5efd09fa44
             modules: v2.sec002_research.test_journal tests.test_phase3_signer_abstraction
             pythonpath: 'v2:prototypes:.'
+          - lane: C
+            source_sha: 89773e82fc1d46a58cf6189ac5b670308be0f199
+            modules: v2.sec003_research.test_contract
+            pythonpath: 'v2:prototypes:.'
           - lane: D
             source_sha: f8c8623bfda2789507dccbc0ea18fcff49c3076a
             modules: v2.auth001_research.test_boundary v2.test_policy v2.test_disclosure
