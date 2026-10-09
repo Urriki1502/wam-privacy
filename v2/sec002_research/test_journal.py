@@ -37,6 +37,7 @@ class JournalTests(unittest.TestCase):
         self.tmp=tempfile.TemporaryDirectory()
         self.addCleanup(self.tmp.cleanup)
         self.path=Path(self.tmp.name)/"journal.db"
+        PersistentSignerGate(FixtureSigner(), self.path, provision=True)
     def test_restart_idempotence(self):
         provider=FixtureSigner()
         result=PersistentSignerGate(provider,self.path).sign(*inputs())
@@ -111,4 +112,45 @@ class JournalTests(unittest.TestCase):
         with self.assertRaisesRegex(ProviderError,"PROVIDER_RESULT_MISMATCH"):g.sign(*inputs())
         with self.assertRaisesRegex(ProviderError,"REQUEST_PENDING"):g.sign(*inputs())
         self.assertEqual(p.calls,1)
+
+    def test_missing_journal_fails_closed_and_does_not_recreate(self):
+        self.path.unlink()
+        provider=FixtureSigner()
+        with self.assertRaisesRegex(ProviderError,"JOURNAL_UNAVAILABLE"):
+            PersistentSignerGate(provider,self.path)
+        self.assertFalse(self.path.exists())
+        self.assertEqual(provider.calls,0)
+
+    def test_deleted_journal_after_success_cannot_reuse_request(self):
+        provider=FixtureSigner()
+        gate=PersistentSignerGate(provider,self.path)
+        gate.sign(*inputs())
+        self.path.unlink()
+        with self.assertRaisesRegex(ProviderError,"JOURNAL_UNAVAILABLE"):
+            gate.sign(*inputs())
+        with self.assertRaisesRegex(ProviderError,"JOURNAL_UNAVAILABLE"):
+            PersistentSignerGate(FixtureSigner(),self.path)
+        self.assertFalse(self.path.exists())
+        self.assertEqual(provider.calls,1)
+
+    def test_existing_journal_cannot_be_reprovisioned(self):
+        provider=FixtureSigner()
+        first=PersistentSignerGate(provider,self.path).sign(*inputs())
+        with self.assertRaisesRegex(ProviderError,"JOURNAL_ALREADY_EXISTS"):
+            PersistentSignerGate(FixtureSigner(),self.path,provision=True)
+        again=FixtureSigner()
+        self.assertEqual(PersistentSignerGate(again,self.path).sign(*inputs()),first)
+        self.assertEqual(again.calls,0)
+
+    def test_missing_schema_fails_closed_without_bootstrap(self):
+        with sqlite3.connect(self.path) as db:
+            db.execute("DROP TABLE requests")
+        provider=FixtureSigner()
+        with self.assertRaises(sqlite3.DatabaseError):
+            PersistentSignerGate(provider,self.path)
+        self.assertEqual(provider.calls,0)
+        with sqlite3.connect(self.path) as db:
+            self.assertIsNone(db.execute(
+                "SELECT name FROM sqlite_master WHERE name='requests'").fetchone())
+
 if __name__=="__main__":unittest.main()

@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - v2/05-qualification-handoff
-      - research/sec002-signer-journal
   pull_request:
     paths:
       - 'v2/**'
