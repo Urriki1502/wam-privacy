@@ -9,8 +9,8 @@ It is an intake specification, not a review result.
 
 ## Reviewer independence
 
-The reviewer must not be the author of the reviewed implementation or the agent
-that produced the internal qualification evidence.
+The reviewer must not have authored the reviewed implementation or produced
+the internal qualification evidence. Review independence must be verifiable.
 
 The final report must identify:
 
