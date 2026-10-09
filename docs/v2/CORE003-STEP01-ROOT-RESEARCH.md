@@ -8,7 +8,7 @@
 - Frozen V2 research source: `5af86cfd5be27a3275079cbccde2abd2366ebb2b`
 - Separate working branch: `research/core003-canonical-root-reference`
 - Actual Core reference algorithm: `prototypes/zk_balance_halo2/src/anchor.rs` and `src/wallet_state.rs` from frozen V1; no consensus changes
-- Rust toolchain `1.88.0`, pinned Cargo lock derived from frozen V1 Cargo.lock, built as a separate Rust crate
+- Rust toolchain `1.88.0`, using the **exact frozen V1 Cargo.lock** in an ephemeral copy of the existing Rust crate; the committed V1 tree remains untouched
 
 ## Confirmed trust-boundary gap
 
@@ -22,7 +22,8 @@ an exploit demonstrated against current WAM Core or an activated protocol.
 ## Local reference approach
 
 `v2/core003_research/src/lib.rs` is an isolated, no-`unsafe`, no-RPC
-reference gate that:
+reference gate staged as a temporary **integration test** in a copy of the
+frozen V1 Rust crate on the CI runner. It does not change the committed V1 code. The gate:
 
 1. Maintains an **ordered commitment vector** (unlike Core's unordered set).
 2. Checks each new commitment uses a canonical `Fp` encoding and is unique.
@@ -56,8 +57,11 @@ an external test vector or an independently validated protocol specification.
 | Canonical rollback and replay | same deterministic root |
 | One-leaf reference root | matches frozen `anchor::merkle_root` |
 
-Use `cargo test --locked --manifest-path v2/core003_research/Cargo.toml` on
-the dedicated branch. The V1/V2 regression workflows must still be green
+CI copies `prototypes/zk_balance_halo2` into `$RUNNER_TEMP/core003-reference`,
+copies the research source into its `tests/core003_reference.rs`, then executes
+`cargo test --locked --manifest-path "$RUNNER_TEMP/core003-reference/Cargo.toml" --test core003_reference`.
+The exact V1 Cargo.lock is used, with no secondary dependency graph.
+The V1/V2 regression workflows must still be green
 at the exact PR HEAD. No claim of test pass before the GitHub Actions run.
 
 ## Unimplemented constraints — deliberately NOT solved in Step 01
