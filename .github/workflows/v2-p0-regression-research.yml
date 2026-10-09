@@ -29,3 +29,50 @@ jobs:
           name: p0-baseline-evidence
           path: ${{ runner.temp }}/p0-baseline.json
           if-no-files-found: error
+  independent-lane-reproduction:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - lane: A
+            source_sha: b8a5d84e3c981ce1d97b52d6c0af4aa23422d7be
+            modules: v2.sec001_research.test_durable_policy
+            pythonpath: 'v2:prototypes:.'
+          - lane: B
+            source_sha: fc90ff5962d4c354f28e631d56f79c5efd09fa44
+            modules: v2.sec002_research.test_journal tests.test_phase3_signer_abstraction
+            pythonpath: 'v2:prototypes:.'
+          - lane: D
+            source_sha: f8c8623bfda2789507dccbc0ea18fcff49c3076a
+            modules: v2.auth001_research.test_boundary v2.test_policy v2.test_disclosure
+            pythonpath: 'v2:v2/auth001_research:prototypes:.'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ matrix.source_sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Verify immutable lane source and frozen baseline
+        env:
+          SOURCE_SHA: ${{ matrix.source_sha }}
+        run: |
+          test "$(git rev-parse HEAD)" = "$SOURCE_SHA"
+          git diff --exit-code 5af86cfd5be27a3275079cbccde2abd2366ebb2b HEAD -- prototypes/ integration/ tests/ v2/policy.py v2/disclosure.py v2/bridge.py v2/routing.py
+          mkdir -p evidence
+          git rev-parse HEAD > evidence/source-head.txt
+      - name: Separately reproduce lane tests
+        env:
+          PYTHONPATH: ${{ matrix.pythonpath }}
+          PYTHONDONTWRITEBYTECODE: '1'
+          TEST_MODULES: ${{ matrix.modules }}
+        run: |
+          set -o pipefail
+          python3 -B -m unittest -v $TEST_MODULES 2>&1 | tee evidence/tests.txt
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: independent-lane-${{ matrix.lane }}
+          path: evidence/
+          if-no-files-found: error
