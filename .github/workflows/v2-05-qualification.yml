@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - v2/05-qualification-handoff
+      - research/sec002-signer-journal
   pull_request:
     paths:
       - 'v2/**'
@@ -13,6 +14,10 @@ on:
       - 'scripts/build_phase15_review_package.py'
       - 'scripts/run_phase15f_v1_final_audit.py'
   workflow_dispatch:
+
+concurrency:
+  group: v2-05-${{ github.head_ref || github.ref_name }}
+  cancel-in-progress: true
 
 permissions:
   contents: read
@@ -82,3 +87,29 @@ jobs:
           path: ${{ runner.temp }}/v2-05-a.json
           if-no-files-found: error
           retention-days: 90
+
+  sec002-durable-signer:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Verify immutable signer and exact HEAD
+        run: |
+          test "$(git rev-parse HEAD)" = "${{ github.event.pull_request.head.sha || github.sha }}"
+          test "$(git rev-parse HEAD:prototypes/signer_abstraction/provider.py)" = 3bd361bcfdd068a4fd2fa042acc283568673fb47
+          test "$(git rev-parse HEAD:prototypes/signer_abstraction/model.py)" = b2bfb3032d49c472f7b9a8dc256925e4ad05029a
+          mkdir -p evidence
+          git rev-parse HEAD > evidence/head.txt
+      - name: Restart crash concurrency and frozen regression
+        run: |
+          set -o pipefail
+          python -m unittest v2.sec002_research.test_journal tests.test_phase3_signer_abstraction -v 2>&1 | tee evidence/tests.txt
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: sec002-exact-head-evidence
+          path: evidence/
