@@ -128,21 +128,25 @@ jobs:
                   '    ".github/workflows/v2-03-relay-metadata.yml",',
                   '    ".github/workflows/v2-04-v1-bridge.yml",  '
                   '# V2-only regression CI, no V1 runtime change.',
+                  '    ".github/workflows/v2-05-qualification.yml",  '
+                  '# V2-05 evidence-only CI; no V1 runtime/source change.',
               ),
               "scripts/build_phase15_review_package.py": (
                   '    ".github/workflows/v2-03-relay-metadata.yml",',
                   '    ".github/workflows/v2-04-v1-bridge.yml",  '
                   '# V2-only signer bridge CI; no V1 runtime changes.',
+                  '    ".github/workflows/v2-05-qualification.yml",  '
+                  '# V2-05 evidence-only CI; no V1 protocol/source change.',
               ),
           }
           bad = [name for name in changed
                  if not (name.startswith(allowed) or name in allowed_review_scripts)]
-          for filename, (original, appended) in allowed_review_scripts.items():
+          for filename, (original, appended, after) in allowed_review_scripts.items():
               historical = subprocess.check_output(
                   ["git", "show", base + ":" + filename], text=True
               )
               actual = open(filename, encoding="utf-8").read()
-              expected = historical.replace(original, original + "\n" + appended)
+              expected = historical.replace(original, original + "\n" + appended + "\n" + after)
               if historical.count(original) != 1 or actual != expected:
                   raise SystemExit("Unexpected review script change: " + filename)
           if bad:
