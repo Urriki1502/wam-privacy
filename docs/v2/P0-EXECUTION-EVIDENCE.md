@@ -61,9 +61,11 @@ E workflow separately checks out pinned lane source, verifies frozen paths,
 executes each lane suite and stores source SHA + test output artifacts:
 A b8a5d84e3c981ce1d97b52d6c0af4aa23422d7be (12 durability tests);
 B fc90ff5962d4c354f28e631d56f79c5efd09fa44 (11 journal + 19 original signer);
-C 89773e82fc1d46a58cf6189ac5b670308be0f199 (8 DESIGN CONTRACT ONLY);
+C d00ed6ad793b56a53dd68d200910436e666081fd (8 contract + 12 actual A/B composition);
 D f8c8623bfda2789507dccbc0ea18fcff49c3076a (8 adapter + 28 policy + 23 disclosure).
-This is separate reproduction of isolated lanes, not atomic A/B/C integration.
+E stages only pinned A/B research adapter directories for the C matrix job.
+C now executes actual conservative sequential A/B composition; distributed ACID
+and complete SEC-003 acceptance remain BLOCKED.
 B review prompted corrupt DB and shared process provider-count tests; those
 tests and identity/capabilities binding fixes were independently read at B pin.
 
@@ -81,3 +83,27 @@ All targeted and reproduction CI results remain subject to current-head
 GitHub verification. Pending/queued is never PASS. Runtime physical durability,
 trusted monotonic deployment, real consent UI, atomic recovery integration,
 CORE-003 approval and external audits remain blockers.
+
+## Final source review and observed targeted evidence
+
+E independently read stable C d00ed6ad's coordinator and 12 actual composition
+tests. The coordinator copies capability input, binds exact scope and approval,
+checks authenticated A grant fields/consumption/revocation/expiry/clock and B
+durable fingerprint/result, and permanently blocks uncertain intents. Tests
+kill processes at seven commit/provider cuts, reopen real databases, count
+provider calls across processes, reject cache after revoke/expiry, missing or
+mixed participant receipts, changed approvals and caller mapping mutation.
+Runtime at this stable C SHA remains PENDING until CI observation.
+
+E independently fetched targeted job logs:
+A b8a5d84: run37915843539/job113771687177, 100 tests OK;
+B fc90ff59: run37915908355/job113771902602, 30 tests OK;
+D f8c8623: run37915830167/job113771642086, 59 tests OK.
+These establish targeted research suites only, not full inherited green CI.
+Original E baseline old SHA246246371bd2bda6faf83c695b3dde85019f4925:
+run37915792083/job113771517303, 113 tests OK. This does not qualify later E
+workflow changes; final E exact-head A/B/C/D reproduction remains PENDING.
+
+All five current lane comparisons to V2 freeze contain only new scoped files,
+no overlapping changed paths and no pre-existing source edits. Internal
+cross-agent review/reproduction remains distinct from external security audit.
