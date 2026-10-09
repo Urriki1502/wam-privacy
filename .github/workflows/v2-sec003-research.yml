@@ -1,0 +1,56 @@
+name: SEC-003 research recovery contract
+on:
+  pull_request:
+    branches: [v2/research-freeze-2026-10-09]
+    paths:
+      - 'v2/sec003_research/**'
+      - 'docs/v2/SEC003*'
+      - '.github/workflows/v2-sec003-research.yml'
+permissions:
+  contents: read
+jobs:
+  contract-tests:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Exact HEAD and frozen-source evidence
+        env:
+          EXPECTED_HEAD: ${{ github.event.pull_request.head.sha }}
+        run: |
+          mkdir -p evidence
+          test "$(git rev-parse HEAD)" = "$EXPECTED_HEAD"
+          git rev-parse HEAD > evidence/head.txt
+          git merge-base --is-ancestor 5af86cfd5be27a3275079cbccde2abd2366ebb2b HEAD
+          git diff --name-only 5af86cfd5be27a3275079cbccde2abd2366ebb2b HEAD > evidence/changed-paths.txt
+          python3 - <<'PY'
+          from pathlib import Path
+          allowed = ("v2/sec003_research/", "docs/v2/SEC003")
+          bad = [p for p in Path("evidence/changed-paths.txt").read_text().splitlines()
+                 if not p.startswith(allowed) and p != ".github/workflows/v2-sec003-research.yml"]
+          if bad:
+              raise SystemExit("Forbidden paths: " + repr(bad))
+          PY
+          git diff --exit-code 5af86cfd5be27a3275079cbccde2abd2366ebb2b HEAD -- prototypes integration v2/policy.py v2/bridge.py v2/disclosure.py v2/routing.py
+      - name: Contract model tests (A/B integration remains BLOCKED)
+        run: |
+          set -o pipefail
+          python3 -m unittest -v v2.sec003_research.test_contract 2>&1 | tee evidence/tests.txt
+          python3 - <<'PY'
+          import json, pathlib
+          head = pathlib.Path("evidence/head.txt").read_text().strip()
+          pathlib.Path("evidence/status.json").write_text(json.dumps({
+              "head": head, "scope": "SEC003_CONTRACT_ONLY",
+              "contract_tests": "PASS", "AB_integration": "BLOCKED",
+              "production": "BLOCKED", "freeze_base": "5af86cfd5be27a3275079cbccde2abd2366ebb2b"
+          }, indent=2))
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: sec003-contract-${{ github.event.pull_request.head.sha }}
+          path: evidence/
