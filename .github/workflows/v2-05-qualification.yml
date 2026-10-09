@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - v2/05-qualification-handoff
+      - research/p0-regression-handoff
   pull_request:
     paths:
       - 'v2/**'
@@ -13,6 +14,10 @@ on:
       - 'scripts/build_phase15_review_package.py'
       - 'scripts/run_phase15f_v1_final_audit.py'
   workflow_dispatch:
+
+concurrency:
+  group: v2-05-${{ github.head_ref || github.ref_name }}
+  cancel-in-progress: true
 
 permissions:
   contents: read
@@ -82,3 +87,109 @@ jobs:
           path: ${{ runner.temp }}/v2-05-a.json
           if-no-files-found: error
           retention-days: 90
+
+  p0-independent-baseline:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Historical freeze audit and review package at exact HEAD
+        run: |
+          python3 scripts/run_phase15f_v1_final_audit.py --root . --output "$RUNNER_TEMP/p0-freeze-audit.json"
+          python3 scripts/build_phase15_review_package.py --root . --output "$RUNNER_TEMP/p0-review-manifest.json"
+      - name: Offline regression at exact research HEAD
+        env:
+          EXPECTED_HEAD: ${{ github.event.pull_request.head.sha || github.sha }}
+          PYTHONDONTWRITEBYTECODE: '1'
+        run: python3 -B v2/p0_regression/run_baseline.py --output "$RUNNER_TEMP/p0-baseline.json"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: p0-baseline-evidence
+          path: |
+            ${{ runner.temp }}/p0-baseline.json
+            ${{ runner.temp }}/p0-freeze-audit.json
+            ${{ runner.temp }}/p0-review-manifest.json
+          if-no-files-found: error
+  p0-independent-lane-reproduction:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - lane: A
+            source_sha: 5da526b380d1788875d1133c0a6623b2fcdda09e
+            modules: v2.sec001_research.test_durable_policy
+            pythonpath: 'v2:prototypes:.'
+          - lane: B
+            source_sha: fe41f504d8f4064fd0bc5f01adc1c13733c22fa9
+            modules: v2.sec002_research.test_journal tests.test_phase3_signer_abstraction
+            pythonpath: 'v2:prototypes:.'
+          - lane: C
+            source_sha: d4e33ae114fcc1c32c95766b5dfe7f429b599cc3
+            modules: v2.sec003_research.test_contract v2.sec003_research.test_composition
+            pythonpath: 'v2:prototypes:.'
+          - lane: D
+            source_sha: 2ace9ccae6f727d0498cbfbeca20be817e1e8058
+            modules: v2.auth001_research.test_boundary v2.test_policy v2.test_disclosure
+            pythonpath: 'v2:v2/auth001_research:prototypes:.'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ matrix.source_sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Verify immutable lane source and frozen baseline
+        env:
+          SOURCE_SHA: ${{ matrix.source_sha }}
+        run: |
+          test "$(git rev-parse HEAD)" = "$SOURCE_SHA"
+          git diff --exit-code 5af86cfd5be27a3275079cbccde2abd2366ebb2b HEAD -- prototypes/ integration/ tests/ v2/policy.py v2/disclosure.py v2/bridge.py v2/routing.py
+          mkdir -p evidence
+          git rev-parse HEAD > evidence/source-head.txt
+      - name: Historical lane freeze audit and review package
+        run: |
+          python3 scripts/run_phase15f_v1_final_audit.py --root . --output evidence/freeze-audit.json
+          python3 scripts/build_phase15_review_package.py --root . --output evidence/review-manifest.json
+      - name: Checkout C pinned A dependency
+        if: matrix.lane == 'C'
+        uses: actions/checkout@v4
+        with:
+          ref: b8a5d84e3c981ce1d97b52d6c0af4aa23422d7be
+          path: dependencies/a
+          persist-credentials: false
+      - name: Checkout C pinned B dependency
+        if: matrix.lane == 'C'
+        uses: actions/checkout@v4
+        with:
+          ref: fc90ff5962d4c354f28e631d56f79c5efd09fa44
+          path: dependencies/b
+          persist-credentials: false
+      - name: Verify C dependencies and stage only research adapters
+        if: matrix.lane == 'C'
+        run: |
+          test "$(git -C dependencies/a rev-parse HEAD)" = "b8a5d84e3c981ce1d97b52d6c0af4aa23422d7be"
+          test "$(git -C dependencies/b rev-parse HEAD)" = "fc90ff5962d4c354f28e631d56f79c5efd09fa44"
+          cp -R dependencies/a/v2/sec001_research v2/
+          cp -R dependencies/b/v2/sec002_research v2/
+          git -C dependencies/a rev-parse HEAD > evidence/A-head.txt
+          git -C dependencies/b rev-parse HEAD > evidence/B-head.txt
+      - name: Separately reproduce lane tests
+        env:
+          PYTHONPATH: ${{ matrix.pythonpath }}
+          PYTHONDONTWRITEBYTECODE: '1'
+          TEST_MODULES: ${{ matrix.modules }}
+        run: |
+          set -o pipefail
+          python3 -B -m unittest -v $TEST_MODULES 2>&1 | tee evidence/tests.txt
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: independent-lane-${{ matrix.lane }}
+          path: evidence/
+          if-no-files-found: error
