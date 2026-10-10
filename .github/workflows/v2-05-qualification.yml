@@ -82,3 +82,32 @@ jobs:
           path: ${{ runner.temp }}/v2-05-a.json
           if-no-files-found: error
           retention-days: 90
+
+  core003-ordered-root-reference-research:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 55
+    steps:
+      - name: Checkout exact research PR commit
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Pinned frozen V1 Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: '1.88.0'
+      - name: Reject changes to frozen V1 implementation and Core
+        run: |
+          git merge-base --is-ancestor 5af86cfd5be27a3275079cbccde2abd2366ebb2b HEAD
+          git diff --exit-code 95dfe0abf04b4e4dcbdbe9eb6d9bd0439a45a127 HEAD -- prototypes/zk_balance_halo2/ integration/core/ tests/ scripts/phase14d_static_review.py scripts/build_phase14d_ledger.py
+      - name: Run CORE-003 research fixture against frozen V1 Cargo.lock
+        run: |
+          # Work entirely in an ephemeral copy: the checkout, frozen V1 files
+          # and protected Git tree are never modified.
+          cp -a prototypes/zk_balance_halo2 "$RUNNER_TEMP/core003-reference"
+          cp v2/core003_research/src/lib.rs "$RUNNER_TEMP/core003-reference/tests/core003_reference.rs"
+          cargo test --locked --manifest-path "$RUNNER_TEMP/core003-reference/Cargo.toml" --test core003_reference --verbose
+      - name: Verify frozen source checkout remained clean
+        run: |
+          test -z "$(git status --porcelain)"
